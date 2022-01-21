@@ -35,7 +35,6 @@ export const extensionNames = {
     popup: 'popup',
     contentScript: 'contentScript',
     controller: 'controller',
-    option: 'option',
     background: 'background',
 } as const;
 
@@ -54,15 +53,11 @@ export const orderNames = {
     sendSectionTitle: 'sendSectionTitle',
     // order to disconnect port
     disconnect: 'disconnect',
-
-    // DELETED
-    //
-    // transcriptOpened: 'transcriptOpened',
-    // transcriptClosed: 'transcriptClosed',
-    // languageIsEnglish: 'languageIsEnglish',
-    // languageIsNotEnglish: 'languageIsNotEnglish',
-    // loading: 'loading',
-    // loaded: 'loaded',
+    
+    // from popup inquire the url is correct
+    inquireUrl: "inquireUrl",
+    // from popup, run process
+    run: "run"
 } as const;
 
 type et = typeof extensionNames;
@@ -92,10 +87,12 @@ export interface iMessage {
     //   Is message passing done?
     complete?: boolean;
 
+
     //   ADDED
     //
     loading?: boolean;
     loaded?: boolean;
+    correctUrl?: boolean;
 
     //   DELETED
     //
@@ -120,6 +117,8 @@ export interface iResponse {
     title?: string;
     disconnect?: boolean;
     complete?: boolean;
+    correctUrl?: boolean;
+
 }
 
 // ---- ABOUT PORT ----------------------------------
