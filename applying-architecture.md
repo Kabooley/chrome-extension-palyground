@@ -130,3 +130,201 @@ storage.localへ保存する
 
 #### ビジネスロジック
 
+
+## 開発メモ
+
+必要な登場人物
+
+Queueクラス
+Queueインスタンスを受け取ってQueueuのなかの関数を実行する関数
+各処理単位である関数（Queueに突っ込まれる関数）
+
+Queueに関数を突っ込もうと思ったけれど
+Queueのクラスの型付けがanyだらけになるので断念
+代わりにcommand patternが解決策にならないか模索する
+
+(Queueは関数を直接ではなくてcommandインスタンスを取得するとか)
+
+#### Queueとcommand patternの合わせだし
+
+##### Command Pattern
+
+https://www.patterns.dev/posts/command-pattern/
+
+> コマンドパターンを使用すると、特定のタスクを実行するオブジェクトを、メソッドを呼び出すオブジェクトから切り離すことができます。
+
+```JavaScript
+class OrderManager() {
+  constructor() {
+    this.orders = []
+  }
+
+  placeOrder(order, id) {
+    this.orders.push(id)
+    return `You have successfully ordered ${order} (${id})`;
+  }
+
+  trackOrder(id) {
+    return `Your order ${id} will arrive in 20 minutes.`
+  }
+
+  cancelOrder(id) {
+    this.orders = this.orders.filter(order => order.id !== id)
+    return `You have canceled your order ${id}`
+  }
+}
+
+const manager = new OrderManager();
+
+manager.placeOrder("Pad Thai", "1234");
+manager.trackOrder("1234");
+manager.cancelOrder("1234");
+```
+
+以上のコードでは
+managerインスタンスを介して直接メソッドを呼び出している
+
+このメソッドをmanagerから切り離す
+
+```JavaScript
+// 
+// OrderManagerからメソッドをすべて取り除いて
+// 代わりにexecuteﾒｿｯﾄﾞ一つだけを持たせる
+// 
+class OrderManager {
+  constructor() {
+    this.orders = [];
+  }
+
+    // 
+    // Commandインスタンスのexecuteメソッドを実行するだけ
+    // 
+  execute(command, ...args) {
+    return command.execute(this.orders, ...args);
+  }
+}
+
+// 
+// 新たにCommandクラスをつくり
+// 
+class Command {
+  constructor(execute) {
+    //   
+    // 渡された関数をexecuteという共通の名前で登録する
+    // 
+    this.execute = execute;
+  }
+}
+
+// 
+// コマンドで実行する関数とな
+// 
+function PlaceOrderCommand(order, id) {
+    // 
+    // Commandには実際に実行することになる関数を渡す
+    // 
+  return new Command(orders => {
+    orders.push(id);
+    return `You have successfully ordered ${order} (${id})`;
+  });
+}
+
+function CancelOrderCommand(id) {
+  return new Command(orders => {
+    orders = orders.filter(order => order.id !== id);
+    return `You have canceled your order ${id}`;
+  });
+}
+
+function TrackOrderCommand(id) {
+  return new Command(() => `Your order ${id} will arrive in 20 minutes.`);
+}
+```
+
+`execute()`メソッドは与えられた関数をすべて実行する関数
+
+
+```JavaScript
+const manager = new OrderManager();
+
+manager.execute(new PlaceOrderCommand("Pad Thai", "1234"));
+manager.execute(new TrackOrderCommand("1234"));
+manager.execute(new CancelOrderCommand("1234"));
+```
+
+つまり
+Commandにはexecute()呼出で実行できる関数を登録する
+Commandインスタンスには実際に実行することになる関数を渡す
+Commandインスタンスを生成する関数はコンストラクタ関数である
+OrderManagerインスタンスのexecute()にはこのコンストラクタ関数のnew オブジェクトを渡す
+つまり実際にはOrderManager.execute()にはCommandのインスタンスを渡している
+
+これにより
+
+呼出す側と実際に実行するメソッドは分離される
+呼出す側は好きなメソッドを実行できる
+
+
+
+これを応用してQueueクラスを作ってみる
+
+```TypeScript
+class Command {
+    public execute: (any) => any;
+    constructor(execute: (any) => any ){
+        this.execute = execute;
+    }
+}
+
+// --- 実際に実行する関数群 ---
+const someProcess = (): void => {
+    // ...
+}
+
+const otherProcess = (): boolean => {
+    // ...
+    return true;
+}
+
+const anotherProcess = (): number => {
+    // ...
+    return 11;
+};
+
+// --- Commandインスタンスを生成する関数 ---
+// 
+// 任意の関数を渡してCommandインスタンスへ変換する
+const generateCommand = (func: (any) => any) => {
+    return new Command(func);
+};
+
+
+// class Queue {
+//     private _queue: Command[];
+//     constructor(queue: Command[]){
+//         if(queue.length) {
+//             queue.forEach(q => {
+//                 this._queue.push(q);
+//             })
+//         }
+//     }
+
+// }
+
+// Queueはただの入れものにしたいのか
+// それともexecuteメソッドを持つ、実行もともなうclassにしたいのか
+
+
+
+// Commandインスタンスからなる配列であればいい
+const queue: Command[] = [];
+queue.push(generateCommand(someProcess));
+queue.push(generateCommand(otherProcess));
+queue.push(generateCommand(anotherProcess));
+
+class QueueManager {
+    
+}
+// この段階ではCommandのインスタンスをexecute()にわたしてあればいい
+manager.execute()
+```
