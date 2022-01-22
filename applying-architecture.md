@@ -328,3 +328,149 @@ class QueueManager {
 // この段階ではCommandのインスタンスをexecute()にわたしてあればいい
 manager.execute()
 ```
+
+
+```JavaScript
+class Command {
+    public execute: (any) => any;
+    constructor(execute: (any) => any ){
+        this.execute = execute;
+    }
+}
+
+// --- 実際に実行する関数群 ---
+const someProcess = (): void => {
+    // ...
+}
+
+const otherProcess = (): boolean => {
+    // ...
+    return true;
+}
+
+const anotherProcess = (num: number): number => {
+    // ...
+    return num * num;
+};
+
+// --- Commandインスタンスを生成する関数 ---
+// 
+// 任意の関数を渡してCommandインスタンスへ変換する
+const generateCommand = (func: (any) => any, ...args) => {
+    return new Command(func, ...args);
+};
+
+
+// class Queue {
+//     private _queue: Command[];
+//     constructor(queue: Command[]){
+//         if(queue.length) {
+//             queue.forEach(q => {
+//                 this._queue.push(q);
+//             })
+//         }
+//     }
+
+// }
+
+// Queueはただの入れものにしたいのか
+// それともexecuteメソッドを持つ、実行もともなうclassにしたいのか
+
+
+
+// Commandインスタンスからなる配列であればいい
+const queue: Command[] = [];
+queue.push(generateCommand(someProcess));
+queue.push(generateCommand(otherProcess));
+queue.push(generateCommand(anotherProcess, 11));
+
+class QueueManager {
+    private _que: Command[];
+    constructor(que: Command[]){
+        que.forEach(q => {
+            _que.push(q);
+        });
+    };
+
+    execute
+
+    popAll(): void {
+        while(this._que.length){
+            this._que.pop():
+        }
+    }
+    
+}
+// この段階ではCommandのインスタンスをexecute()にわたしてあればいい
+manager.execute()
+```
+
+いや、いったんボトムアップで作ってみよう...
+
+```TypeScript
+// RUN以降の処理をひとまずひとまとめにするとどうなるか
+
+
+const inject_contentScript = async (scriptName: string, tabId: number): Promise<void> => {
+    await chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        files: [scriptName],
+    });
+}
+
+const inquireTabsForResponse = async(tabId: number, sendto: extensionNames, order: orderNames[]): Promise<iResponse> => {
+    const response: iResponse = await sendMessageToTabsPromise({
+        from: extensionNames.background,
+        to: sendTo,
+        order: order
+    });
+    return response;
+}
+
+const executeRUN = async(): Promise<{
+    isSuccess: boolean;
+    phase: string;
+    failureReason: string;
+}> => {
+    try {
+        // tabId取得処理と保存処理
+        await inject_contentScript("contentScript.js", tabId);
+        const response: iResponse = await inquireTabsForResponse(tabId, extensionNames.contentScript, [orderNames.sendStatus]);
+        // responseに収められたstatusの保存
+        // statusの値を検査 条件分岐
+            // 検査合格：次へ
+            // 不合格：失敗 return {isSuccess: false, phase: "after injecting contentScript.js", failureReason: "language is not English"}
+        await inject_contentScript("contentScript.js", tabId);
+        // 5秒くらい待ったほうがいいかも
+        const response2: iResponse = await inquireTabsForResponse(tabId, extensionNames.captureSubtitle, [orderNames.sendSubtitle]);
+        // response2に収められた字幕データをstateへ保存
+        // 字幕データが壊れていないか検査
+            // 検査合格：次へ
+            // 不合格：失敗 return {isSuccess: false, phase: "after injecting captureSubtitle.js", failureReason: "Could not capture subtitles"}
+        await inject_contentScript("controller.js", tabId);
+        const response3: iResponse = await inquireTabsForResponse(tabId, extensionNames.controller, [orderNames.sendCompleted]);
+
+        return {isSuccess: true, phase: "", failureReason: ""};
+    }
+    catch(err) {console.error(err.message)}
+}
+
+
+chrome.runtime.onMessage.addListener((
+    message: iMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response?: iResponse) => void
+) => {
+    const { order, ...rest} = message;
+    // ...
+    if(order.includes(orderNames.run)){
+        const tabId: number = await checkTabIsCorrect();
+        const result = await executeRUN();
+        // resultの検査
+        // result結果にしたがってpopupへ返事を返す
+        // or
+        // Errorを出力する
+        sendResponse({})
+    }
+})
+```
