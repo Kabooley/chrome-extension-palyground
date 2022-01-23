@@ -14,18 +14,18 @@ MVC と DDD の設計思想を取り入れたい
 
 @popup
 
--   popup を開く
--   popup 上の RUN ボタンを押す
+- popup を開く
+- popup 上の RUN ボタンを押す
 
 @Udemy-page
 
--   ブラウザのサイズを変更する
--   字幕を変更する
--   トランスクリプトを ON/OFF にする
--   URL が変わる(動画が切り替わる)
--   tab を閉じる（ブラウザを閉じる）
+- ブラウザのサイズを変更する
+- 字幕を変更する
+- トランスクリプトを ON/OFF にする
+- URL が変わる(動画が切り替わる)
+- tab を閉じる（ブラウザを閉じる）
 
--   ExTranscript を閉じる
+- ExTranscript を閉じる
 
 #### 一般的な処理の流れ
 
@@ -68,9 +68,9 @@ microsoft の DDD の説明によれば
 
 > オブジェクト指向におけるクラスは、
 >
-> -   インスタンス変数
-> -   インスタンス変数 を正常に制御するメソッド
->     から構成されるのが基本です
+> - インスタンス変数
+> - インスタンス変数 を正常に制御するメソッド
+>   から構成されるのが基本です
 
 つまり単一責任とはある変数を変更できるクラスは一つだけで
 そのクラスが負う責任は変数の正常動作にたいして責任を負うのである
@@ -246,18 +246,19 @@ manager.execute(new CancelOrderCommand("1234"));
 
 つまり
 <<<<<<< HEAD
-Commandインスタンスにはexecute()呼出で実行できる関数を登録する
-Commandインスタンスを生成する関数はコンストラクタ関数である
-OrderManagerインスタンスのexecute()にはこのコンストラクタ関数のnew オブジェクトを渡す
-つまり実際にはOrderManager.execute()にはCommandのインスタンスを渡している
-OrderManagerはorderプロパティをもち、これが実際に実行される関数に渡されるからOrderManagerがわざわざ呼び出す意義がある0
+Command インスタンスには execute()呼出で実行できる関数を登録する
+Command インスタンスを生成する関数はコンストラクタ関数である
+OrderManager インスタンスの execute()にはこのコンストラクタ関数の new オブジェクトを渡す
+つまり実際には OrderManager.execute()には Command のインスタンスを渡している
+OrderManager は order プロパティをもち、これが実際に実行される関数に渡されるから OrderManager がわざわざ呼び出す意義がある 0
 =======
 Command には execute()呼出で実行できる関数を登録する
 Command インスタンスには実際に実行することになる関数を渡す
 Command インスタンスを生成する関数はコンストラクタ関数である
 OrderManager インスタンスの execute()にはこのコンストラクタ関数の new オブジェクトを渡す
 つまり実際には OrderManager.execute()には Command のインスタンスを渡している
->>>>>>> e25cafebc477bc30a375b8a4dc0acd425ccf00cc
+
+> > > > > > > e25cafebc477bc30a375b8a4dc0acd425ccf00cc
 
 これにより
 
@@ -266,9 +267,9 @@ OrderManager インスタンスの execute()にはこのコンストラクタ関
 
 メリット
 
--   クラスはメソッドを持つ必要がなくなる
--   実際に実行する関数は呼び出し側のクラスのプロパティと共通の名前をもつことでプロパティを変更できる
--   呼び出し側の都合でクラスに好きなメソッドを実行させることができる
+- クラスはメソッドを持つ必要がなくなる
+- 実際に実行する関数は呼び出し側のクラスのプロパティと共通の名前をもつことでプロパティを変更できる
+- 呼び出し側の都合でクラスに好きなメソッドを実行させることができる
 
 これを応用して Queue クラスを作ってみる
 
@@ -499,8 +500,8 @@ State に何か新しい機能を付けるのは面倒なので
 検討１：proxy API
 
 proxy を導入するにしても、何に対して？
-State.\_state の場合、State が proxy インスタンスを持つことになる
-(\_state は private なので)
+State._state の場合、State が proxy インスタンスを持つことになる
+(_state は private なので)
 
 model
 
@@ -529,14 +530,13 @@ const contentUrlState = new State<iContentUrl>(contentUrl_storage_key);
 
 確認できるパターン
 
-content scriptをインジェクトする
-background script側からインジェクトしたコンテントスクリプトへ何かしらのデータを要求する
+content script をインジェクトする
+background script 側からインジェクトしたコンテントスクリプトへ何かしらのデータを要求する
 要求したデータに併せてモデルを更新する
 モデルの変化結果から状態を判断する
 状態に応じて何らかの結果が返る
 参考になりそう...?
 https://qiita.com/emaame/items/745a35509fdfc7250026
-
 
 #### 1/23
 
@@ -545,33 +545,33 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 ちょっと整理
 
 やろうとしていること
-中目標としてMVCモデルの導入、DDD設計思想に近づけたい
+中目標として MVC モデルの導入、DDD 設計思想に近づけたい
 そのために必要なこととして
-- orderにたいして処理に必要な関数をQueueにつめてQueueを実行するシステムにする
-- stateの変更内容に応じてnotifyするシステムにする
 
-##### orderとQueueの実装に関して
+- order にたいして処理に必要な関数を Queue につめて Queue を実行するシステムにする
+- state の変更内容に応じて notify するシステムにする
+
+##### order と Queue の実装に関して
 
 想定する処理の一般的な流れ
 
-例：popupからRUNボタンが押された
+例：popup から RUN ボタンが押された
 
-前提：必要なstateの生成はchrome.runtime.onInstalledで済んでいる
+前提：必要な state の生成は chrome.runtime.onInstalled で済んでいる
 
 - メッセージ受信機能がメッセージハンドラを呼び出す
-- メッセージハンドラはメッセージ内容を読んで、必要な処理（関数）をQueueへつめる
-- Queueをqueue実行関数へ渡す
-- Queueの関数が一つずつ実行される
-- 実行するにつれて必要なstateの変更も発生する
-- すべての処理が無事に済んだらsuccess, うまくいかなかったらfailureを返す
+- メッセージハンドラはメッセージ内容を読んで、必要な処理（関数）を Queue へつめる
+- Queue を queue 実行関数へ渡す
+- Queue の関数が一つずつ実行される
+- 実行するにつれて必要な state の変更も発生する
+- すべての処理が無事に済んだら success, うまくいかなかったら failure を返す
 
 実装しようとしたときにぶち当たった障害
 
-- Queueにつめる関数を一般化したいけれど、戻り値の扱いが異なるから一般化できない
+- Queue につめる関数を一般化したいけれど、戻り値の扱いが異なるから一般化できない
   すくなくとも今の自分の腕では...
 
-
-##### state observerの実装に関して
+##### state observer の実装に関して
 
 ```TypeScript
 // iProgressのstateで扱うオブジェクト
@@ -607,21 +607,75 @@ const progressProxy = new Proxy(
 
 // notifyというか、stateの変更を検知してstateの値から何を通知すべきなのか
 // 判断してくれるアルゴリズムの実装が必要
-// 
-// 
+//
+//
 ```
-
-
-
 
 ##### 今できること
 
 とにもかくにも便利機能の実装はおいておいて
-ksksハードコーディングでいいから作ってみる
+ksks ハードコーディングでいいから作ってみる
 
-orderごとにtaskが集まった関数を作る
+order ごとに task が集まった関数を作る
 
-
-...なんかつくっててつくづくやっぱりstateの変更検知機能ほしいなぁと思う
+...なんかつくっててつくづくやっぱり state の変更検知機能ほしいなぁと思う
 ハードコーディングはあほみたいな条件分岐が発生するからダメだね
 
+```TypeScript
+class Observable {
+    private _observers;
+    constructor() {
+        this._observers = [];
+    }
+
+    subscribe(func) {
+        this.observers.push(func);
+    }
+
+    unsubscribe(func) {
+        this.observers = this.observers.filter(observer => observer !== func);
+    }
+        // すべてのobserverへ、observer.observer(data)を実行する
+    notify(data) {
+        this.observers.forEach(observer => observer(data));
+    }
+}
+
+class State<TYPE extends object> {
+    private _state: TYPE;
+    private _proxy: Proxy<TYPE>;
+    private _localStorage: LocalStorage<TYPE>;
+    private _keyOfStorage: string;
+    constructor(key: string, handler) {
+        this._keyOfStorage = key;
+        this._proxy = new Proxy(this._state, handler);
+    }
+
+    // prop: {contentScriptInjected: true, restructured: false}
+    setState(prop: {[Property in keyof TYPE]: TYPE[Property]}):void {
+        Object.keys(prop).forEach(p => {
+            this._proxy[p] = prop[p];
+        })
+    };
+
+    getState(): TYPE {
+        
+    }
+}
+// usage
+const progress: State<iProgress> = new State<iProgress>("keyofprogress__", handler);
+progress.setState({contentScriptInjected: true});
+
+// 何を監視したいかといえばState._stateである
+const handler = {
+    set: function (target: iProgress, property: keyof iProgress, receiver) {
+    // local storageへ保存
+    // notifyerの実行
+    return Reflect.set(...arguments);
+  },
+  get: function (target: iProgress, property: keyof iProgress, receiver) {
+    return Reflect.get(...arguments);
+  },
+
+}
+```
