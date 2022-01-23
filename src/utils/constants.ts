@@ -26,6 +26,7 @@ export const extensionNames = {
     popup: 'popup',
     contentScript: 'contentScript',
     controller: 'controller',
+    captureSubtitle: "captureSubtitle",
     background: 'background',
 } as const;
 
@@ -33,22 +34,22 @@ export const extensionNames = {
 // Updated
 //
 export const orderNames = {
-    // Inject content script order
-    injectCaptureSubtitleScript: 'injectCaptureSubtitleScript',
-    injectExTranscriptScript: 'injectExTranscriptScript',
+    // // Inject content script order
+    // injectCaptureSubtitleScript: 'injectCaptureSubtitleScript',
+    // injectExTranscriptScript: 'injectExTranscriptScript',
     // From background to contentScript
     sendStatus: 'sendStatus',
     // from controller to background
     sendSubtitles: 'sendSubtitles',
-    // from contentScript to background
-    sendSectionTitle: 'sendSectionTitle',
     // order to disconnect port
     disconnect: 'disconnect',
     
     // from popup inquire the url is correct
     inquireUrl: "inquireUrl",
     // from popup, run process
-    run: "run"
+    run: "run",
+    // something succeeded
+    success: "success"
 } as const;
 
 type et = typeof extensionNames;
