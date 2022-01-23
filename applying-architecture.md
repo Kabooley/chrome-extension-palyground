@@ -253,11 +253,11 @@ manager.execute(new CancelOrderCommand("1234"));
 ```
 
 つまり
-Commandにはexecute()呼出で実行できる関数を登録する
-Commandインスタンスには実際に実行することになる関数を渡す
+Commandインスタンスにはexecute()呼出で実行できる関数を登録する
 Commandインスタンスを生成する関数はコンストラクタ関数である
 OrderManagerインスタンスのexecute()にはこのコンストラクタ関数のnew オブジェクトを渡す
 つまり実際にはOrderManager.execute()にはCommandのインスタンスを渡している
+OrderManagerはorderプロパティをもち、これが実際に実行される関数に渡されるからOrderManagerがわざわざ呼び出す意義がある0
 
 これにより
 
@@ -474,3 +474,11 @@ chrome.runtime.onMessage.addListener((
     }
 })
 ```
+
+確認できるパターン
+
+content scriptをインジェクトする
+background script側からインジェクトしたコンテントスクリプトへ何かしらのデータを要求する
+要求したデータに併せてモデルを更新する
+モデルの変化結果から状態を判断する
+状態に応じて何らかの結果が返る
