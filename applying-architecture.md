@@ -14,18 +14,18 @@ MVC と DDD の設計思想を取り入れたい
 
 @popup
 
--   popup を開く
--   popup 上の RUN ボタンを押す
+- popup を開く
+- popup 上の RUN ボタンを押す
 
 @Udemy-page
 
--   ブラウザのサイズを変更する
--   字幕を変更する
--   トランスクリプトを ON/OFF にする
--   URL が変わる(動画が切り替わる)
--   tab を閉じる（ブラウザを閉じる）
+- ブラウザのサイズを変更する
+- 字幕を変更する
+- トランスクリプトを ON/OFF にする
+- URL が変わる(動画が切り替わる)
+- tab を閉じる（ブラウザを閉じる）
 
--   ExTranscript を閉じる
+- ExTranscript を閉じる
 
 #### 一般的な処理の流れ
 
@@ -68,9 +68,9 @@ microsoft の DDD の説明によれば
 
 > オブジェクト指向におけるクラスは、
 >
-> -   インスタンス変数
-> -   インスタンス変数 を正常に制御するメソッド
->     から構成されるのが基本です
+> - インスタンス変数
+> - インスタンス変数 を正常に制御するメソッド
+>   から構成されるのが基本です
 
 つまり単一責任とはある変数を変更できるクラスは一つだけで
 そのクラスが負う責任は変数の正常動作にたいして責任を負うのである
@@ -267,9 +267,9 @@ OrderManager インスタンスの execute()にはこのコンストラクタ関
 
 メリット
 
--   クラスはメソッドを持つ必要がなくなる
--   実際に実行する関数は呼び出し側のクラスのプロパティと共通の名前をもつことでプロパティを変更できる
--   呼び出し側の都合でクラスに好きなメソッドを実行させることができる
+- クラスはメソッドを持つ必要がなくなる
+- 実際に実行する関数は呼び出し側のクラスのプロパティと共通の名前をもつことでプロパティを変更できる
+- 呼び出し側の都合でクラスに好きなメソッドを実行させることができる
 
 これを応用して Queue クラスを作ってみる
 
@@ -548,8 +548,8 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 中目標として MVC モデルの導入、DDD 設計思想に近づけたい
 そのために必要なこととして
 
--   order にたいして処理に必要な関数を Queue につめて Queue を実行するシステムにする
--   state の変更内容に応じて notify するシステムにする
+- order にたいして処理に必要な関数を Queue につめて Queue を実行するシステムにする
+- state の変更内容に応じて notify するシステムにする
 
 ##### order と Queue の実装に関して
 
@@ -559,17 +559,17 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 
 前提：必要な state の生成は chrome.runtime.onInstalled で済んでいる
 
--   メッセージ受信機能がメッセージハンドラを呼び出す
--   メッセージハンドラはメッセージ内容を読んで、必要な処理（関数）を Queue へつめる
--   Queue を queue 実行関数へ渡す
--   Queue の関数が一つずつ実行される
--   実行するにつれて必要な state の変更も発生する
--   すべての処理が無事に済んだら success, うまくいかなかったら failure を返す
+- メッセージ受信機能がメッセージハンドラを呼び出す
+- メッセージハンドラはメッセージ内容を読んで、必要な処理（関数）を Queue へつめる
+- Queue を queue 実行関数へ渡す
+- Queue の関数が一つずつ実行される
+- 実行するにつれて必要な state の変更も発生する
+- すべての処理が無事に済んだら success, うまくいかなかったら failure を返す
 
 実装しようとしたときにぶち当たった障害
 
--   Queue につめる関数を一般化したいけれど、戻り値の扱いが異なるから一般化できない
-    すくなくとも今の自分の腕では...
+- Queue につめる関数を一般化したいけれど、戻り値の扱いが異なるから一般化できない
+  すくなくとも今の自分の腕では...
 
 ##### state observer の実装に関して
 
@@ -684,15 +684,15 @@ const handler = {
 
 ユーザ操作：
 
--   [popup](#popupが開かれる)
--   [popup](#RUNが押される)
--   [ブラウザ] ウィンドウのサイズを変更する
--   [ブラウザ] 字幕の言語を変更する
--   [ブラウザ] (公式の)トランスクリプトを ON または OFF にする
-    一度拡張機能を実行済ならこれに合わせて閉じる、再度開かれたら開く
--   [ブラウザ](#URLが変わる(動画が切り替わる))
--   [ブラウザ] タブを閉じる
--   [ExTranscript] ExTranscript を閉じる
+- [popup](#popupが開かれる)
+- [popup](#RUNが押される)
+- [ブラウザ] ウィンドウのサイズを変更する
+- [ブラウザ] 字幕の言語を変更する
+- [ブラウザ] (公式の)トランスクリプトを ON または OFF にする
+  一度拡張機能を実行済ならこれに合わせて閉じる、再度開かれたら開く
+- [ブラウザ](<#URLが変わる(動画が切り替わる)>)
+- [ブラウザ] タブを閉じる
+- [ExTranscript] ExTranscript を閉じる
 
 [設計に関する考察](#設計に関する考察)
 
@@ -813,36 +813,36 @@ const popupMessageHandler = async (m: messageTemplate): Promise<void> => {
 
 処理順序:
 
--   [poup] マウント時または毎度の useEffect()で background へ`order:[orderNames.isUrlCorrect]`を送信する
+- [poup] マウント時または毎度の useEffect()で background へ`order:[orderNames.isUrlCorrect]`を送信する
 
--   [background] メッセージハンドラが受信してメッセージに応じた処理関数へ移動する
--   [background] メッセージに含まれる sender から URL を取得する
--   [background] url を matchURL と比較して比較結果を sendResponse()で返す
-    `{complete: true, url: true}`
--   [poup] sendResponse の結果に応じて state を変更し、popup の表示内容を変える
+- [background] メッセージハンドラが受信してメッセージに応じた処理関数へ移動する
+- [background] メッセージに含まれる sender から URL を取得する
+- [background] url を matchURL と比較して比較結果を sendResponse()で返す
+  `{complete: true, url: true}`
+- [poup] sendResponse の結果に応じて state を変更し、popup の表示内容を変える
 
 popup の state について:
 
--   `matchedPage`: popup を開いたときの tab の URL が正しいかについての状態を管理する state
+- `matchedPage`: popup を開いたときの tab の URL が正しいかについての状態を管理する state
 
 #### RUN が押される
 
 前提：
 
--   RUN ボタンは`matchedPage`が true の時に有効になるとする
--   sendResponse()で返事が返されることを前提とする
--   sendResponse()はエラーが返されることも想定する
+- RUN ボタンは`matchedPage`が true の時に有効になるとする
+- sendResponse()で返事が返されることを前提とする
+- sendResponse()はエラーが返されることも想定する
 
 エラーの可能性箇条書き：
 
--   字幕が英語でない、トランスクリプトが開かれていない
-    alert で字幕を英語にするように、またはトランスクリプトを開くように促す
+- 字幕が英語でない、トランスクリプトが開かれていない
+  alert で字幕を英語にするように、またはトランスクリプトを開くように促す
 
--   処理途中で字幕の言語を変えた、トランスクリプトを閉じた
-    alert で失敗を表示し、英語とトランスクリプトを戻して再度実行してもらうように促す
+- 処理途中で字幕の言語を変えた、トランスクリプトを閉じた
+  alert で失敗を表示し、英語とトランスクリプトを戻して再度実行してもらうように促す
 
--   それ以外のエラー
-    エラーだからどうしようもないよ
+- それ以外のエラー
+  エラーだからどうしようもないよ
 
 つまり大別して、成功、失敗（アラート）、エラー
 成功：`complete: true`
@@ -1012,6 +1012,19 @@ controller.js が正常に ExTranscript を展開できたか確認
 正常展開 ? popup へ正常完了の返事 : エラー出力
 
 
+orderName.runを受け取った後の処理に見られる傾向：
+
+- content scriptのinject
+
+- content scriptからのメッセージで次の処理に必要な情報を取得する
+または
+- background scriptからinjectしたcontent scriptへ必要な情報を催促して取得する
+
+- 取得した情報を検査してstateへ保存して次へ進むか、処理を中断してエラーを返す
+
+
+
+
 #### URL が変わる(動画が切り替わる)
 
 `chrome.tabs.onUpdated.addListener`で検知する
@@ -1020,38 +1033,38 @@ controller.js が正常に ExTranscript を展開できたか確認
 
 継続条件：
 
--   拡張機能が未展開であるけど、Udemy 講義ページである
-    なにもしない
+- 拡張機能が未展開であるけど、Udemy 講義ページである
+  なにもしない
 
--   拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
-    拡張機能をリセットして引き続き展開する
+- 拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
+  拡張機能をリセットして引き続き展開する
 
--   拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
-    拡張機能は OFF にする
+- 拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
+  拡張機能は OFF にする
 
--   タブが切り替わった
-    何もしない
+- タブが切り替わった
+  何もしない
 
--   拡張機能が展開されていたタブが閉じられた
-    拡張機能を OFF にする
+- 拡張機能が展開されていたタブが閉じられた
+  拡張機能を OFF にする
 
 次の時はどうするか:
 
--   すでに拡張機能が実行されているときにページのユーザ操作によるリロードがあった
-    変わらず展開したい
-    google 翻訳アプリも変わらず展開しているし
-    OFF になるのは、
-    tab が閉じられたとき、ユーザの操作によって拡張機能上の OFF ボタンが押されたとき
-    拡張機能マネージャでが OFF にされたとき、
-    そのタブで別の Udemy 講義ページ以外に移動したとき
+- すでに拡張機能が実行されているときにページのユーザ操作によるリロードがあった
+  変わらず展開したい
+  google 翻訳アプリも変わらず展開しているし
+  OFF になるのは、
+  tab が閉じられたとき、ユーザの操作によって拡張機能上の OFF ボタンが押されたとき
+  拡張機能マネージャでが OFF にされたとき、
+  そのタブで別の Udemy 講義ページ以外に移動したとき
 
 Udemy ページの挙動と chrome.tabs.onUpdated の挙動:
 
--   リンクをたどって Udemy 講義ページへ移動したとき
-    "loading"は二度以上起こる
-    しかし、URL は同じ(#以下が変わるだけ)
+- リンクをたどって Udemy 講義ページへ移動したとき
+  "loading"は二度以上起こる
+  しかし、URL は同じ(#以下が変わるだけ)
 
-    ...よく考えたらこれ関係ないな...
+  ...よく考えたらこれ関係ないな...
 
 ...以上の挙動と事情がすべて反映されるように条件分岐を設ける
 
@@ -1114,60 +1127,167 @@ chrome.tabs.onUpdated.addListener(
 
 要確認：
 
-- stateはどのようにリセットすべきか
-- content scriptはinjectされたままなのか
-- content scriptはinjectされたままだとして、ちゃんとリロードされたページのDOMを取得できるのか？
-
+- state はどのようにリセットすべきか
+- content script は inject されたままなのか
+- content script は inject されたままだとして、ちゃんとリロードされたページの DOM を取得できるのか？
 
 ##### 拡張機能 OFF 処理
 
 要確認：
 
-- stateはどのようにリセットすべきか
-- content scriptはそのページから除去できるのか
+- state はどのようにリセットすべきか
+- content script はそのページから除去できるのか
 - 除去できないとしたらどうするか
-
-
 
 #### 設計に関する考察
 
-他の拡張機能からbackgroundへ通信することがら
+いろんな状況におけるstateの値を状況ごとに表してみる
 
-- iMessage: order
-- iResponse: sendResponse()を通じて
 
-他の拡張機能から来た依頼: order
-他の拡張機能へ依頼: order
-あらゆる返事：sendResponse()
+modelのベースとなるオブジェクト
 
-background.jsから見て:
+```TypeScript
+// 進行状況を管理するStateの素になる
+interface iProgress {
+    isContentScriptInjected: boolean;
+    isCaptureSubtitleInjected: boolean;
+    isControllerInjected: boolean;
+    capturing: boolean;
+    captured: boolean;
+    restructured: boolean;
+};
 
-- orderが来る
-- message handlerが振り分ける
-- handlerはorder内容に応じて...
-  state
-  予め用意されているタスク
-  ...と比較して何をすればいいのか決める
+// 拡張機能を展開するタブの
+// chrome.tabs.Tab.idを管理するstateのもと
+interface iTabId {
+    id: number;
+}
 
-たとえばorder.runならば:
+// 拡張機能を展開したタブの
+// URLを管理するstateのもと
+interface iContentUrl {
+    url: string;
+}
 
-```JavaScript
-If(!state<iProgress>.isContentScriptInjected && order === orderNames.run)
+// 取得した字幕データを管理するstateの素
+interface iSubtitles {
+    subtitles: subtitle_piece[];
+}
 
-then inject contentScript.js
+// 初期値(chrome.runtime.onInstalledで生成されたときの初期値)
+
+const progress: iProgress = {
+    isContentScriptInjected: false,
+    isCaptureSubtitleInjected: false,
+    isControllerInjected: false,
+    capturing: false,
+    captured: false,
+    restructured: false
+};
+
+const tabId: iTabId = {
+    id: null
+};
+
+const contentUrl: iContentUrl = {
+    url: null
+};
+
+const subtitles: iSubtitles = {
+    subtitles: null
+};
+
+
 ```
 
-contentScript.jsが正常にinject出来たとしてそれが確認出来たら
-stateを更新して
+1. case: popup opened:
 
-```JavaScript
-state<iProgress>.isContentScriptInjected = true;
-then notify state_updater
+popupが開かれただけならば、拡張機能を展開するとは限らないので
+何も変更しない
 
+2. case: Just RUN clicked
+
+```TypeScript
+
+const progress: iProgress = {
+    isContentScriptInjected: false,
+    isCaptureSubtitleInjected: false,
+    isControllerInjected: false,
+    capturing: false,
+    captured: false,
+    restructured: false
+};
+
+const tabId: iTabId = {
+    id: null
+};
+
+const contentUrl: iContentUrl = {
+    url: null
+};
+
+const subtitles: iSubtitles = {
+    subtitles: null
+};
 
 ```
 
- 
-...どつぼにはまっているなぁ
-patterns.devのairbnb模倣をやってみる
-mvcのヒントがあるかも
+RUNされたときのURLが正しかったとして、
+URLとtabIdが保存される
+progressに変化ないなこのままだと
+
+```TypeScript
+
+const progress: iProgress = {
+    isContentScriptInjected: false,
+    isCaptureSubtitleInjected: false,
+    isControllerInjected: false,
+    capturing: false,
+    captured: false,
+    restructured: false
+};
+
+// updated
+const tabId: iTabId = {
+    id: 1
+};
+
+// updated
+const contentUrl: iContentUrl = {
+    url: "https://www.udemy.com/course/..."
+};
+
+const subtitles: iSubtitles = {
+    subtitles: null
+};
+
+```
+
+contentScript.jsがinjectされた
+
+
+```TypeScript
+
+const progress: iProgress = {
+    isContentScriptInjected: true,
+    isCaptureSubtitleInjected: false,
+    isControllerInjected: false,
+    capturing: false,
+    captured: false,
+    restructured: false
+};
+
+const tabId: iTabId = {
+    id: 1
+};
+
+const contentUrl: iContentUrl = {
+    url: "https://www.udemy.com/course/..."
+};
+
+const subtitles: iSubtitles = {
+    subtitles: null
+};
+
+```
+

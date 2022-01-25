@@ -142,5 +142,14 @@ notify はひとたび呼び出すと、すべての observer に一気に通知
 
 - pub/sub との違いは？
 
-#### ちょっといじってみる
+#### 作成中のものに当てはめてみる
+
+
+stateの値が変更されたらどうなればいいか:
+
+- validation
+- chrome.storage.localを更新する
+- 変更内容をobserverへnotifyする
+
+
 
