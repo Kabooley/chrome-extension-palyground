@@ -14,18 +14,18 @@ MVC と DDD の設計思想を取り入れたい
 
 @popup
 
-- popup を開く
-- popup 上の RUN ボタンを押す
+-   popup を開く
+-   popup 上の RUN ボタンを押す
 
 @Udemy-page
 
-- ブラウザのサイズを変更する
-- 字幕を変更する
-- トランスクリプトを ON/OFF にする
-- URL が変わる(動画が切り替わる)
-- tab を閉じる（ブラウザを閉じる）
+-   ブラウザのサイズを変更する
+-   字幕を変更する
+-   トランスクリプトを ON/OFF にする
+-   URL が変わる(動画が切り替わる)
+-   tab を閉じる（ブラウザを閉じる）
 
-- ExTranscript を閉じる
+-   ExTranscript を閉じる
 
 #### 一般的な処理の流れ
 
@@ -68,9 +68,9 @@ microsoft の DDD の説明によれば
 
 > オブジェクト指向におけるクラスは、
 >
-> - インスタンス変数
-> - インスタンス変数 を正常に制御するメソッド
->   から構成されるのが基本です
+> -   インスタンス変数
+> -   インスタンス変数 を正常に制御するメソッド
+>     から構成されるのが基本です
 
 つまり単一責任とはある変数を変更できるクラスは一つだけで
 そのクラスが負う責任は変数の正常動作にたいして責任を負うのである
@@ -267,9 +267,9 @@ OrderManager インスタンスの execute()にはこのコンストラクタ関
 
 メリット
 
-- クラスはメソッドを持つ必要がなくなる
-- 実際に実行する関数は呼び出し側のクラスのプロパティと共通の名前をもつことでプロパティを変更できる
-- 呼び出し側の都合でクラスに好きなメソッドを実行させることができる
+-   クラスはメソッドを持つ必要がなくなる
+-   実際に実行する関数は呼び出し側のクラスのプロパティと共通の名前をもつことでプロパティを変更できる
+-   呼び出し側の都合でクラスに好きなメソッドを実行させることができる
 
 これを応用して Queue クラスを作ってみる
 
@@ -500,8 +500,8 @@ State に何か新しい機能を付けるのは面倒なので
 検討１：proxy API
 
 proxy を導入するにしても、何に対して？
-State._state の場合、State が proxy インスタンスを持つことになる
-(_state は private なので)
+State.\_state の場合、State が proxy インスタンスを持つことになる
+(\_state は private なので)
 
 model
 
@@ -548,8 +548,8 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 中目標として MVC モデルの導入、DDD 設計思想に近づけたい
 そのために必要なこととして
 
-- order にたいして処理に必要な関数を Queue につめて Queue を実行するシステムにする
-- state の変更内容に応じて notify するシステムにする
+-   order にたいして処理に必要な関数を Queue につめて Queue を実行するシステムにする
+-   state の変更内容に応じて notify するシステムにする
 
 ##### order と Queue の実装に関して
 
@@ -559,17 +559,17 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 
 前提：必要な state の生成は chrome.runtime.onInstalled で済んでいる
 
-- メッセージ受信機能がメッセージハンドラを呼び出す
-- メッセージハンドラはメッセージ内容を読んで、必要な処理（関数）を Queue へつめる
-- Queue を queue 実行関数へ渡す
-- Queue の関数が一つずつ実行される
-- 実行するにつれて必要な state の変更も発生する
-- すべての処理が無事に済んだら success, うまくいかなかったら failure を返す
+-   メッセージ受信機能がメッセージハンドラを呼び出す
+-   メッセージハンドラはメッセージ内容を読んで、必要な処理（関数）を Queue へつめる
+-   Queue を queue 実行関数へ渡す
+-   Queue の関数が一つずつ実行される
+-   実行するにつれて必要な state の変更も発生する
+-   すべての処理が無事に済んだら success, うまくいかなかったら failure を返す
 
 実装しようとしたときにぶち当たった障害
 
-- Queue につめる関数を一般化したいけれど、戻り値の扱いが異なるから一般化できない
-  すくなくとも今の自分の腕では...
+-   Queue につめる関数を一般化したいけれど、戻り値の扱いが異なるから一般化できない
+    すくなくとも今の自分の腕では...
 
 ##### state observer の実装に関して
 
@@ -659,7 +659,7 @@ class State<TYPE extends object> {
     };
 
     getState(): TYPE {
-        
+
     }
 }
 // usage
@@ -679,3 +679,495 @@ const handler = {
 
 }
 ```
+
+## 1/25: もう一度処理についておさらい
+
+ユーザ操作：
+
+-   [popup](#popupが開かれる)
+-   [popup](#RUNが押される)
+-   [ブラウザ] ウィンドウのサイズを変更する
+-   [ブラウザ] 字幕の言語を変更する
+-   [ブラウザ] (公式の)トランスクリプトを ON または OFF にする
+    一度拡張機能を実行済ならこれに合わせて閉じる、再度開かれたら開く
+-   [ブラウザ](#URLが変わる(動画が切り替わる))
+-   [ブラウザ] タブを閉じる
+-   [ExTranscript] ExTranscript を閉じる
+
+[設計に関する考察](#設計に関する考察)
+
+#### popup が開かれる
+
+前提：chrome.runtime.sendMessage は sendResponse が返されることが前提である
+
+拡張機能が ON になってから popup を開くと、mount 時の useEffect が発動する
+それ以降の popup の開閉は毎回発火する useEffect が発動することになる
+
+```TypeScript
+// popup.tsx
+
+const Popup = (): JSX.Element => {
+  // popupの初回呼び出しが済んでいるかどうか
+  const [active, setActive] = useState<boolean>(false);
+  // RUNボタンを押して、ExTranscriptが挿入されるまでの間はtrue
+  const [loading, setLoading] = useState<boolean>(false);
+  // ExTranscriptが挿入完了したらtrue
+  const [complete, setComplete] = useState<boolean>(false);
+  // popupが表示されたページがUdemyの講義ページならばtrue
+  const [matchedPage, setMatchedPage] = useState<boolean>(false);
+
+  useEffect(() => {
+    console.log("[popup] Set onMessage listener");
+    chrome.runtime.onMessage.addListener(messageHandler);
+    chrome.runtime.sendMessage({
+      from: extensionNames.popup,
+      to: extensionNames.background,
+      order: [orderNames.isUrlCorrect]
+    })
+      .then((result) => {
+        console.log(result);
+        setMatchedPage(result);
+      })
+      .catch((err) => console.error(err));
+
+    return () => {
+      console.log("[popup] Removed onMessage listener");
+      chrome.runtime.onMessage.removeListener(messageHandler);
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log("Is this page correct?");
+    chrome.runtime.sendMessage({
+      from: extensionNames.popup,
+      to: extensionNames.background,
+      order: [orderNames.isUrlCorrect]
+    })
+      .then((result) => {
+        console.log(result);
+        setMatchedPage(result);
+      })
+      .catch((err) => console.error(err));
+  });
+
+  const buttonHandler = (): void => {
+    console.log("[popup] RUN");
+    chrome.runtime.sendMessage(messageTemplates.run);
+  };
+
+  const messageHandler = (
+    message: iMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response: iResponse) => void
+  ) => {
+    if (message.to !== extensionNames.popup) return;
+    const { order, ...rest } = message;
+    //
+  };
+
+  return (
+    // ...
+  );
+};
+
+// ...
+```
+
+```TypeScript
+// background.ts
+
+const popupMessageHandler = async (m: messageTemplate): Promise<void> => {
+  try {
+    console.log("...message from POPUP");
+    const { message, sender, sendResponse } = m;
+    const { order, ...rest } = message;
+    const refStatus: State<iStatus> = stateList.caller<iStatus>(
+      nameOfState.status
+    );
+    if (order && order.length) {
+      if(order.includes(orderNames.isUrlCorrect)){
+        // URLが正しいのかチェックして判定結果をbooleanで返す
+        //
+        // urlがただしくてもこの時点ではtabIdを保存しない
+        // このタブで必ず拡張機能を実行するとは限らないので
+        // なので純粋にboolean値を返すだけ
+        // StateにtabIdは保存しない
+        //
+        // 処理内容
+        // ほしい情報はすべてsenderに含まれている
+        // url, tabId
+        // なのでまじでURLを判定するだけ
+        const pattern = /https:\/\/www.udemy.com\/course\/*/gm;
+        const result: RegExpMatchArray = sender.url.match(pattern);
+        sendResponse({url: true, complete: true})
+
+      }
+    }
+    if (sendResponse) sendResponse({ complete: true });
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+```
+
+処理順序:
+
+-   [poup] マウント時または毎度の useEffect()で background へ`order:[orderNames.isUrlCorrect]`を送信する
+
+-   [background] メッセージハンドラが受信してメッセージに応じた処理関数へ移動する
+-   [background] メッセージに含まれる sender から URL を取得する
+-   [background] url を matchURL と比較して比較結果を sendResponse()で返す
+    `{complete: true, url: true}`
+-   [poup] sendResponse の結果に応じて state を変更し、popup の表示内容を変える
+
+popup の state について:
+
+-   `matchedPage`: popup を開いたときの tab の URL が正しいかについての状態を管理する state
+
+#### RUN が押される
+
+前提：
+
+-   RUN ボタンは`matchedPage`が true の時に有効になるとする
+-   sendResponse()で返事が返されることを前提とする
+-   sendResponse()はエラーが返されることも想定する
+
+エラーの可能性箇条書き：
+
+-   字幕が英語でない、トランスクリプトが開かれていない
+    alert で字幕を英語にするように、またはトランスクリプトを開くように促す
+
+-   処理途中で字幕の言語を変えた、トランスクリプトを閉じた
+    alert で失敗を表示し、英語とトランスクリプトを戻して再度実行してもらうように促す
+
+-   それ以外のエラー
+    エラーだからどうしようもないよ
+
+つまり大別して、成功、失敗（アラート）、エラー
+成功：`complete: true`
+それ以外: `complete: false`
+
+RUN ボタンが押されたら、background へ`order: [orderNames.run]`を送信する
+
+```TypeScript
+// popup.tsx
+
+const Popup = (): JSX.Element => {
+  // RUNボタンを押して、ExTranscriptが挿入されるまでの間はtrue
+  const [loading, setLoading] = useState<boolean>(false);
+  // ExTranscriptが挿入完了したらtrue
+  const [complete, setComplete] = useState<boolean>(false);
+  // popupが表示されたページがUdemyの講義ページならばtrue
+  const [matchedPage, setMatchedPage] = useState<boolean>(false);
+
+
+  const buttonHandler = (): void => {
+    console.log("[popup] RUN");
+    chrome.runtime.sendMessage({
+      from: extensionNames.popup,
+      to: extensionNames.background,
+      order: [orderNames.run]
+    })
+    .then(res => {
+      setComplete(res.success)
+    })
+  };
+
+  return (
+    <div className="container">
+      // ...
+      <button onClick={runButtonHandler} disabled={!matchedPage}>RUN</button>
+    </div>
+  );
+};
+
+```
+
+```TypeScript
+// background.ts
+
+const popupMessageHandler = async (m: messageTemplate): Promise<void> => {
+  try {
+    console.log("...message from POPUP");
+    const { message, sender, sendResponse } = m;
+    const { order, ...rest } = message;
+    const refStatus: State<iStatus> = stateList.caller<iStatus>(
+      nameOfState.status
+    );
+    if (order && order.length) {
+      if (order.includes(orderNames.run)){
+        // phase 1.
+        // is URL correct?
+        const pattern = /https:\/\/www.udemy.com\/course\/*/gm;
+        const result: RegExpMatchArray = sender.url.match(pattern);
+        if(!result) {
+          sendResponse({complete: true, alert: "Invalid URL. Extension works only in https://... "});
+          return;
+        }
+
+        // tabIdとURLの保存
+        // senderから取得できる
+
+        // phase 2.
+        // inject contentScript.js
+
+        await chrome.scripting.execute({target: { tabId: tabId }, files: ["contentScript.js"]});
+
+        // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...
+
+        const response: iResponse = await sendMessageToTabsPromise({
+          from: extensionNames.background, to: extensionNames.contentScript,
+          order: [orderNames.sendStatus]
+        });
+
+        if(!response.language || !response.transcriptExpanded) {
+          sendResponse({complete: true, alert: "Required subtitle language English and tunr Transcript ON"});
+          return;
+        }
+
+        // contentScript.jsからのステータスをstateへ保存
+
+        // phase 3.
+        // inject captureSubtitle.js
+
+        // tabIdはStateから取得したとして
+        await chrome.scripting.execute({target: { tabId: tabId }, files: ["captureSubtitle.js"]});
+
+        // TODO: ここでcontent scriptが展開完了したのを確認したうえで次に行きたいのだが...
+
+        const response: iResponse = await sendMessageToTabsPromise({
+          from: extensionNames.background, to: extensionNames.contentScript,
+          order: [orderNames.sendSubtitles]
+        });
+
+        // response.subtitleを検査(長さがおかしいとか)
+        // いまのところテキトー
+        if(!response.subtitles.length) {
+          sendResponse({comolete: true, error: "Failed to capture subtitle data"});
+          return;
+        }
+
+        // 検査が問題なければstateへ字幕データを保存したとして
+
+        // phase 4.
+        // inject controller.js
+
+        await chrome.scripting.execute({target: { tabId: tabId }, files: ["controller.js"]});
+
+        // TODO: ここでcontent scriptが展開完了したのを確認したうえで次に行きたいのだが...
+
+        const response: iResponse = await sendMessageToTabsPromise({
+          from: extensionNames.background, to: extensionNames.contentScript,
+          order: [orderNames.sendStatus]
+        });
+
+        // 検査：controller.jsがExTranscriptを正常展開できたか
+
+        // 検査結果失敗ならばpopupへ失敗送信、return
+
+        // 成功ならstateを更新
+
+        // すべて正常完了で
+        sendResponse({complete: true, success: true});
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+```
+
+NOTE: 以下の処理チャートは state の更新について考えていない
+
+-- phase 1 --
+URL チェック
+検査結果 ? tabId と URL の保存、次の処理へ : popup へエラーを返す(そもそも無効な URL では RUN ボタンは無効なはずなので)
+
+-- phase 2. --
+
+contentScritp.js の inject
+contentScript.js へステータス送信要求
+contentScript.js からのステータス検査
+検査結果 ? ステータスを保存し次の処理へ : popup へアラート返す
+
+起こりうるエラー：
+css selector がマッチしない(Udemy が selector を変更したとか)
+
+-- phase 3. --
+
+captureSubtitle.js を inject
+captureSubtitle.js へ字幕データ要求
+字幕データを取得、検査（データがおかしくないか）
+検査結果 ? 字幕データを保存し次の処理へ : popup へアラートを返す
+
+起こりうるエラー：
+css selector がマッチしない(Udemy が selector を変更したとか)
+
+-- phase 4. --
+
+controller.js を inject
+controller.js が正常に ExTranscript を展開できたか確認
+正常展開 ? popup へ正常完了の返事 : エラー出力
+
+
+#### URL が変わる(動画が切り替わる)
+
+`chrome.tabs.onUpdated.addListener`で検知する
+
+拡張機能が展開済の時に、URL が変更されたときの挙動をここで制御する
+
+継続条件：
+
+-   拡張機能が未展開であるけど、Udemy 講義ページである
+    なにもしない
+
+-   拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
+    拡張機能をリセットして引き続き展開する
+
+-   拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
+    拡張機能は OFF にする
+
+-   タブが切り替わった
+    何もしない
+
+-   拡張機能が展開されていたタブが閉じられた
+    拡張機能を OFF にする
+
+次の時はどうするか:
+
+-   すでに拡張機能が実行されているときにページのユーザ操作によるリロードがあった
+    変わらず展開したい
+    google 翻訳アプリも変わらず展開しているし
+    OFF になるのは、
+    tab が閉じられたとき、ユーザの操作によって拡張機能上の OFF ボタンが押されたとき
+    拡張機能マネージャでが OFF にされたとき、
+    そのタブで別の Udemy 講義ページ以外に移動したとき
+
+Udemy ページの挙動と chrome.tabs.onUpdated の挙動:
+
+-   リンクをたどって Udemy 講義ページへ移動したとき
+    "loading"は二度以上起こる
+    しかし、URL は同じ(#以下が変わるだけ)
+
+    ...よく考えたらこれ関係ないな...
+
+...以上の挙動と事情がすべて反映されるように条件分岐を設ける
+
+NOTE:
+たとえば RUN がおされて処理の最中にページがリロードされたときの処置はまだ考えていない
+
+```TypeScript
+chrome.tabs.onUpdated.addListener(
+  async (
+    tabId: number,
+    changeInfo: chrome.tabs.TabChangeInfo,
+    Tab: chrome.tabs.Tab
+  ): Promise<void> => {
+    // "https://www.udemy.com/course/*"以外のURLなら無視する
+  const { url, status } = changeInfo;
+  const pattern = /https:\/\/www.udemy.com\/course\/*/gm;
+  const { resturctured } = progressState.getState();
+  const { tabId } = tabIdState.getState();
+  const { url } = contentUrl.getState();
+  // 条件１：
+  // 拡張機能が未展開、changeInfo.statusがloadingでないなら無視する
+  if(changeInfo.status !== "loading" || !restructured) return;
+
+
+  // 条件２：
+  // 拡張機能が展開済だとして、tabIdが展開済のtabId以外に切り替わったなら無視する
+  // return;
+  if(Tab.id !== tabId) return;
+
+
+  // 条件３：
+  // 展開中のtabId && chnageInfo.urlがUdemy講義ページ以外のURLならば
+  // 拡張機能OFF
+  // --> 拡張期のOFFの処理へ
+  if(restructured && Tab.id === tabId) {
+    // おなじURLでのリロードか？
+    if(changedInfo.url === undefined) {
+      // 拡張機能は何もしない
+      return;
+    }
+    else if(!changedInfo.url.match(pattern)) {
+      // Udemy講義ページ以外に移動した
+      // --> 拡張機能OFF処理へ
+    }
+
+  // 条件４：
+  // 展開中のtabIdである && changeInfo.urlが講義ページだけど末尾が変化した(#以下は無視)
+  // 動画が切り替わった判定
+    else if(changeInfo.url.match(pattern) && changeInfo.url !== url){
+      // 動画が切り替わった
+      // --> リセット処理へ
+    }
+  }
+  }
+);
+
+```
+
+##### リセット処理
+
+要確認：
+
+- stateはどのようにリセットすべきか
+- content scriptはinjectされたままなのか
+- content scriptはinjectされたままだとして、ちゃんとリロードされたページのDOMを取得できるのか？
+
+
+##### 拡張機能 OFF 処理
+
+要確認：
+
+- stateはどのようにリセットすべきか
+- content scriptはそのページから除去できるのか
+- 除去できないとしたらどうするか
+
+
+
+#### 設計に関する考察
+
+他の拡張機能からbackgroundへ通信することがら
+
+- iMessage: order
+- iResponse: sendResponse()を通じて
+
+他の拡張機能から来た依頼: order
+他の拡張機能へ依頼: order
+あらゆる返事：sendResponse()
+
+background.jsから見て:
+
+- orderが来る
+- message handlerが振り分ける
+- handlerはorder内容に応じて...
+  state
+  予め用意されているタスク
+  ...と比較して何をすればいいのか決める
+
+たとえばorder.runならば:
+
+```JavaScript
+If(!state<iProgress>.isContentScriptInjected && order === orderNames.run)
+
+then inject contentScript.js
+```
+
+contentScript.jsが正常にinject出来たとしてそれが確認出来たら
+stateを更新して
+
+```JavaScript
+state<iProgress>.isContentScriptInjected = true;
+then notify state_updater
+
+
+```
+
+ 
+...どつぼにはまっているなぁ
+patterns.devのairbnb模倣をやってみる
+mvcのヒントがあるかも
