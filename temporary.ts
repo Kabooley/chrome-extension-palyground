@@ -1,80 +1,45 @@
+// observerはupdateという関数を持つことにするとして
+//
+//
+/*
+    たとえばstateが変更になったら常に通知される状況だとして
+    stateの一覧
+        iProgress: 進行状況を保存しているオブジェクト
+        iPageStatus: Udemy講義ページの状態を保存しているオブジェクト
+        iTabId: 拡張機能を有効にするUdemy講義ページのタブIDを保存しているオブジェクト
+        iSubtitles: 取得した整形字幕データを保存しているオブジェクト
 
-// このままだと型付けがanyだらけだ...
-// 
-class Observable {
-    private _observers: ((param?:any) => any)[];
-    constructor() {
-      this._observers = [];
+    それぞれのプロパティが変更になる場合とは？
+
+    iProgress: {
+        isContentScriptInjected: boolean;   // contentScriptがインジェクトされていたらtrue
+        isCaptureSubtitleInjected: boolean;  // captureSubtitleはインジェクトされていたらtrue
+        isControllerInjected: boolean;
+        capturing: boolean;  // 要らないかも...
+        captured: boolean;  // 字幕データを取得で来たらtrue
+        restructured: boolean;  // ExTranscriptが展開で来たらtrue
     }
-  
-    register(func: (param?:any) => any): void {
-      this._observers.push(func);
+
+    iPageStatus: {
+        isEnglish: boolean;
+        isOpended: boolean;
+        isWindowTooSmall: boolean;
     }
-  
-    unregister(func: (param?:any) => any): void {
-      this._observers = this._observers.filter(observer => observer !== func);
-    }
-  
-    notify(data: any) {
-      this._observers.forEach(observer => observer(data));
-    }
-  };
-  
-  interface iProgress {
-    isScriptInjected: boolean;
-    isSubtitleCapturing: boolean;
-    isSubtitleCaptured: boolean;
-    isTranscriptRestructured: boolean;
-  };
-  
-  const progressBase: iProgress = {
-    isScriptInjected: false,
-    isSubtitleCapturing: false,
-    isSubtitleCaptured: false,
-    isTranscriptRestructured: false
-  };
-  
-  // すごく一時的な処理だけど
-  // obseervableのインスタンスをいったん作る
-  const observable = new Observable();
-  
-  const handler: ProxyHandler<iProgress> = {
-    set: function(target:iProgress, property: keyof iProgress, value: boolean, receiver: any) {
-      // 変更をnotifyする
-      observable.notify({prop: property, value: value});
-      return Reflect.set(target, property, value, receiver);
-    },
-    get: function(target:iProgress, property: keyof iProgress, receiver: any) {
-      // Reflect.getは参照を返す
-      return Reflect.get(target, property, receiver);
-    }
-  }
-  
-  const proxyProgress = new Proxy(progressBase, handler);
-  
-  // NOTE:
-  // proxy.getは参照を返している
-  proxyProgress.isScriptInjected = true;
-  const refProxyProgress = proxyProgress;
-  console.log(refProxyProgress);
-  refProxyProgress.isSubtitleCaptured = true;
-  // isSubttileCaptured: trueだった
-  console.log(proxyProgress);
-  
-  
-  class State<TYPE extends object> {
-    private _state: TYPE;
-    private _proxy: TYPE;
-    constructor(baseObject: TYPE, handler: ProxyHandler<TYPE>) {
-      this._state = baseObject;
-      this._proxy = new Proxy(this._state, handler);
-    };
-  
-    setState(prop:{[Property in keyof TYPE]?: TYPE[Property]}): void {
-      // いったんここでdeep copyをとるとして
-      this._proxy = {
-        this._proxy, ...prop
-      }
-    }
-  
-  }
+*/
+
+interface iProgress {
+    isContentScriptInjected: boolean; // contentScriptがインジェクトされていたらtrue
+    isCaptureSubtitleInjected: boolean; // captureSubtitleはインジェクトされていたらtrue
+    isControllerInjected: boolean;
+    capturing: boolean; // 要らないかも...
+    captured: boolean; // 字幕データを取得で来たらtrue
+    restructured: boolean; // ExTranscriptが展開で来たらtrue
+}
+
+// かならずstate全てを受け取る
+const domain = (
+    // 新しくなったプロパティだけ送信される
+    newState: { [Property in keyof iProgress]?: iProgress[Property] },
+    // 更新前のプロパティはすべて送信される
+    prevState: { [Property in keyof iProgress]: iProgress[Property] }
+) => {};
