@@ -141,3 +141,6 @@ notify はひとたび呼び出すと、すべての observer に一気に通知
     addEventListenerはおなじみのイベントが起こったときに発火するが、observer-patternではnotifyの呼び出しは任意である
 
 - pub/sub との違いは？
+
+#### ちょっといじってみる
+
