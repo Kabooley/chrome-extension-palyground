@@ -573,114 +573,239 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 
 ##### state observer の実装に関して
 
+
+結論：proxyはいらない。既存のStateにobservableを持たせればいい
+
 ```TypeScript
-// iProgressのstateで扱うオブジェクト
-// 初期値
-// progressStateのオブジェクトへのアクセスはプロキシ経由になる
-const progressState: iProgress = {
-  contentScriptInjected: false,
-    captureSubtitleInjected: false,
-    controllerInjected: false,
-    capturing: false,
-    captured: false,
-    stored: false,
-    restructured: false
+/*
+  確認した成果：
+  - proxyはなんでもできる。でも型付けが難しい
+  - proxyはspread syntaxに対応していない
+  - proxyは、他のオブジェクト同様参照を扱う
+
+
+
+*/ 
+const deepCopier = <T>(data: T): T => {
+  return JSON.parse(JSON.stringify(data));
 };
 
-const progressHandler = {
-  set: function (target: iProgress, property: keyof iProgress, receiver) {
-    // local storageへ保存
-    // notifyerの実行
-    return Reflect.set(...arguments);
-  },
-  get: function (target: iProgress, property: keyof iProgress, receiver) {
-    return Reflect.get(...arguments);
-  },
 
-}
-
-
-const progressProxy = new Proxy(
-  progressState,
-  progressHandler
-);
-
-// notifyというか、stateの変更を検知してstateの値から何を通知すべきなのか
-// 判断してくれるアルゴリズムの実装が必要
+// このままだと型付けがanyだらけだ...
 //
-//
-```
-
-##### 今できること
-
-とにもかくにも便利機能の実装はおいておいて
-ksks ハードコーディングでいいから作ってみる
-
-order ごとに task が集まった関数を作る
-
-...なんかつくっててつくづくやっぱり state の変更検知機能ほしいなぁと思う
-ハードコーディングはあほみたいな条件分岐が発生するからダメだね
-
-```TypeScript
 class Observable {
-    private _observers;
-    constructor() {
-        this._observers = [];
-    }
+  private _observers: ((param?: any) => any)[];
+  constructor() {
+    this._observers = [];
+  }
 
-    subscribe(func) {
-        this.observers.push(func);
-    }
+  register(func: (param?: any) => any): void {
+    this._observers.push(func);
+  }
 
-    unsubscribe(func) {
-        this.observers = this.observers.filter(observer => observer !== func);
-    }
-        // すべてのobserverへ、observer.observer(data)を実行する
-    notify(data) {
-        this.observers.forEach(observer => observer(data));
-    }
+  unregister(func: (param?: any) => any): void {
+    this._observers = this._observers.filter((observer) => observer !== func);
+  }
+
+  notify(data: any) {
+    this._observers.forEach((observer) => observer(data));
+  }
 }
 
 class State<TYPE extends object> {
-    private _state: TYPE;
-    private _proxy: Proxy<TYPE>;
-    private _localStorage: LocalStorage<TYPE>;
-    private _keyOfStorage: string;
-    constructor(key: string, handler) {
-        this._keyOfStorage = key;
-        this._proxy = new Proxy(this._state, handler);
+  private _state: TYPE;
+  private _proxy: TYPE;
+  constructor(baseObject: TYPE, handler: ProxyHandler<TYPE>) {
+    this._state = baseObject;
+    this._proxy = new Proxy(this._state, handler);
+  }
+
+  setState(prop: { [Property in keyof TYPE]?: TYPE[Property] }): void {
+    // いったんここでdeep copyをとるとして...
+    // 
+    // NOTE: spread構文だとproxyのsetハンドラは反応しないらしい...
+    // this._proxy = {
+    //   ...this._proxy,
+    //   ...prop,
+    // };
+    
+    // 必ず浅いコピーを作る
+    const temporary = {...prop};
+    Object.keys(temporary).forEach((p, index) => {
+      if(p in this._proxy) this._proxy[p] = prop[p];
+    })
+  }
+
+  getState(prop?: string): TYPE {
+    // かならずコピーを渡すこと
+    if(prop && prop in this._proxy){
+      return this._proxy[prop];
     }
-
-    // prop: {contentScriptInjected: true, restructured: false}
-    setState(prop: {[Property in keyof TYPE]: TYPE[Property]}):void {
-        Object.keys(prop).forEach(p => {
-            this._proxy[p] = prop[p];
-        })
-    };
-
-    getState(): TYPE {
-
-    }
+    return deepCopier<TYPE>(this._proxy);
+  }
 }
-// usage
-const progress: State<iProgress> = new State<iProgress>("keyofprogress__", handler);
-progress.setState({contentScriptInjected: true});
 
-// 何を監視したいかといえばState._stateである
-const handler = {
-    set: function (target: iProgress, property: keyof iProgress, receiver) {
-    // local storageへ保存
-    // notifyerの実行
-    return Reflect.set(...arguments);
-  },
-  get: function (target: iProgress, property: keyof iProgress, receiver) {
-    return Reflect.get(...arguments);
-  },
-
+interface iProgress {
+  isScriptInjected: boolean;
+  isSubtitleCapturing: boolean;
+  isSubtitleCaptured: boolean;
+  isTranscriptRestructured: boolean;
 }
+
+const progressBase: iProgress = {
+  isScriptInjected: false,
+  isSubtitleCapturing: false,
+  isSubtitleCaptured: false,
+  isTranscriptRestructured: false,
+};
+
+// すごく一時的な処理だけど
+// obseervableのインスタンスをいったん作る
+const observable = new Observable();
+const observer = (props) => {
+  console.log("[observer];");
+  console.log(props);
+};
+observable.register(observer);
+
+// handlerにはobservableをわたせられれば
+// あとは再利用可能なオブジェクトになるはず
+const handler: ProxyHandler<iProgress> = {
+  set: function (
+    target: iProgress,
+    property: keyof iProgress,
+    value: boolean,
+    receiver: any
+  ) {
+    // NOTE: targetはnotfyする時点で変更が反映されてしまうらしいので
+    // 一旦コピーをとってこれをprevStateとする
+    const temp = {...target};
+    // 変更をnotifyする
+    console.log("[proxy] set");
+    observable.notify({ prop: property, value: value, prevState: temp });
+    return Reflect.set(target, property, value, receiver);
+  },
+  get: function (target: iProgress, property: keyof iProgress, receiver: any) {
+    // Reflect.getは参照を返す
+    console.log("[proxy] get");
+    return Reflect.get(target, property, receiver);
+  },
+};
+
+
+// // NOTE: proxy.getは参照を返している
+// const proxyProgress = new Proxy(progressBase, handler);
+// proxyProgress.isScriptInjected = true;
+// const refProxyProgress = proxyProgress;
+// console.log(refProxyProgress);
+// refProxyProgress.isSubtitleCaptured = true;
+// // isSubttileCaptured: trueだった
+// console.log(proxyProgress);
+
+// THIS WORKED
+// なんだかhandlerともとのオブジェクトをそのまま渡すくらいなら
+// Stateなんてclassいらないのでは?
+const state_progress: State<iProgress> = new State<iProgress>(
+  progressBase,
+  handler
+);
+state_progress.setState({
+  isScriptInjected: true,
+  isSubtitleCaptured: true,
+});
+
+console.log("current proxy:");
+console.log(state_progress.getState());
+
+state_progress.setState({
+  isTranscriptRestructured: true,
+  isSubtitleCaptured: false,
+});
+
+
+
+console.log("current proxy:");
+console.log(state_progress.getState());
+
+// いまんところ
+console.log(state_progress.getState("isScriptInjected"));
+
+
+// おさらい
+// シャローコピーはspread構文でおｋ
+const dummy = {
+  name: "Jonathan",
+  age: 16,
+  country: "USA"
+};
+
+const tmp = {...dummy};
+tmp.name = "JOJO";
+console.log(dummy)
+console.log(tmp)
+
+// // https://stackoverflow.com/questions/32308370/what-is-the-syntax-for-typescript-arrow-functions-with-generics
+// const generateProxyHandler = <TYPE extends object, K extends keyof TYPE>(observable: Observable): ProxyHandler<TYPE> => {
+//   return {
+//     set: function(target:TYPE, property: string | number | symbol, value: any, receiver?: any): boolean {
+//       if(target[property] === undefined)return false;
+//       // 変更をnotifyする
+//       observable.notify({prop: property, value: value, prevState: target});
+//       return Reflect.set(target, property, value, receiver);
+//     },
+//     get: function(target:TYPE, property: PropertyKey, receiver?: any): boolean {
+//       // Reflect.getは参照を返す
+//       return Reflect.get(target, property, receiver);
+//     }
+//   }
+// };
+
+// // const observableForProgress = new Observable();
+// // const progressHandler2 = new generateProxyHandler<iProgress>(observableForProgress);
+
+// // これだとstateインスタンスをいくつでも作れてしまうことに注意
+// class generateState<TYPE extends object> {
+//   public stateInstance: State<TYPE>;
+//   private _observableInstance: Observable;
+//   private _proxyHandler: ProxyHandler<TYPE>;
+//   constructor(base: TYPE, observable: Observable) {
+//     this._observableInstance = observable;
+//     this._proxyHandler = new generateProxyHandler<TYPE>(observable);
+//     this.stateInstance = new State<TYPE>(base, this._proxyHandler);
+//   }
+
+//   getInstance(): State<TYPE> {
+//     return this.stateInstance;
+//   }
+// }
+
+// const progressState2 = new generateState(progressBase, new Observable());
+
+// // Proxyについて勉強してstateのつくりを見直すこととする
+// // Proxyについて詳しい(TypeScriptはない)
+// // https://javascript.info/proxy
+
 ```
 
-## 1/25: もう一度処理についておさらい
+作ってみて思ったのが
+Proxyは導入してもいいけれど
+型をつけるのがむずかしく、
+結構ハードコーディングの可能性が出てくるのと、
+そもそも要らないのではという話
+
+使い方が悪いかもだけど
+notifyするためだけに使おうとおもっていじっていたが、
+結局順序としてsetstateしてからproxyに移るので
+じゃあsetstateで完結させればいいじゃんとなった
+
+機能がダダ被りなので、
+stateを作るかproxyを使うかどちらかの話になってくる
+
+notifyはsetstate内で呼出せばいいだけなので
+結局proxy入らないねって話になる
+
+
+## 1/25: 処理についておさらい
 
 ユーザ操作：
 
@@ -1131,6 +1256,188 @@ chrome.tabs.onUpdated.addListener(
 - content script は inject されたままなのか
 - content script は inject されたままだとして、ちゃんとリロードされたページの DOM を取得できるのか？
 
+動画が切り替わったら
+
+- 各content scriptのイベントリスナをremoveして再度セットする必要
+- 各content scriptのイベントリスナリセットを通知、完了報告管理
+- `state<iSubtitles>.subtitles: null`に
+- `state<iTabId>`はそのまま
+- `state<iContentUrl>`はURLが変わったのでその反映だけ
+- `state<iProgress>`は...
+- ExTranscriptは中身をいったん空にする(空にして表示する loading circleでも表示するかい？)
+
+進行状況state：
+
+```TypeScript
+
+// ベース
+
+interface iProgress {
+  isContentScriptInjected: boolean;
+  isCaptureSubtitleInjected: boolean;
+  isControllerInjected: boolean;
+  isSubtitleCapturing: boolean;
+  isSubtitleCaptured: boolean;
+  isTranscriptRestructured: boolean;
+
+}
+
+const progressBase: iProgress = {
+  isContentScriptInjected: false,
+  isCaptureSubtitleInjected: false,
+  isControllerInjected: false,
+  isSubtitleCapturing: false,
+  isSubtitleCaptured: false,
+  isTranscriptRestructured: false
+};
+
+// 動画の切り替えでリセットは...
+const progressBase: iProgress = {
+  // 各 content script はinjectされたままのでtrueのまま
+  isContentScriptInjected: true,
+  isCaptureSubtitleInjected: true,
+  isControllerInjected: true,
+  // 
+  // 字幕データは取り直しになるのでfalseだけれど...
+  // 
+  isSubtitleCapturing: false,
+  isSubtitleCaptured: false,
+  // 
+  // 動画の切り替わりで、中身は空になるけれど、「展開」はしているからtrue
+  // 
+  isTranscriptRestructured: true
+};
+```
+
+この進行状況stateだと矛盾が起こりそうだなぁ...
+
+リセットタスク：
+
+
+- 各content scriptのイベントリスナをremoveして再度セットする必要
+- 各content scriptのイベントリスナリセットを通知、完了報告管理
+- `state<iSubtitles>.subtitles: null`に
+- `state<iTabId>`はそのまま
+- `state<iContentUrl>`はURLが変わったのでその反映だけ
+- `state<iProgress>`は...
+- ExTranscriptは中身をいったん空にする(空にして表示する loading circleでも表示するかい？)
+
+- [background] contentScript.jsへリセット通知
+- [background] captureSubtitle.jsへリセット通知
+- [background] controller.jsへリセット通知
+- [background] 各content scriptから`{success: boolean;}`の返事取得
+- [background] 全てのcontent script sucessがtrueだったらstateを更新
+- [background] 字幕取得処理を実施
+- [background] 
+
+
+- [contentScript] toggleボタンの要素は変化しないのでリセット不要
+- [contentScript] ccPopupButton要素も変化しないのでリセット不要
+  結果、contentScriptはリセット不要でした...
+
+- [captureSubtitle] stateのリセット
+- [captureSubtitle] 要素へのリスナはないのでリスナのリセット不要
+- [captureSubtitle] 毎度関数の実行時にすべてDOMを取得しなおすのでリセット不要
+- [captureSubtitle] 実行関数をサイド呼出せばいいだけっぽい
+- [captureSubtitle] 処理完了したらbackgroundへ字幕データを送信する
+
+- [controller] stateは...
+    _state: iControllerState 不要
+    _subtitles リセット
+    _highlight リセット
+    _ExHighlight リセット
+    _indexList リセット
+
+
+```TypeScript
+// background.ts
+// 
+// chrome.tabs.onUpdated.addListener()より...
+
+const resetHandler = async (): Promise<void> => {
+  try {
+    // reset開始...
+    // 
+    // 各content scriptへリセット通知、すべて成功ならエラーがスローされない
+    // reset orderというか初期化しなおしだなただしくは
+    await resetOrderHandler();
+    // stateを更新する
+    // 更新完了したとして
+    // ページのステータスを調べて問題なければ
+    // 字幕取得
+    const isSubtitleCaught: iResponse = await sendMessageToTabsPromise({
+      from: extensionNames.background,
+      to: extensionNames.captureSubtitles,
+      order: [orderNames.sendSubtitle]
+    });
+    // 字幕データをstateに保存できたとして
+    // controllerへ字幕データ: subtitles を送信
+    const isRestructured: iResponse = await sendMessageToTabsPromise({
+      from: extensionNames.background,
+      to: extensionNames.controller,
+      subtitles: subtitles
+    });
+    if(isRestructured.success) {
+      // reset完了
+      // stateを更新する
+    }
+    else {
+      throw new Error("Error: Failed to restructure ExTranscript after sent subtitles data");
+    }
+  }
+  catch(err) {
+    console.error(err.message);
+  }
+}
+
+// iResponse.response: {
+//   success: boolean;
+//   failureReason: string;
+// }を取得する
+const resetOrderHandler = async(): Promise<void> => {
+  const captureSubtitle = sendMessageToTabsPromise({
+    from: extensionNames.background,
+    to: extensionNames.captureSubtitles,
+    order: [orderNames.reset]
+  });
+  const controller = sendMessageToTabsPromise({
+    from: extensionNames.background,
+    to: extensionNames.controller,
+    order: [orderNames.reset]
+  });
+  try {
+    const results: iResponse[] = await Promise.all([captureSubtitle, controller]);
+    const failures: string[] = results.filter(r => {
+      if(!r.success) return r.failureReason;
+    });
+    if(failure.length) {
+      throw new Error(`Failed to reset content script. ${failures.join(" ")}`);
+    }
+  }
+  catch(err) {
+    console.error(err.message);
+  }
+}
+```
+
+```TypeScript
+// constants.ts
+
+export const orderNames = {
+  // ...
+  reset: "reset",
+} as const;
+
+export interface iResponse {
+  // これはmessage passingのsendResponseで必須のプロパティ
+  // メッセージの返事を正常に送信することを示す
+  complete?: boolean;
+  // orderの処理が正常に完了したことを示す
+  success?: boolean;
+  failureReason?: string;
+}
+```
+
 ##### 拡張機能 OFF 処理
 
 要確認：
@@ -1141,153 +1448,6 @@ chrome.tabs.onUpdated.addListener(
 
 #### 設計に関する考察
 
-いろんな状況におけるstateの値を状況ごとに表してみる
 
-
-modelのベースとなるオブジェクト
-
-```TypeScript
-// 進行状況を管理するStateの素になる
-interface iProgress {
-    isContentScriptInjected: boolean;
-    isCaptureSubtitleInjected: boolean;
-    isControllerInjected: boolean;
-    capturing: boolean;
-    captured: boolean;
-    restructured: boolean;
-};
-
-// 拡張機能を展開するタブの
-// chrome.tabs.Tab.idを管理するstateのもと
-interface iTabId {
-    id: number;
-}
-
-// 拡張機能を展開したタブの
-// URLを管理するstateのもと
-interface iContentUrl {
-    url: string;
-}
-
-// 取得した字幕データを管理するstateの素
-interface iSubtitles {
-    subtitles: subtitle_piece[];
-}
-
-// 初期値(chrome.runtime.onInstalledで生成されたときの初期値)
-
-const progress: iProgress = {
-    isContentScriptInjected: false,
-    isCaptureSubtitleInjected: false,
-    isControllerInjected: false,
-    capturing: false,
-    captured: false,
-    restructured: false
-};
-
-const tabId: iTabId = {
-    id: null
-};
-
-const contentUrl: iContentUrl = {
-    url: null
-};
-
-const subtitles: iSubtitles = {
-    subtitles: null
-};
-
-
-```
-
-1. case: popup opened:
-
-popupが開かれただけならば、拡張機能を展開するとは限らないので
-何も変更しない
-
-2. case: Just RUN clicked
-
-```TypeScript
-
-const progress: iProgress = {
-    isContentScriptInjected: false,
-    isCaptureSubtitleInjected: false,
-    isControllerInjected: false,
-    capturing: false,
-    captured: false,
-    restructured: false
-};
-
-const tabId: iTabId = {
-    id: null
-};
-
-const contentUrl: iContentUrl = {
-    url: null
-};
-
-const subtitles: iSubtitles = {
-    subtitles: null
-};
-
-```
-
-RUNされたときのURLが正しかったとして、
-URLとtabIdが保存される
-progressに変化ないなこのままだと
-
-```TypeScript
-
-const progress: iProgress = {
-    isContentScriptInjected: false,
-    isCaptureSubtitleInjected: false,
-    isControllerInjected: false,
-    capturing: false,
-    captured: false,
-    restructured: false
-};
-
-// updated
-const tabId: iTabId = {
-    id: 1
-};
-
-// updated
-const contentUrl: iContentUrl = {
-    url: "https://www.udemy.com/course/..."
-};
-
-const subtitles: iSubtitles = {
-    subtitles: null
-};
-
-```
-
-contentScript.jsがinjectされた
-
-
-```TypeScript
-
-const progress: iProgress = {
-    isContentScriptInjected: true,
-    isCaptureSubtitleInjected: false,
-    isControllerInjected: false,
-    capturing: false,
-    captured: false,
-    restructured: false
-};
-
-const tabId: iTabId = {
-    id: 1
-};
-
-const contentUrl: iContentUrl = {
-    url: "https://www.udemy.com/course/..."
-};
-
-const subtitles: iSubtitles = {
-    subtitles: null
-};
-
-```
+Domain
 

@@ -1,3 +1,8 @@
+const deepCopier = <T>(data: T): T => {
+  return JSON.parse(JSON.stringify(data));
+};
+
+
 // このままだと型付けがanyだらけだ...
 //
 class Observable {
@@ -28,16 +33,27 @@ class State<TYPE extends object> {
   }
 
   setState(prop: { [Property in keyof TYPE]?: TYPE[Property] }): void {
-    // いったんここでdeep copyをとるとして
-    this._proxy = {
-      ...this._proxy,
-      ...prop,
-    };
+    // いったんここでdeep copyをとるとして...
+    // 
+    // NOTE: spread構文だとproxyのsetハンドラは反応しないらしい...
+    // this._proxy = {
+    //   ...this._proxy,
+    //   ...prop,
+    // };
+    
+    // 必ず浅いコピーを作る
+    const temporary = {...prop};
+    Object.keys(temporary).forEach((p, index) => {
+      if(p in this._proxy) this._proxy[p] = prop[p];
+    })
   }
 
-  getState(): TYPE {
-    // いったんここでdeep copyをとるとして
-    return this._proxy;
+  getState(prop?: string): TYPE {
+    // かならずコピーを渡すこと
+    if(prop && prop in this._proxy){
+      return this._proxy[prop];
+    }
+    return deepCopier<TYPE>(this._proxy);
   }
 }
 
@@ -73,20 +89,23 @@ const handler: ProxyHandler<iProgress> = {
     value: boolean,
     receiver: any
   ) {
+    // NOTE: targetはnotfyする時点で変更が反映されてしまうらしいので
+    // 一旦コピーをとってこれをprevStateとする
+    const temp = {...target};
     // 変更をnotifyする
-    console.log("set");
-    observable.notify({ prop: property, value: value, prevState: target });
+    console.log("[proxy] set");
+    observable.notify({ prop: property, value: value, prevState: temp });
     return Reflect.set(target, property, value, receiver);
   },
   get: function (target: iProgress, property: keyof iProgress, receiver: any) {
     // Reflect.getは参照を返す
-    console.log("get");
+    console.log("[proxy] get");
     return Reflect.get(target, property, receiver);
   },
 };
 
-// // NOTE:
-// // proxy.getは参照を返している
+
+// // NOTE: proxy.getは参照を返している
 // const proxyProgress = new Proxy(progressBase, handler);
 // proxyProgress.isScriptInjected = true;
 // const refProxyProgress = proxyProgress;
@@ -106,6 +125,36 @@ state_progress.setState({
   isScriptInjected: true,
   isSubtitleCaptured: true,
 });
+
+console.log("current proxy:");
+console.log(state_progress.getState());
+
+state_progress.setState({
+  isTranscriptRestructured: true,
+  isSubtitleCaptured: false,
+});
+
+
+
+console.log("current proxy:");
+console.log(state_progress.getState());
+
+// いまんところ
+console.log(state_progress.getState("isScriptInjected"));
+
+
+// おさらい
+// シャローコピーはspread構文でおｋ
+const dummy = {
+  name: "Jonathan",
+  age: 16,
+  country: "USA"
+};
+
+const tmp = {...dummy};
+tmp.name = "JOJO";
+console.log(dummy)
+console.log(tmp)
 
 // // https://stackoverflow.com/questions/32308370/what-is-the-syntax-for-typescript-arrow-functions-with-generics
 // const generateProxyHandler = <TYPE extends object, K extends keyof TYPE>(observable: Observable): ProxyHandler<TYPE> => {
