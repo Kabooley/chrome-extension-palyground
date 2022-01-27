@@ -2,11 +2,19 @@
 
 MVC と DDD の設計思想を取り入れたい
 
-そのための奮闘記
+でも参考とする書籍は一切に読んでいない
 
-## ドメイン・レイヤーを当てはめる
+それでは実現できないので自分なりに「綺麗」にする
 
-考えのまとめ
+## 目次
+
+[1/25:処理についておさらい](#1/25:処理についておさらい)
+
+## DDD設計思想の導入に関するメモ
+
+聞きかじりでしかない
+
+考えまとめ
 
 #### ユーザの操作
 
@@ -805,7 +813,7 @@ notifyはsetstate内で呼出せばいいだけなので
 結局proxy入らないねって話になる
 
 
-## 1/25: 処理についておさらい
+## 1/25:処理についておさらい
 
 ユーザ操作：
 
@@ -1446,8 +1454,106 @@ export interface iResponse {
 - content script はそのページから除去できるのか
 - 除去できないとしたらどうするか
 
-#### 設計に関する考察
+
+## 1/28:各処理機能の実装をしてみる
 
 
-Domain
+[1/25:処理についておさらい](#1/25:処理についておさらい)
+にて検討した処理を実装してみる
 
+たびたび障害となる、service workerゆえに変更を保持できない問題
+これは別の「環境」を用意してやれば解決するだろうか
+
+つまりbackground scriptじゃない環境をstateのために用意すればいちいちロード、アンロードに対応しなくていい
+もしくは最小限に抑えられるのか
+
+```TypeScript
+/**
+ * よく考えたらstateをやたら作る必要はなくて、すべてまとめちゃっても別にいいわけだ
+ * そうなるとstateListみたいなものを作る必要はなくなるわけで
+ * */ 
+// 
+// これは間違い
+// interface iModel {
+//     [Property in keyof iProgress]: iProgress[Property];
+//     [Property in keyof iPageStatus]: iPageStatus[Property];
+//     [Property in keyof iTabId]: iTabId[Property];
+//     [Property in keyof iContentUrl]: iContentUrl[Property];
+//     [Property in keyof iSubtitle]: iSubtitle[Property];
+// };
+
+// こっちがただしい
+interface iModel extends iProgress, iPageStatus, iContentUrl, iTabId, iSubtitle{};
+
+// modelBaseは新規プロパティの追加も削除もない
+const modelBase: iModel = {
+    isContentScriptInjected: false,
+    isCaptureSubtitleInjected: false,
+    isControllerInjected: false,
+    isSubtitleCapturing: false,
+    isSubtitleCaptured: false,
+    isTranscriptRestructured: false,
+    isTranscriptON: false,
+    isEnglish: false,
+    isWindowTooSmall: false,
+    tabId: null,
+    url: null,
+    subtitles: null
+} as const;
+
+const model: Model = new Model();
+model.update({isContentScriptInjected: true, isEnglish: true, isOpened: true});
+
+class Model<T exntends object> {
+    private _storage_key: string;
+    private _local_storage: LocalStorage;
+    constructor(key: string, base: T) {
+        this._storage_key = key;
+        this._local_storage = new LocalStorage(this._storage_key);
+        this._local_storage.save(base);
+    };
+
+    async update(prop: {[Property in keyof T]?: T[Property]}): Promise<void> {
+        // いちいち毎度すべていったん取得してから、引数に一致するプロパティだけ変更して
+        // 変更したすべてを保存する
+        // なのでひと手間ある
+        const current: T = await this._local_storage.load();
+        current = {...current, ...prop};
+        await this._local_storage.save(current);
+    }
+
+    async load(): Promise<T> {
+        const current: T = await this._local_storgae.load();
+        return deepCopier(current);
+    }
+
+    async clearAll(): Promise<void> {
+        await this._local_storage.clearAll();
+    }
+}
+```
+
+```TypeScript
+
+chrome.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails): void => {
+    console.log(`[background] onInstalled: ${details.reason}`);
+    const model: Model = new Model("__key__local_storage_", modelBase);
+});
+
+const model_ = (function() {
+    const instance: Model = null;
+
+    return {
+        register: (m: Model): void => {
+            instance = m;
+        },
+        unregister: (): void => {
+            instance = null;
+        },
+        _: (): Model => {
+            return instance;
+        }
+    }
+})();
+
+```

@@ -19,22 +19,7 @@ __webpack_require__.r(__webpack_exports__);
  * constants
  * ________________________________________________
  *
- * iMessageがぐちゃぐちゃだったので次のようにまとめた
- *
- * - orderNamesは拡張機能にやってほしいことを示す命令だけにした
- * - 命令に対する返答ややり取りするデータなどはすべてiMessageのプロパティとした
- *
- * >>検証内容<<
- *
- * 正常に機能するのかテスト
- * iMessage.orderをオブジェクトにするか配列にするか検証
- *
- *
- *
  * ************************************************/
-//
-// Changed Name
-//
 const extensionStatus = {
     working: 'working',
     notWorking: 'notWorking',
@@ -44,32 +29,28 @@ const extensionNames = {
     popup: 'popup',
     contentScript: 'contentScript',
     controller: 'controller',
-    option: 'option',
+    captureSubtitle: "captureSubtitle",
     background: 'background',
 };
 //
 // Updated
 //
 const orderNames = {
-    // Inject content script order
-    injectCaptureSubtitleScript: 'injectCaptureSubtitleScript',
-    injectExTranscriptScript: 'injectExTranscriptScript',
+    // // Inject content script order
+    // injectCaptureSubtitleScript: 'injectCaptureSubtitleScript',
+    // injectExTranscriptScript: 'injectExTranscriptScript',
     // From background to contentScript
     sendStatus: 'sendStatus',
     // from controller to background
     sendSubtitles: 'sendSubtitles',
-    // from contentScript to background
-    sendSectionTitle: 'sendSectionTitle',
     // order to disconnect port
     disconnect: 'disconnect',
-    // DELETED
-    //
-    // transcriptOpened: 'transcriptOpened',
-    // transcriptClosed: 'transcriptClosed',
-    // languageIsEnglish: 'languageIsEnglish',
-    // languageIsNotEnglish: 'languageIsNotEnglish',
-    // loading: 'loading',
-    // loaded: 'loaded',
+    // from popup inquire the url is correct
+    inquireUrl: "inquireUrl",
+    // from popup, run process
+    run: "run",
+    // something succeeded
+    success: "success"
 };
 // ---- ABOUT PORT ----------------------------------
 const port_names = {
@@ -186,47 +167,24 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 const deepCopier = (data) => {
     return JSON.parse(JSON.stringify(data));
 };
-const sendMessageToTabsPromise = (tabId, message, callback) => __awaiter(void 0, void 0, void 0, function* () {
+const sendMessageToTabsPromise = (tabId, message) => __awaiter(void 0, void 0, void 0, function* () {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         chrome.tabs.sendMessage(tabId, message, (response) => __awaiter(void 0, void 0, void 0, function* () {
-            // 
-            // NOTE:
-            // 
-            // responseが返されることが前提になっている
-            // なのでsendResponse()実行する側が引数を渡さなかった
-            // 
-            // もしくはsendResponse()をそもそも実行しなかったら
-            // 以下でエラーが起こる可能性がある
             const { complete } = response, rest = __rest(response, ["complete"]);
-            if (complete) {
-                if (callback && typeof callback === 'function') {
-                    yield callback(rest);
-                    resolve();
-                }
-                else {
-                    resolve(rest);
-                }
-            }
-            else
-                reject('Send message to tabs went something wrong');
+            complete
+                ? resolve(rest)
+                : reject('Send message to tabs went something wrong');
         }));
     }));
 });
-const sendMessagePromise = (message, callback) => __awaiter(void 0, void 0, void 0, function* () {
+const sendMessagePromise = (message) => __awaiter(void 0, void 0, void 0, function* () {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         chrome.runtime.sendMessage(message, (response) => __awaiter(void 0, void 0, void 0, function* () {
             const { complete } = response, rest = __rest(response, ["complete"]);
-            if (complete) {
-                if (callback && typeof callback === 'function') {
-                    yield callback(rest);
-                    resolve();
-                }
-                else {
-                    resolve(rest);
-                }
-            }
+            if (complete)
+                resolve(rest);
             else
-                reject('Send message to extension went something wrong');
+                reject();
         }));
     }));
 });
@@ -311,7 +269,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('[content script] ONMESSAGE');
+    console.log("[content script] ONMESSAGE");
     const { from, to, order } = message;
     if (to !== _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript)
         return;
@@ -322,19 +280,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // 検証１：sendResponse()を実行しなかったら
         // 呼び出し側はどうなるか
         //
-        console.log('[content script] GOT ORDER');
+        console.log("[content script] GOT ORDER");
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendStatus)) {
-            console.log('[content script] SEND STATUS');
+            console.log("[content script] SEND STATUS");
         }
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.disconnect)) {
-            console.log('[content script] DISCONNECT');
+            console.log("[content script] DISCONNECT");
         }
-        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.injectCaptureSubtitleScript)) {
-            console.log('[content script] injectCaptureSubtitleScript');
-        }
-        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.injectExTranscriptScript)) {
-            console.log('[content script] injectExTranscriptScript');
-        }
+        // if (order.includes(orderNames.injectCaptureSubtitleScript)) {
+        //     console.log('[content script] injectCaptureSubtitleScript');
+        // }
+        // if (order.includes(orderNames.injectExTranscriptScript)) {
+        //     console.log('[content script] injectExTranscriptScript');
+        // }
     }
     return true;
 });
@@ -342,7 +300,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     try {
         setTimeout(function () {
             return __awaiter(this, void 0, void 0, function* () {
-                console.log('content script injected');
+                console.log("content script injected");
                 const response = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessagePromise)({
                     from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
                     to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
@@ -362,8 +320,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
                     language: true,
                     order: [
-                        _utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.injectCaptureSubtitleScript,
-                        _utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.injectExTranscriptScript,
+                    // orderNames.injectCaptureSubtitleScript,
+                    // orderNames.injectExTranscriptScript,
                     ],
                 });
                 if (response3)
@@ -371,7 +329,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const response4 = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessagePromise)({
                     from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
                     to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
-                    title: 'Awesome title',
+                    title: "Awesome title",
                     complete: true,
                 });
                 if (response4)

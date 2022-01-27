@@ -2,6 +2,104 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./src/utils/LocalStorage.ts":
+/*!***********************************!*\
+  !*** ./src/utils/LocalStorage.ts ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "LocalStorage": () => (/* binding */ LocalStorage)
+/* harmony export */ });
+/*
+    chrome.storage.localのclass化
+    ___________________________________________
+
+    NOTE:
+        1. インスタンスにつき一つだけlocalStorageへ保存するためのkeyを登録できる
+            なので一つのkeyに対するデータだけ保存できる
+
+        2. ~loadが返すのは{_key: 保存したデータ}であることに注意~
+            ~なので保存したデータだけに用がある場合がほ飛んだと思うので~
+            ~利用する側はそのまま使ってしまわないように注意~
+        load()のreturn する値を変更した
+
+    
+*/
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+class LocalStorage {
+    constructor(_key) {
+        this._key = _key;
+    }
+    _getLocalStorage(_key) {
+        return new Promise((resolve, reject) => {
+            // chrome.storage.local.get()はPromiseチェーンみたいなもの
+            chrome.storage.local.get(_key, (s) => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                }
+                resolve(s);
+            });
+        });
+    }
+    save(data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const obj = { [this._key]: data };
+                yield chrome.storage.local.set(obj);
+            }
+            catch (err) {
+                if (err === chrome.runtime.lastError) {
+                    console.error(err.message);
+                }
+                else {
+                    console.log(err);
+                }
+            }
+        });
+    }
+    load() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const data = yield this._getLocalStorage(this._key);
+                // return data;
+                // 保存されたデータだけを返すようにした
+                return data[this._key];
+            }
+            catch (err) {
+                if (err === chrome.runtime.lastError) {
+                    console.error(err.message);
+                }
+                else {
+                    console.log(err);
+                }
+            }
+        });
+    }
+    clearAll() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield chrome.storage.local.remove(this._key);
+        });
+    }
+}
+// -- USAGE --------------
+//
+// const ls_sectionTitle = new LocalStorage<string>("key_section_title");
+// await ls_sectionTitle.save(someStringdata);
+// const data = await ls_sectionTitle.load();
+
+
+/***/ }),
+
 /***/ "./src/utils/constants.ts":
 /*!********************************!*\
   !*** ./src/utils/constants.ts ***!
@@ -19,22 +117,7 @@ __webpack_require__.r(__webpack_exports__);
  * constants
  * ________________________________________________
  *
- * iMessageがぐちゃぐちゃだったので次のようにまとめた
- *
- * - orderNamesは拡張機能にやってほしいことを示す命令だけにした
- * - 命令に対する返答ややり取りするデータなどはすべてiMessageのプロパティとした
- *
- * >>検証内容<<
- *
- * 正常に機能するのかテスト
- * iMessage.orderをオブジェクトにするか配列にするか検証
- *
- *
- *
  * ************************************************/
-//
-// Changed Name
-//
 const extensionStatus = {
     working: 'working',
     notWorking: 'notWorking',
@@ -44,32 +127,28 @@ const extensionNames = {
     popup: 'popup',
     contentScript: 'contentScript',
     controller: 'controller',
-    option: 'option',
+    captureSubtitle: "captureSubtitle",
     background: 'background',
 };
 //
 // Updated
 //
 const orderNames = {
-    // Inject content script order
-    injectCaptureSubtitleScript: 'injectCaptureSubtitleScript',
-    injectExTranscriptScript: 'injectExTranscriptScript',
+    // // Inject content script order
+    // injectCaptureSubtitleScript: 'injectCaptureSubtitleScript',
+    // injectExTranscriptScript: 'injectExTranscriptScript',
     // From background to contentScript
     sendStatus: 'sendStatus',
     // from controller to background
     sendSubtitles: 'sendSubtitles',
-    // from contentScript to background
-    sendSectionTitle: 'sendSectionTitle',
     // order to disconnect port
     disconnect: 'disconnect',
-    // DELETED
-    //
-    // transcriptOpened: 'transcriptOpened',
-    // transcriptClosed: 'transcriptClosed',
-    // languageIsEnglish: 'languageIsEnglish',
-    // languageIsNotEnglish: 'languageIsNotEnglish',
-    // loading: 'loading',
-    // loaded: 'loaded',
+    // from popup inquire the url is correct
+    inquireUrl: "inquireUrl",
+    // from popup, run process
+    run: "run",
+    // something succeeded
+    success: "success"
 };
 // ---- ABOUT PORT ----------------------------------
 const port_names = {
@@ -186,47 +265,24 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 const deepCopier = (data) => {
     return JSON.parse(JSON.stringify(data));
 };
-const sendMessageToTabsPromise = (tabId, message, callback) => __awaiter(void 0, void 0, void 0, function* () {
+const sendMessageToTabsPromise = (tabId, message) => __awaiter(void 0, void 0, void 0, function* () {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         chrome.tabs.sendMessage(tabId, message, (response) => __awaiter(void 0, void 0, void 0, function* () {
-            // 
-            // NOTE:
-            // 
-            // responseが返されることが前提になっている
-            // なのでsendResponse()実行する側が引数を渡さなかった
-            // 
-            // もしくはsendResponse()をそもそも実行しなかったら
-            // 以下でエラーが起こる可能性がある
             const { complete } = response, rest = __rest(response, ["complete"]);
-            if (complete) {
-                if (callback && typeof callback === 'function') {
-                    yield callback(rest);
-                    resolve();
-                }
-                else {
-                    resolve(rest);
-                }
-            }
-            else
-                reject('Send message to tabs went something wrong');
+            complete
+                ? resolve(rest)
+                : reject('Send message to tabs went something wrong');
         }));
     }));
 });
-const sendMessagePromise = (message, callback) => __awaiter(void 0, void 0, void 0, function* () {
+const sendMessagePromise = (message) => __awaiter(void 0, void 0, void 0, function* () {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         chrome.runtime.sendMessage(message, (response) => __awaiter(void 0, void 0, void 0, function* () {
             const { complete } = response, rest = __rest(response, ["complete"]);
-            if (complete) {
-                if (callback && typeof callback === 'function') {
-                    yield callback(rest);
-                    resolve();
-                }
-                else {
-                    resolve(rest);
-                }
-            }
+            if (complete)
+                resolve(rest);
             else
-                reject('Send message to extension went something wrong');
+                reject();
         }));
     }));
 });
@@ -299,6 +355,27 @@ var __webpack_exports__ = {};
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/constants */ "./src/utils/constants.ts");
 /* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
+/* harmony import */ var _utils_LocalStorage__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/LocalStorage */ "./src/utils/LocalStorage.ts");
+/*******************************************************************
+ * background.ts
+ * ________________________________________________________________
+ *
+ * As service worker and Application Layer.
+ *
+ * *****************************************************************/
+/**
+ * 検証：
+ * グローバルモジュールのmodelは、service workerがアンロードされたあとでも
+ * 自身のinstanceを保持しているのか？
+ *
+ * 結果：
+ * ぜんぜんアンロードされない
+ * 10分くらい放っておいても問題ない...
+ *
+ * ということで雑だけれどservice workerでもわりとアンロードされないから
+ * グローバル・モジュールに値を保持させるのはアリとする
+ *
+ * */
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -319,139 +396,120 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
         }
     return t;
 };
-/****************************************************
- * sendMessageのPromise化関数が機能するか、
- * また使い方に制限があるのかの確認
- *________________________________________________
- *  "../utils/helpers"::sendMessagePromiseの
- * 使い方を確認する
- *
- * 検証内容：
- * 1. sendResponse()を返さなかったどうなるか
- * 2. sendResponse()を引数なしで実行したらどうなるか
- * 3. 正しい使い方の模索
- *
- *************************************************/
 
 
-// --- LISTENERS -----------------------------------
-chrome.runtime.onInstalled.addListener(() => {
-    console.log('BACKGROUND RUNNING...');
+
+chrome.runtime.onInstalled.addListener((details) => {
+    console.log(`[background] onInstalled: ${details.reason}`);
+    const m = new Model("__key__local_storage_", modelBase);
+    console.log(m);
+    model.register(m);
 });
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('[background] ONMESSAGE');
-    console.log(message);
-    const { from, to, order } = message, rest = __rest(message, ["from", "to", "order"]);
-    console.log(rest);
-    if (to !== _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background)
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.to !== _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background)
         return;
+    const { order } = message, rest = __rest(message, ["order"]);
     if (order && order.length) {
-        //
-        // DEBUG:
-        //
-        // 検証１：sendResponse()を実行しなかったら
-        // 呼び出し側はどうなるか
-        //
-        console.log('[background] GOT ORDER');
-        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendStatus)) {
-            console.log('SEND STATUS');
-            sendResponse({ complete: true });
-        }
-        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.disconnect)) {
-            console.log('DISCONNECT');
-            sendResponse({ complete: true });
-        }
-        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.injectCaptureSubtitleScript)) {
-            console.log('injectCaptureSubtitleScript');
-            sendResponse({ complete: true });
-        }
-        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.injectExTranscriptScript)) {
-            console.log('injectExTranscriptScript');
-            sendResponse({ complete: true });
-        }
-    }
-    if (rest.activated) {
-        console.log('[background] content script has been activated');
-        sendResponse({ complete: true });
-    }
-    if (rest.language) {
-        console.log('[background] correct language');
-        sendResponse({ complete: true });
-    }
-    return true;
-}));
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, Tab) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('TAB UPDATED...');
-    // const _tabId: number = await checkTabIsCorrect(
-    //     /https:\/\/developer.mozilla.org\/ja\//);
-    // if(_tabId)messageSender(_tabId);
-}));
-const checkTabIsCorrect = (pattern) => __awaiter(void 0, void 0, void 0, function* () {
-    // https://www.udemy.com/course/*
-    try {
-        const w = yield chrome.windows.getCurrent();
-        const tabs = yield chrome.tabs.query({
-            active: true,
-            windowId: w.id,
-        });
-        const tab = tabs[0];
-        const result = tab.url.match(pattern);
-        if (result) {
-            return tab.id;
-        }
-        else {
-            return null;
-        }
-    }
-    catch (err) {
-        if (err === chrome.runtime.lastError) {
-            console.error(err.message);
-        }
-        else {
-            console.log(err);
+        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.run)) {
+            console.log("[background] got run order:");
+            const m = model._();
+            m.load().then((res) => console.log(res));
         }
     }
 });
-const messageSender = (tabId) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const response = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
-            to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
-            from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
-            activated: true,
-        });
-        if (response)
-            console.log(response);
-        const response2 = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
-            to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
-            from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
-            order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendStatus, _utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.disconnect],
-        });
-        if (response2)
-            console.log(response2);
-        const response3 = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
-            to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
-            from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
-            language: true,
-            order: [
-                _utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.injectCaptureSubtitleScript,
-                _utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.injectExTranscriptScript,
-            ],
-        });
-        if (response3)
-            console.log(response3);
-        const response4 = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
-            to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
-            from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
-            title: 'Awesome title',
-            complete: true,
-        });
-        if (response4)
-            console.log(response4);
+// modelBaseは新規プロパティの追加も削除もない
+const modelBase = {
+    isContentScriptInjected: false,
+    isCaptureSubtitleInjected: false,
+    isControllerInjected: false,
+    isSubtitleCapturing: false,
+    isSubtitleCaptured: false,
+    isTranscriptRestructured: false,
+    isTranscriptON: false,
+    isEnglish: false,
+    isWindowTooSmall: false,
+    tabId: null,
+    url: null,
+    subtitles: null,
+};
+class Model {
+    constructor(key, base) {
+        this._storage_key = key;
+        this._local_storage = new _utils_LocalStorage__WEBPACK_IMPORTED_MODULE_2__.LocalStorage(this._storage_key);
+        this._local_storage.save(base);
     }
-    catch (err) {
-        console.error(err.message);
+    update(prop) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // いちいち毎度すべていったん取得してから、引数に一致するプロパティだけ変更して
+            // 変更したすべてを保存する
+            // なのでひと手間ある
+            let current = yield this._local_storage.load();
+            current = Object.assign(Object.assign({}, current), prop);
+            yield this._local_storage.save(current);
+        });
     }
-});
+    load() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const current = yield this._local_storage.load();
+            return (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.deepCopier)(current);
+        });
+    }
+    clearAll() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this._local_storage.clearAll();
+        });
+    }
+}
+const model = (function () {
+    let instance = null;
+    return {
+        register: (m) => {
+            instance = m;
+        },
+        unregister: () => {
+            instance = null;
+        },
+        _: () => {
+            return instance;
+        },
+    };
+})();
+/*
+    stateList module
+    ______________________________________________
+
+    Stateのインスタンスを保存しておく場所
+    インスタンスをどこからでも呼出せるようにするためと、
+    インスタンスをグローバル変数にしたくないからこんな面倒をしている
+
+    検証：service workerがアンロードされても_listの中身は消えないのか?
+*/
+const stateList = (function () {
+    console.log("stateList module invoked");
+    // Instances stored in this list.
+    const _list = {};
+    return {
+        register: (name, instance) => {
+            _list[name] = instance;
+        },
+        unregister: (name) => {
+            // これでinstanceもさくじょしていることになるかしら
+            delete _list[name];
+        },
+        // nameで指定するんじゃなくて、
+        // 型引数で指定できるようにしたいなぁ
+        caller: (name) => {
+            return _list[name];
+        },
+        showList: () => {
+            console.log("stateList::_list:");
+            console.log(_list);
+        },
+        length: () => {
+            return Object.keys(_list).length;
+        },
+    };
+})();
 
 })();
 

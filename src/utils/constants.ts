@@ -3,11 +3,14 @@
  * ________________________________________________
  * 
  * ************************************************/
-/*
-    ビジネスロジックにかかわる:
-        iMessage, iResponse, orderNames
 
-*/ 
+
+
+// Subtitle object interface
+export interface subtitle_piece {
+    index: number;
+    subtitle: string;
+}
 
 
 export const extensionStatus = {
@@ -15,12 +18,6 @@ export const extensionStatus = {
     notWorking: 'notWorking',
     idle: 'idle',
 } as const;
-
-// Subtitle object interface
-export interface subtitle_piece {
-    index: number;
-    subtitle: string;
-}
 
 export const extensionNames = {
     popup: 'popup',
