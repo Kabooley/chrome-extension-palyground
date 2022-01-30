@@ -958,7 +958,7 @@ popup の state について:
 
 - `matchedPage`: popup を開いたときの tab の URL が正しいかについての状態を管理する state
 
-#### RUN が押される
+#### RUNが押される
 
 前提：
 

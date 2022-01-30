@@ -4,14 +4,9 @@
  * 
  * ************************************************/
 
+export const _key_of_model_state__ = "_key_of_model_state__@&%8=8";
 
-
-// Subtitle object interface
-export interface subtitle_piece {
-    index: number;
-    subtitle: string;
-}
-
+export const urlPattern: RegExp = /https:\/\/www.udemy.com\/course\/*/gm;
 
 export const extensionStatus = {
     working: 'working',
@@ -48,6 +43,14 @@ export const orderNames = {
     // something succeeded
     success: "success"
 } as const;
+
+
+// Subtitle object interface
+export interface subtitle_piece {
+    index: number;
+    subtitle: string;
+}
+
 
 type et = typeof extensionNames;
 type on = typeof orderNames;
@@ -101,12 +104,18 @@ export interface iResponse {
     subtitles?: subtitle_piece[];
     order?: orderTypes[];
     activated?: boolean;
-    completed?: boolean;
+    // completed?: boolean;
     language?: boolean;
     title?: string;
-    disconnect?: boolean;
+    // disconnect?: boolean;
     complete?: boolean;
     correctUrl?: boolean;
+    // 何かしらの成功を示す
+    success?: boolean;
+    // RUN orderに対して、展開がすべて完了したらtrue
+    successDeployment?: boolean;
+    // Udemy講義ページでトランスクリプトが開かれているか
+    transcript?: boolean;
 
 }
 

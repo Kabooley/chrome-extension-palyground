@@ -15,8 +15,6 @@ const Popup = (): JSX.Element => {
   const [running, setRunning] = useState<boolean>(false);
   // 正常に拡張機能が実行されたらtrue
   const [complete, setComplete] = useState<boolean>(false);
-  // popupが表示されたページがUdemyの講義ページならばtrue
-  const [matchedPage, setMatchedPage] = useState<boolean>(false);
 
   useEffect(() => {
     console.log("[popup] Set onMessage listener");
@@ -28,6 +26,8 @@ const Popup = (): JSX.Element => {
   }, []);
 
   useEffect(() => {
+    // NOTE: DON'T USE AWAIT inside of useEffect().
+    // 
     // popupが開かれるたびに開かれたタブのURLが
     // 指定のURLと一致するのかbackgroundと通信する
     sendInquire();
@@ -60,7 +60,7 @@ const Popup = (): JSX.Element => {
         setComplete(complete);
         setRunning(false);
         if (!complete) {
-          throw new Error("Error: something went wrong to run extension");
+          throw new Error("Error: something went wrong while extension running");
         }
       })
       .catch((err) => {

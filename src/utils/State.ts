@@ -28,7 +28,7 @@ export class State<TYPE extends object> {
     }
 
     async setState(prop: {
-        [Property in keyof TYPE]: TYPE[Property];
+        [Property in keyof TYPE]?: TYPE[Property];
     }): Promise<void> {
         this._state = {
             ...this._state,

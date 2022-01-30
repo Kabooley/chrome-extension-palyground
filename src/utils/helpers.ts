@@ -1,4 +1,5 @@
 import { iMessage, iResponse } from '../utils/constants';
+import { State } from "./State";
 
 export const deepCopier = <T>(data: T): T => {
     return JSON.parse(JSON.stringify(data));
@@ -28,3 +29,5 @@ export const sendMessagePromise = async (message: iMessage): Promise<iResponse> 
       });
   });
 };
+
+

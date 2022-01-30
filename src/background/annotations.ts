@@ -51,17 +51,36 @@ export interface iSubtitle {
     subtitles: subtitle_piece[];
 };
 
+export interface iModel
+  extends iProgress,
+    iPageStatus,
+    iContentUrl,
+    iTabId,
+    iSubtitle {};
 
-export interface iStateList {
-    register: <TYPE extends object>(name: string, instance: State<TYPE>) => void;
-    unregister: (name: string) => void;
-    caller: <TYPE extends object>(name: string) => State<TYPE>;
-    //
-    // ADDED
-    //
-    showList: () => void;
-    //
-    // ADDED
-    //
-    length: () => number;
-  }
+
+
+export interface iStateModule<TYPE extends object> {
+    register: (m: State<TYPE>) => void;
+    unregister: () => void;
+    getInstance: () => State<TYPE>;
+    }
+      
+  
+
+  // modelBaseは新規プロパティの追加も削除もない
+export const modelBase: iModel = {
+    isContentScriptInjected: false,
+    isCaptureSubtitleInjected: false,
+    isControllerInjected: false,
+    isSubtitleCapturing: false,
+    isSubtitleCaptured: false,
+    isTranscriptRestructured: false,
+    isTranscriptON: false,
+    isEnglish: false,
+    isWindowTooSmall: false,
+    tabId: null,
+    url: null,
+    subtitles: null,
+  } as const;
+  

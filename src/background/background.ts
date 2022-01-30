@@ -1,10 +1,12 @@
-/*******************************************************************
+/***************************************************************
  * background.ts
- * ________________________________________________________________
+ * _____________________________________________________________
  *
  * As service worker and Application Layer.
  *
- * *****************************************************************/
+ *
+ * chrome.runtime.onInstalled: Stateを初期化してstateへ保存する
+ *  ***************************************************************/
 /**
  * 検証：
  * グローバルモジュールのmodelは、service workerがアンロードされたあとでも
@@ -20,162 +22,467 @@
  * */
 
 import {
-  extensionStatus,
-  orderNames,
-  extensionsTypes,
-  extensionNames,
-  iMessage,
-  subtitle_piece,
-  port_names,
-  iResponse,
-} from "../utils/constants";
-import { sendMessageToTabsPromise, deepCopier } from "../utils/helpers";
-import { State } from "../utils/State";
-import { LocalStorage } from "../utils/LocalStorage";
+    _key_of_model_state__,
+    urlPattern,
+    extensionStatus,
+    orderNames,
+    extensionsTypes,
+    extensionNames,
+    iMessage,
+    subtitle_piece,
+    iResponse,
+} from '../utils/constants';
+import { sendMessageToTabsPromise, deepCopier } from '../utils/helpers';
+import { State } from '../utils/State';
 import {
-  iProgress,
-  iPageStatus,
-  iTabId,
-  iContentUrl,
-  iSubtitle,
-  iStateList,
-} from "./annotations";
+    iProgress,
+    iPageStatus,
+    iTabId,
+    iContentUrl,
+    iSubtitle,
+    iModel,
+    modelBase,
+    iStateModule,
+} from './annotations';
 
+//
+// --- Chrome API Listeners ---------------------------------
+//
+
+/***
+ * chrome.runtime.onInstalled.addListener():
+ *
+ * Initialize State as iModel.
+ * Always clear storage.
+ * Set modelBase as initiali value.
+ * */
 chrome.runtime.onInstalled.addListener(
-  (details: chrome.runtime.InstalledDetails): void => {
-    console.log(`[background] onInstalled: ${details.reason}`);
-    const m: Model<iModel> = new Model<iModel>(
-      "__key__local_storage_",
-      modelBase
-    );
-    console.log(m);
-    model.register(m);
-  }
+    async (details: chrome.runtime.InstalledDetails): Promise<void> => {
+        console.log(`[background] onInstalled: ${details.reason}`);
+        try {
+            state.unregister();
+            await state.register(new State<iModel>(_key_of_model_state__));
+            await state.getInstance().clearStorage();
+            await state.getInstance().setState(modelBase);
+        } catch (err) {
+            console.error(err.message);
+        }
+    }
 );
 
+/**
+ * chrome.tabs.onUpdated.addListener()
+ * ______________________________________________
+ *
+ * 機能：
+ * URLが変更されたかどうかを検知する機能を実装する
+ *
+ * chrome.tabs.onUpdatedはすべてのタブにおけるイベントを検知する
+ * なので関係ないタブに関することは無視する機能を実装する必要がある
+ *
+ * ブラウザの挙動に対してonUpdatedが反応したときの振舞に関して：
+ *
+ * - 拡張機能が未展開であるけど、Udemy 講義ページである
+ * なにもしない
+ *
+ * - 拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
+ * 拡張機能をリセットして引き続き展開する
+ *
+ * - 拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
+ * 拡張機能は OFF にする
+ *
+ * - タブが切り替わった
+ *  何もしない
+ *
+ * - 拡張機能が展開されていたタブが閉じられた
+ *  拡張機能を OFF にする
+ *
+ * */
+chrome.tabs.onUpdated.addListener(
+    async (
+        tabIdUpdatedOccured: number,
+        changeInfo: chrome.tabs.TabChangeInfo,
+        Tab: chrome.tabs.Tab
+    ): Promise<void> => {
+        console.log(changeInfo);
+        // "https://www.udemy.com/course/*"以外のURLなら無視する
+        const _state: State<iModel> = state.getInstance();
+        const { url, tabId, isTranscriptRestructured } =
+            await _state.getState();
+
+        // 拡張機能が未展開、changeInfo.statusがloadingでないなら無視する
+        if (changeInfo.status !== 'loading' || !isTranscriptRestructured)
+            return;
+
+        // 拡張機能が展開済だとして、tabIdが展開済のtabId以外に切り替わったなら無視する
+        // return;
+        if (tabIdUpdatedOccured !== tabId) return;
+
+        // 展開中のtabId && chnageInfo.urlがUdemy講義ページ以外のURLならば
+        // 拡張機能OFFの処理へ
+        if (isTranscriptRestructured && tabIdUpdatedOccured === tabId) {
+            // おなじURLでのリロードか？
+            if (changeInfo.url === undefined) {
+                // 拡張機能は何もしない
+                return;
+            } else if (!changeInfo.url.match(urlPattern)) {
+                // Udemy講義ページ以外に移動した
+                // TODO: 拡張機能OFF処理へ
+                console.log('[background] OFF this extension');
+            }
+
+            // 展開中のtabIdである && changeInfo.urlが講義ページだけど末尾が変化した(#以下は無視)
+            // 動画が切り替わった判定
+            else if (
+                changeInfo.url.match(urlPattern) &&
+                changeInfo.url !== url
+            ) {
+                // 動画が切り替わった
+                // TODO: リセット処理へ
+                console.log('[background] RESET this extension');
+            }
+        }
+    }
+);
+
+/**
+ *
+ *
+ * */
 chrome.runtime.onMessage.addListener(
-  (
+    (
+        message: iMessage,
+        sender: chrome.runtime.MessageSender,
+        sendResponse: (response?: iResponse) => void
+    ) => {
+        if (message.to !== extensionNames.background) return;
+        sortMessage(message, sender, sendResponse);
+    }
+);
+
+const sortMessage = (
     message: iMessage,
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: iResponse) => void
-  ) => {
-    if (message.to !== extensionNames.background) return;
-
-    const { order, ...rest } = message;
-    if (order && order.length) {
-      if (order.includes(orderNames.run)) {
-        console.log("[background] got run order:");
-        const m: Model<iModel> = model._();
-        m.load().then((res) => console.log(res));
-      }
+): void => {
+    switch (message.from) {
+        case extensionNames.popup:
+            handlerOfPopupMessage(message, sender, sendResponse);
+            break;
+        case extensionNames.contentScript:
+            handlerOfContentScriptMessage(message, sender, sendResponse);
+            break;
+        case extensionNames.captureSubtitle:
+            handlerOfCaptureSubtitleMessage(message, sender, sendResponse);
+            break;
+        case extensionNames.controller:
+            handlerOfControllerMessage(message, sender, sendResponse);
+            break;
     }
-  }
-);
+};
 
-interface iModel
-  extends iProgress,
-    iPageStatus,
-    iContentUrl,
-    iTabId,
-    iSubtitle {}
+//
+// --- Message Handlers ----------------------------------------
+//
 
-// modelBaseは新規プロパティの追加も削除もない
-const modelBase: iModel = {
-  isContentScriptInjected: false,
-  isCaptureSubtitleInjected: false,
-  isControllerInjected: false,
-  isSubtitleCapturing: false,
-  isSubtitleCaptured: false,
-  isTranscriptRestructured: false,
-  isTranscriptON: false,
-  isEnglish: false,
-  isWindowTooSmall: false,
-  tabId: null,
-  url: null,
-  subtitles: null,
-} as const;
+/**
+ *
+ *
+ * */
+const handlerOfPopupMessage = async (
+    message: iMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response?: iResponse) => void
+): Promise<void> => {
+    console.log('[background] Message from Popup');
+    try {
+        const { order, ...rest } = message;
 
-class Model<T extends object> {
-  private _storage_key: string;
-  private _local_storage: LocalStorage<T>;
-  constructor(key: string, base: T) {
-    this._storage_key = key;
-    this._local_storage = new LocalStorage(this._storage_key);
-    this._local_storage.save(base);
-  }
+        if (order && order.length) {
+            // popupが開かれるたびに呼び出される処理
+            //
+            // なのでurlが正しいかだけを返信する
+            // Stateを変更しない
+            if (order.includes(orderNames.inquireUrl)) {
+                const isValidPage: boolean = handlerOfVerifyValidPage(
+                    sender.url
+                );
+                sendResponse({ correctUrl: isValidPage, complete: true });
+            }
 
-  async update(prop: { [Property in keyof T]?: T[Property] }): Promise<void> {
-    // いちいち毎度すべていったん取得してから、引数に一致するプロパティだけ変更して
-    // 変更したすべてを保存する
-    // なのでひと手間ある
-    let current: T = await this._local_storage.load();
-    current = { ...current, ...prop };
-    await this._local_storage.save(current);
-  }
+            // 拡張機能の実行命令
+            if (order.includes(orderNames.run)) {
+                const isSuccess: boolean = await handlerOfRun(sender);
+                sendResponse({ successDeployment: isSuccess, complete: true });
+                if (!isSuccess) {
+                    // ここでエラーを出すのか
+                    // handlerOfRunでエラーを出すのか
+                    // 未定
+                    sendResponse({ complete: true, success: false });
+                } else {
+                    sendResponse({ complete: true, success: true });
+                }
+            }
+        }
+    } catch (err) {
+        console.error(err.message);
+    }
+};
 
-  async load(): Promise<T> {
-    const current: T = await this._local_storage.load();
-    return deepCopier(current);
-  }
+/**
+ *
+ *
+ * */
+const handlerOfContentScriptMessage = async (
+    message: iMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response?: iResponse) => void
+): Promise<void> => {
+    console.log('[background] Message from contentScript.js');
+    try {
+        const { order, ...rest } = message;
+    } catch (err) {
+        console.error(err.message);
+    }
+};
 
-  async clearAll(): Promise<void> {
-    await this._local_storage.clearAll();
-  }
-}
+/**
+ *
+ *
+ * */
+const handlerOfCaptureSubtitleMessage = async (
+    message: iMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response?: iResponse) => void
+): Promise<void> => {
+    try {
+    } catch (err) {
+        console.error(err.message);
+    }
+};
 
-const model = (function () {
-  let instance: Model<iModel> = null;
+/**
+ *
+ *
+ * */
+const handlerOfControllerMessage = async (
+    message: iMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response?: iResponse) => void
+): Promise<void> => {
+    try {
+    } catch (err) {
+        console.error(err.message);
+    }
+};
 
-  return {
-    register: (m: Model<iModel>): void => {
-      instance = m;
-    },
-    unregister: (): void => {
-      instance = null;
-    },
-    _: (): Model<iModel> => {
-      return instance;
-    },
-  };
-})();
+//
+// --- Order Handlers -------------------------------------------
+//
+
+/**
+ *
+ *
+ * */
+const handlerOfVerifyValidPage = (url: string): boolean => {
+    try {
+        const result: RegExpMatchArray = url.match(urlPattern);
+        return result.length ? true : false;
+    } catch (err) {
+        console.error(err.message);
+    }
+};
+
+/**
+ * handler of RUN order.
+ * _______________________________________________
+ *
+ * TODO:
+ * - 処理中の失敗を段階ごとに理由と一緒に返せるようにしたい
+ *  失敗理由によってはエラーじゃない場合もある
+ *  あと各段階でおこるエラースローは各段階のcatchへキャッチさせたほうがいいのかな？
+ *
+ *
+ * - injectしたコンテントスクリプトからのinject成功信号を受信したら、こっちに処理が戻ってくるようにしたい
+ *  いまのワイの腕では無理
+ *
+ * - controller.jsへの字幕データの渡し方を変更したい
+ *
+ *
+ * 例：
+ * contentScriptのステータスを確認してみたら、字幕が英語じゃなかった
+ * ならば「英語字幕じゃなかったからキャンセルしたよ」をpopupへ送信できる
+ * */
+const handlerOfRun = async (
+    sender: chrome.runtime.MessageSender
+): Promise<boolean> => {
+    try {
+        const _state: State<iModel> = state.getInstance();
+        const { url, tab } = sender;
+        // <phase 1> is URL correct?
+        // 拡張機能を展開するurlとtabIdを保存するため
+        if (!handlerOfVerifyValidPage(url)) {
+            // TODO: 失敗またはキャンセルの方法未定義...
+            // ひとまずfalseを返している
+            return false;
+        }
+        // Save valid url and current tab that extension popup opened.
+        await _state.setState({ url: url, tabId: tab.id });
+
+        //<phase 2> inject contentScript.js
+        const { tabId } = await _state.getState();
+        await chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            files: ['contentScript.js'],
+        });
+        await _state.setState({ isContentScriptInjected: true });
+
+        // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...実装する技術がない...
+        const { language, transcript } = await sendMessageToTabsPromise(tabId, {
+            from: extensionNames.background,
+            to: extensionNames.contentScript,
+            order: [orderNames.sendStatus],
+        });
+        // 結果がどうあれ現状の状態を保存する
+        await _state.setState({
+            isEnglish: language,
+            isTranscriptON: transcript,
+        });
+        // 字幕が英語じゃない、またはトランスクリプトがONでないならば
+        // キャンセル
+        if (!language || !transcript) {
+            // TODO: 失敗またはキャンセルの方法未定義...
+            // ひとまずfalseを返している
+            return false;
+        }
+
+        // <phase 3> inject captureSubtitle.js
+        // 字幕データを取得する
+        await chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            files: ['captureSubtitle.js'],
+        });
+        await _state.setState({ isCaptureSubtitleInjected: true });
+
+        // TODO: ここでcontent scriptが展開完了したのを確認したうえで次に行きたいのだが...
+
+        const { subtitles } = await sendMessageToTabsPromise(tabId, {
+            from: extensionNames.background,
+            to: extensionNames.captureSubtitle,
+            order: [orderNames.sendSubtitles],
+        });
+
+        // TODO: subtitlesのデータがおかしくないか検査したい
+        // 条件分岐で検査に合格したら字幕データを保存
+        // 不合格でエラー
+        await _state.setState({ subtitles: subtitles });
+
+        // <phase 4> inject controller.js
+        await chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            files: ['controller.js'],
+        });
+        await _state.setState({ isControllerInjected: true });
+
+        const { success } = await sendMessageToTabsPromise(tabId, {
+            from: extensionNames.background,
+            to: extensionNames.contentScript,
+            order: [orderNames.sendStatus],
+        });
+        // TODO: 字幕データの渡し方が未定義
+        // 今のところ、controller側から要求して渡している
+        // これをこちらから渡すようにしたい...
+        if (!success) {
+            // TODO: 失敗またはキャンセルの方法未定義...
+            // ひとまずfalseを返している
+            return false;
+        }
+
+        await _state.setState({ isTranscriptRestructured: true });
+        // ...ここまででエラーがなければ成功
+        return true;
+    } catch (err) {
+        console.error(err.message);
+    }
+};
+
+/**
+ * handler of RESET
+ * ________________________________________________
+ *
+ * 処理内容：
+ *
+ * - 各 content scriptのリセット：
+ * content scriptはinjectされたまま（というか除去する手段はない）
+ * なのでcontent scriptの状態を変化させないといかん
+ * contentScript.js リセット不要
+ * captureSubtitle.js 要リセット
+ * controller.js 要リセット
+ *
+ * - captureSubtitle.jsから字幕データを取得する
+ *
+ * - controller.jsへ字幕データを渡す
+ *
+ * */
+const handlerOfReset = async (): Promise<boolean> => {
+    try {
+        const isResetSuccess: boolean = await resetEachContentScript();
+        if (!isResetSuccess) {
+        }
+    } catch (err) {
+        console.error(err.message);
+    }
+};
+
+/**
+ *
+ *
+ * TODO:
+ * - 処理中の失敗を段階ごとに理由と一緒に返せるようにしたい
+ * */
+const resetEachContentScript = async (): Promise<boolean> => {
+    try {
+        // すべてリセット成功したとして...
+        return true;
+    } catch (err) {
+        throw new Error(
+            `Error: Failed to restructure ExTranscript after sent subtitles data. ${err.message}`
+        );
+    }
+};
+//
+// --- Other Methods ----------------------------------------
+//
 
 /*
-    stateList module
+    state module
     ______________________________________________
+    service workerなので、Stateを常に参照できるようにしておくため
+    モジュール化したState
 
-    Stateのインスタンスを保存しておく場所
-    インスタンスをどこからでも呼出せるようにするためと、
-    インスタンスをグローバル変数にしたくないからこんな面倒をしている
+    Stateのインスタンスはここへカプセル化され、
+    getInstance()を通して参照が渡される
 
-    検証：service workerがアンロードされても_listの中身は消えないのか?
+    検証してみた結果、アンロード、ロードに耐えうる模様
 */
-const stateList: iStateList = (function () {
-  console.log("stateList module invoked");
-  // Instances stored in this list.
-  const _list = {};
+export const state: iStateModule<iModel> = (function () {
+    let _instance: State<iModel> = null;
 
-  return {
-    register: <TYPE extends object>(
-      name: string,
-      instance: State<TYPE>
-    ): void => {
-      _list[name] = instance;
-    },
-    unregister: (name: string): void => {
-      // これでinstanceもさくじょしていることになるかしら
-      delete _list[name];
-    },
-    // nameで指定するんじゃなくて、
-    // 型引数で指定できるようにしたいなぁ
-    caller: <TYPE extends object>(name: string): State<TYPE> => {
-      return _list[name];
-    },
-    showList: (): void => {
-      console.log("stateList::_list:");
-      console.log(_list);
-    },
-    length: (): number => {
-      return Object.keys(_list).length;
-    },
-  };
+    return {
+        register: (m: State<iModel>): void => {
+            _instance = m;
+        },
+        // unregisterする場面では、もはやStateは要らないから
+        // Stateを削除しちゃってもいいと思う
+        unregister: (): void => {
+            _instance = null;
+        },
+        getInstance: (): State<iModel> => {
+            return _instance;
+        },
+    };
 })();
+
+//
+// --- LEGACY ----------------------------
+//
