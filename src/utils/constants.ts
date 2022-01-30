@@ -40,6 +40,8 @@ export const orderNames = {
     inquireUrl: "inquireUrl",
     // from popup, run process
     run: "run",
+    // reset content script
+    reset: "reset",
     // something succeeded
     success: "success"
 } as const;
@@ -112,6 +114,8 @@ export interface iResponse {
     correctUrl?: boolean;
     // 何かしらの成功を示す
     success?: boolean;
+    // 失敗の理由を示す
+    failureReason?: string,
     // RUN orderに対して、展開がすべて完了したらtrue
     successDeployment?: boolean;
     // Udemy講義ページでトランスクリプトが開かれているか

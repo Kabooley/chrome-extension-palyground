@@ -426,7 +426,9 @@ const handlerOfRun = async (
  * */
 const handlerOfReset = async (): Promise<boolean> => {
     try {
-        const isResetSuccess: boolean = await resetEachContentScript();
+        const _state: State<iModel> = state.getInstance();
+        const { tabId } = await _state.getState();
+        const isResetSuccess: boolean = await resetEachContentScript(tabId);
         if (!isResetSuccess) {
         }
     } catch (err) {
@@ -440,16 +442,40 @@ const handlerOfReset = async (): Promise<boolean> => {
  * TODO:
  * - 処理中の失敗を段階ごとに理由と一緒に返せるようにしたい
  * */
-const resetEachContentScript = async (): Promise<boolean> => {
+const resetEachContentScript = async (tabId: number): Promise<boolean> => {
     try {
         // すべてリセット成功したとして...
-        return true;
+        const captureSubtitle = sendMessageToTabsPromise(tabId, {
+            from: extensionNames.background,
+            to: extensionNames.captureSubtitle,
+            order: [orderNames.reset],
+        });
+        const controller = sendMessageToTabsPromise(tabId, {
+            from: extensionNames.background,
+            to: extensionNames.controller,
+            order: [orderNames.reset],
+        });
+        const results: iResponse[] = await Promise.all([
+            captureSubtitle,
+            controller,
+        ]);
+        // TODO: 以下、もっとわかりやすくして
+        //
+        const failures: iResponse[] = results.filter((r) => {
+            if (!r.success) return r;
+        });
+        if (failures.length) {
+            throw new Error(
+                `Failed to reset content script. ${failures.join(' ')}`
+            );
+        } else return true;
     } catch (err) {
         throw new Error(
             `Error: Failed to restructure ExTranscript after sent subtitles data. ${err.message}`
         );
     }
 };
+
 //
 // --- Other Methods ----------------------------------------
 //
