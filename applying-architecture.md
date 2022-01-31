@@ -10,7 +10,7 @@ MVC と DDD の設計思想を取り入れたい
 
 [1/25:処理についておさらい](#1/25:処理についておさらい)
 
-## DDD設計思想の導入に関するメモ
+## DDD 設計思想の導入に関するメモ
 
 聞きかじりでしかない
 
@@ -22,18 +22,18 @@ MVC と DDD の設計思想を取り入れたい
 
 @popup
 
-- popup を開く
-- popup 上の RUN ボタンを押す
+-   popup を開く
+-   popup 上の RUN ボタンを押す
 
 @Udemy-page
 
-- ブラウザのサイズを変更する
-- 字幕を変更する
-- トランスクリプトを ON/OFF にする
-- URL が変わる(動画が切り替わる)
-- tab を閉じる（ブラウザを閉じる）
+-   ブラウザのサイズを変更する
+-   字幕を変更する
+-   トランスクリプトを ON/OFF にする
+-   URL が変わる(動画が切り替わる)
+-   tab を閉じる（ブラウザを閉じる）
 
-- ExTranscript を閉じる
+-   ExTranscript を閉じる
 
 #### 一般的な処理の流れ
 
@@ -76,9 +76,9 @@ microsoft の DDD の説明によれば
 
 > オブジェクト指向におけるクラスは、
 >
-> - インスタンス変数
-> - インスタンス変数 を正常に制御するメソッド
->   から構成されるのが基本です
+> -   インスタンス変数
+> -   インスタンス変数 を正常に制御するメソッド
+>     から構成されるのが基本です
 
 つまり単一責任とはある変数を変更できるクラスは一つだけで
 そのクラスが負う責任は変数の正常動作にたいして責任を負うのである
@@ -275,9 +275,9 @@ OrderManager インスタンスの execute()にはこのコンストラクタ関
 
 メリット
 
-- クラスはメソッドを持つ必要がなくなる
-- 実際に実行する関数は呼び出し側のクラスのプロパティと共通の名前をもつことでプロパティを変更できる
-- 呼び出し側の都合でクラスに好きなメソッドを実行させることができる
+-   クラスはメソッドを持つ必要がなくなる
+-   実際に実行する関数は呼び出し側のクラスのプロパティと共通の名前をもつことでプロパティを変更できる
+-   呼び出し側の都合でクラスに好きなメソッドを実行させることができる
 
 これを応用して Queue クラスを作ってみる
 
@@ -556,8 +556,8 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 中目標として MVC モデルの導入、DDD 設計思想に近づけたい
 そのために必要なこととして
 
-- order にたいして処理に必要な関数を Queue につめて Queue を実行するシステムにする
-- state の変更内容に応じて notify するシステムにする
+-   order にたいして処理に必要な関数を Queue につめて Queue を実行するシステムにする
+-   state の変更内容に応じて notify するシステムにする
 
 ##### order と Queue の実装に関して
 
@@ -567,22 +567,21 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 
 前提：必要な state の生成は chrome.runtime.onInstalled で済んでいる
 
-- メッセージ受信機能がメッセージハンドラを呼び出す
-- メッセージハンドラはメッセージ内容を読んで、必要な処理（関数）を Queue へつめる
-- Queue を queue 実行関数へ渡す
-- Queue の関数が一つずつ実行される
-- 実行するにつれて必要な state の変更も発生する
-- すべての処理が無事に済んだら success, うまくいかなかったら failure を返す
+-   メッセージ受信機能がメッセージハンドラを呼び出す
+-   メッセージハンドラはメッセージ内容を読んで、必要な処理（関数）を Queue へつめる
+-   Queue を queue 実行関数へ渡す
+-   Queue の関数が一つずつ実行される
+-   実行するにつれて必要な state の変更も発生する
+-   すべての処理が無事に済んだら success, うまくいかなかったら failure を返す
 
 実装しようとしたときにぶち当たった障害
 
-- Queue につめる関数を一般化したいけれど、戻り値の扱いが異なるから一般化できない
-  すくなくとも今の自分の腕では...
+-   Queue につめる関数を一般化したいけれど、戻り値の扱いが異なるから一般化できない
+    すくなくとも今の自分の腕では...
 
 ##### state observer の実装に関して
 
-
-結論：proxyはいらない。既存のStateにobservableを持たせればいい
+結論：proxy はいらない。既存の State に observable を持たせればいい
 
 ```TypeScript
 /*
@@ -593,7 +592,7 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 
 
 
-*/ 
+*/
 const deepCopier = <T>(data: T): T => {
   return JSON.parse(JSON.stringify(data));
 };
@@ -630,13 +629,13 @@ class State<TYPE extends object> {
 
   setState(prop: { [Property in keyof TYPE]?: TYPE[Property] }): void {
     // いったんここでdeep copyをとるとして...
-    // 
+    //
     // NOTE: spread構文だとproxyのsetハンドラは反応しないらしい...
     // this._proxy = {
     //   ...this._proxy,
     //   ...prop,
     // };
-    
+
     // 必ず浅いコピーを作る
     const temporary = {...prop};
     Object.keys(temporary).forEach((p, index) => {
@@ -796,36 +795,35 @@ console.log(tmp)
 ```
 
 作ってみて思ったのが
-Proxyは導入してもいいけれど
+Proxy は導入してもいいけれど
 型をつけるのがむずかしく、
 結構ハードコーディングの可能性が出てくるのと、
 そもそも要らないのではという話
 
 使い方が悪いかもだけど
-notifyするためだけに使おうとおもっていじっていたが、
-結局順序としてsetstateしてからproxyに移るので
-じゃあsetstateで完結させればいいじゃんとなった
+notify するためだけに使おうとおもっていじっていたが、
+結局順序として setstate してから proxy に移るので
+じゃあ setstate で完結させればいいじゃんとなった
 
 機能がダダ被りなので、
-stateを作るかproxyを使うかどちらかの話になってくる
+state を作るか proxy を使うかどちらかの話になってくる
 
-notifyはsetstate内で呼出せばいいだけなので
-結局proxy入らないねって話になる
-
+notify は setstate 内で呼出せばいいだけなので
+結局 proxy 入らないねって話になる
 
 ## 1/25:処理についておさらい
 
 ユーザ操作：
 
-- [popup](#popupが開かれる)
-- [popup](#RUNが押される)
-- [ブラウザ] ウィンドウのサイズを変更する
-- [ブラウザ] 字幕の言語を変更する
-- [ブラウザ] (公式の)トランスクリプトを ON または OFF にする
-  一度拡張機能を実行済ならこれに合わせて閉じる、再度開かれたら開く
-- [ブラウザ](<#URLが変わる(動画が切り替わる)>)
-- [ブラウザ] タブを閉じる
-- [ExTranscript] ExTranscript を閉じる
+-   [popup](#popupが開かれる)
+-   [popup](#RUNが押される)
+-   [ブラウザ] ウィンドウのサイズを変更する
+-   [ブラウザ] 字幕の言語を変更する
+-   [ブラウザ] (公式の)トランスクリプトを ON または OFF にする
+    一度拡張機能を実行済ならこれに合わせて閉じる、再度開かれたら開く
+-   [ブラウザ](<#URLが変わる(動画が切り替わる)>)
+-   [ブラウザ] タブを閉じる
+-   [ExTranscript] ExTranscript を閉じる
 
 [設計に関する考察](#設計に関する考察)
 
@@ -946,36 +944,36 @@ const popupMessageHandler = async (m: messageTemplate): Promise<void> => {
 
 処理順序:
 
-- [poup] マウント時または毎度の useEffect()で background へ`order:[orderNames.isUrlCorrect]`を送信する
+-   [poup] マウント時または毎度の useEffect()で background へ`order:[orderNames.isUrlCorrect]`を送信する
 
-- [background] メッセージハンドラが受信してメッセージに応じた処理関数へ移動する
-- [background] メッセージに含まれる sender から URL を取得する
-- [background] url を matchURL と比較して比較結果を sendResponse()で返す
-  `{complete: true, url: true}`
-- [poup] sendResponse の結果に応じて state を変更し、popup の表示内容を変える
+-   [background] メッセージハンドラが受信してメッセージに応じた処理関数へ移動する
+-   [background] メッセージに含まれる sender から URL を取得する
+-   [background] url を matchURL と比較して比較結果を sendResponse()で返す
+    `{complete: true, url: true}`
+-   [poup] sendResponse の結果に応じて state を変更し、popup の表示内容を変える
 
 popup の state について:
 
-- `matchedPage`: popup を開いたときの tab の URL が正しいかについての状態を管理する state
+-   `matchedPage`: popup を開いたときの tab の URL が正しいかについての状態を管理する state
 
-#### RUNが押される
+#### RUN が押される
 
 前提：
 
-- RUN ボタンは`matchedPage`が true の時に有効になるとする
-- sendResponse()で返事が返されることを前提とする
-- sendResponse()はエラーが返されることも想定する
+-   RUN ボタンは`matchedPage`が true の時に有効になるとする
+-   sendResponse()で返事が返されることを前提とする
+-   sendResponse()はエラーが返されることも想定する
 
 エラーの可能性箇条書き：
 
-- 字幕が英語でない、トランスクリプトが開かれていない
-  alert で字幕を英語にするように、またはトランスクリプトを開くように促す
+-   字幕が英語でない、トランスクリプトが開かれていない
+    alert で字幕を英語にするように、またはトランスクリプトを開くように促す
 
-- 処理途中で字幕の言語を変えた、トランスクリプトを閉じた
-  alert で失敗を表示し、英語とトランスクリプトを戻して再度実行してもらうように促す
+-   処理途中で字幕の言語を変えた、トランスクリプトを閉じた
+    alert で失敗を表示し、英語とトランスクリプトを戻して再度実行してもらうように促す
 
-- それ以外のエラー
-  エラーだからどうしようもないよ
+-   それ以外のエラー
+    エラーだからどうしようもないよ
 
 つまり大別して、成功、失敗（アラート）、エラー
 成功：`complete: true`
@@ -1144,19 +1142,15 @@ controller.js を inject
 controller.js が正常に ExTranscript を展開できたか確認
 正常展開 ? popup へ正常完了の返事 : エラー出力
 
+orderName.run を受け取った後の処理に見られる傾向：
 
-orderName.runを受け取った後の処理に見られる傾向：
+-   content script の inject
 
-- content scriptのinject
+-   content script からのメッセージで次の処理に必要な情報を取得する
+    または
+-   background script から inject した content script へ必要な情報を催促して取得する
 
-- content scriptからのメッセージで次の処理に必要な情報を取得する
-または
-- background scriptからinjectしたcontent scriptへ必要な情報を催促して取得する
-
-- 取得した情報を検査してstateへ保存して次へ進むか、処理を中断してエラーを返す
-
-
-
+-   取得した情報を検査して state へ保存して次へ進むか、処理を中断してエラーを返す
 
 #### URL が変わる(動画が切り替わる)
 
@@ -1166,38 +1160,38 @@ orderName.runを受け取った後の処理に見られる傾向：
 
 継続条件：
 
-- 拡張機能が未展開であるけど、Udemy 講義ページである
-  なにもしない
+-   拡張機能が未展開であるけど、Udemy 講義ページである
+    なにもしない
 
-- 拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
-  拡張機能をリセットして引き続き展開する
+-   拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
+    拡張機能をリセットして引き続き展開する
 
-- 拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
-  拡張機能は OFF にする
+-   拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
+    拡張機能は OFF にする
 
-- タブが切り替わった
-  何もしない
+-   タブが切り替わった
+    何もしない
 
-- 拡張機能が展開されていたタブが閉じられた
-  拡張機能を OFF にする
+-   拡張機能が展開されていたタブが閉じられた
+    拡張機能を OFF にする
 
 次の時はどうするか:
 
-- すでに拡張機能が実行されているときにページのユーザ操作によるリロードがあった
-  変わらず展開したい
-  google 翻訳アプリも変わらず展開しているし
-  OFF になるのは、
-  tab が閉じられたとき、ユーザの操作によって拡張機能上の OFF ボタンが押されたとき
-  拡張機能マネージャでが OFF にされたとき、
-  そのタブで別の Udemy 講義ページ以外に移動したとき
+-   すでに拡張機能が実行されているときにページのユーザ操作によるリロードがあった
+    変わらず展開したい
+    google 翻訳アプリも変わらず展開しているし
+    OFF になるのは、
+    tab が閉じられたとき、ユーザの操作によって拡張機能上の OFF ボタンが押されたとき
+    拡張機能マネージャでが OFF にされたとき、
+    そのタブで別の Udemy 講義ページ以外に移動したとき
 
 Udemy ページの挙動と chrome.tabs.onUpdated の挙動:
 
-- リンクをたどって Udemy 講義ページへ移動したとき
-  "loading"は二度以上起こる
-  しかし、URL は同じ(#以下が変わるだけ)
+-   リンクをたどって Udemy 講義ページへ移動したとき
+    "loading"は二度以上起こる
+    しかし、URL は同じ(#以下が変わるだけ)
 
-  ...よく考えたらこれ関係ないな...
+    ...よく考えたらこれ関係ないな...
 
 ...以上の挙動と事情がすべて反映されるように条件分岐を設ける
 
@@ -1260,21 +1254,21 @@ chrome.tabs.onUpdated.addListener(
 
 要確認：
 
-- state はどのようにリセットすべきか
-- content script は inject されたままなのか
-- content script は inject されたままだとして、ちゃんとリロードされたページの DOM を取得できるのか？
+-   state はどのようにリセットすべきか
+-   content script は inject されたままなのか
+-   content script は inject されたままだとして、ちゃんとリロードされたページの DOM を取得できるのか？
 
 動画が切り替わったら
 
-- 各content scriptのイベントリスナをremoveして再度セットする必要
-- 各content scriptのイベントリスナリセットを通知、完了報告管理
-- `state<iSubtitles>.subtitles: null`に
-- `state<iTabId>`はそのまま
-- `state<iContentUrl>`はURLが変わったのでその反映だけ
-- `state<iProgress>`は...
-- ExTranscriptは中身をいったん空にする(空にして表示する loading circleでも表示するかい？)
+-   各 content script のイベントリスナを remove して再度セットする必要
+-   各 content script のイベントリスナリセットを通知、完了報告管理
+-   `state<iSubtitles>.subtitles: null`に
+-   `state<iTabId>`はそのまま
+-   `state<iContentUrl>`は URL が変わったのでその反映だけ
+-   `state<iProgress>`は...
+-   ExTranscript は中身をいったん空にする(空にして表示する loading circle でも表示するかい？)
 
-進行状況state：
+進行状況 state：
 
 ```TypeScript
 
@@ -1305,67 +1299,64 @@ const progressBase: iProgress = {
   isContentScriptInjected: true,
   isCaptureSubtitleInjected: true,
   isControllerInjected: true,
-  // 
+  //
   // 字幕データは取り直しになるのでfalseだけれど...
-  // 
+  //
   isSubtitleCapturing: false,
   isSubtitleCaptured: false,
-  // 
+  //
   // 動画の切り替わりで、中身は空になるけれど、「展開」はしているからtrue
-  // 
+  //
   isTranscriptRestructured: true
 };
 ```
 
-この進行状況stateだと矛盾が起こりそうだなぁ...
+この進行状況 state だと矛盾が起こりそうだなぁ...
 
 リセットタスク：
 
+-   各 content script のイベントリスナを remove して再度セットする必要
+-   各 content script のイベントリスナリセットを通知、完了報告管理
+-   `state<iSubtitles>.subtitles: null`に
+-   `state<iTabId>`はそのまま
+-   `state<iContentUrl>`は URL が変わったのでその反映だけ
+-   `state<iProgress>`は...
+-   ExTranscript は中身をいったん空にする(空にして表示する loading circle でも表示するかい？)
 
-- 各content scriptのイベントリスナをremoveして再度セットする必要
-- 各content scriptのイベントリスナリセットを通知、完了報告管理
-- `state<iSubtitles>.subtitles: null`に
-- `state<iTabId>`はそのまま
-- `state<iContentUrl>`はURLが変わったのでその反映だけ
-- `state<iProgress>`は...
-- ExTranscriptは中身をいったん空にする(空にして表示する loading circleでも表示するかい？)
+-   [background] contentScript.js へリセット通知
+-   [background] captureSubtitle.js へリセット通知
+-   [background] controller.js へリセット通知
+-   [background] 各 content script から`{success: boolean;}`の返事取得
+-   [background] 全ての content script sucess が true だったら state を更新
+-   [background] 字幕取得処理を実施
+-   [background]
 
-- [background] contentScript.jsへリセット通知
-- [background] captureSubtitle.jsへリセット通知
-- [background] controller.jsへリセット通知
-- [background] 各content scriptから`{success: boolean;}`の返事取得
-- [background] 全てのcontent script sucessがtrueだったらstateを更新
-- [background] 字幕取得処理を実施
-- [background] 
+-   [contentScript] toggle ボタンの要素は変化しないのでリセット不要
+-   [contentScript] ccPopupButton 要素も変化しないのでリセット不要
+    結果、contentScript はリセット不要でした...
 
+-   [captureSubtitle] state のリセット
+-   [captureSubtitle] 要素へのリスナはないのでリスナのリセット不要
+-   [captureSubtitle] 毎度関数の実行時にすべて DOM を取得しなおすのでリセット不要
+-   [captureSubtitle] 実行関数をサイド呼出せばいいだけっぽい
+-   [captureSubtitle] 処理完了したら background へ字幕データを送信する
 
-- [contentScript] toggleボタンの要素は変化しないのでリセット不要
-- [contentScript] ccPopupButton要素も変化しないのでリセット不要
-  結果、contentScriptはリセット不要でした...
-
-- [captureSubtitle] stateのリセット
-- [captureSubtitle] 要素へのリスナはないのでリスナのリセット不要
-- [captureSubtitle] 毎度関数の実行時にすべてDOMを取得しなおすのでリセット不要
-- [captureSubtitle] 実行関数をサイド呼出せばいいだけっぽい
-- [captureSubtitle] 処理完了したらbackgroundへ字幕データを送信する
-
-- [controller] stateは...
-    _state: iControllerState 不要
-    _subtitles リセット
-    _highlight リセット
-    _ExHighlight リセット
-    _indexList リセット
-
+-   [controller] state は...
+    \_state: iControllerState 不要
+    \_subtitles リセット
+    \_highlight リセット
+    \_ExHighlight リセット
+    \_indexList リセット
 
 ```TypeScript
 // background.ts
-// 
+//
 // chrome.tabs.onUpdated.addListener()より...
 
 const resetHandler = async (): Promise<void> => {
   try {
     // reset開始...
-    // 
+    //
     // 各content scriptへリセット通知、すべて成功ならエラーがスローされない
     // reset orderというか初期化しなおしだなただしくは
     await resetOrderHandler();
@@ -1450,29 +1441,27 @@ export interface iResponse {
 
 要確認：
 
-- state はどのようにリセットすべきか
-- content script はそのページから除去できるのか
-- 除去できないとしたらどうするか
-
+-   state はどのようにリセットすべきか
+-   content script はそのページから除去できるのか
+-   除去できないとしたらどうするか
 
 ## 1/28:各処理機能の実装をしてみる
-
 
 [1/25:処理についておさらい](#1/25:処理についておさらい)
 にて検討した処理を実装してみる
 
-たびたび障害となる、service workerゆえに変更を保持できない問題
+たびたび障害となる、service worker ゆえに変更を保持できない問題
 これは別の「環境」を用意してやれば解決するだろうか
 
-つまりbackground scriptじゃない環境をstateのために用意すればいちいちロード、アンロードに対応しなくていい
+つまり background script じゃない環境を state のために用意すればいちいちロード、アンロードに対応しなくていい
 もしくは最小限に抑えられるのか
 
 ```TypeScript
 /**
  * よく考えたらstateをやたら作る必要はなくて、すべてまとめちゃっても別にいいわけだ
  * そうなるとstateListみたいなものを作る必要はなくなるわけで
- * */ 
-// 
+ * */
+//
 // これは間違い
 // interface iModel {
 //     [Property in keyof iProgress]: iProgress[Property];
@@ -1556,4 +1545,41 @@ const model_ = (function() {
     }
 })();
 
+```
+
+## 1/31
+
+**update**やること：
+
+-   background.ts の update に伴った各 content script の update
+-   エラーハンドリング：どういう場合にエラースローでどういうときに続行なのか定義する
+-   Model の見直し：エラーハンドリングと伴って
+-   各`TODO`の消化
+-   Observer の導入: state の変化で反応させられる View に導入する
+-   拡張機能の OFF 機能の実装
+-   （可能ならば）transcript が ON じゃなくても、英語字幕でなくても機能を ON にできるようにする
+-   見た目をイカした感じに
+
+#### Observer の導入
+
+Model の変化で View を変化させるような場面は存在した...
+
+例：
+
+-   popup の`capturing`表示、`complete`表示に関して
+
+state の`isSubtitleCaptured`, `isSubtitleCapturing`の値の変化を
+notify して popup を変化させてもいいね
+
+-   controller.js が表示する subtitles データの変化を notify されるようにする
+
+`state.subtitles`が変化したら notfy されて取得する仕組みにする
+
+```TypeScript
+class Observable {
+  private _observers: (params?:any) => any | void;
+  constructor() {
+    this._observers = [];
+  };
+}
 ```
