@@ -22,18 +22,18 @@ MVC と DDD の設計思想を取り入れたい
 
 @popup
 
--   popup を開く
--   popup 上の RUN ボタンを押す
+- popup を開く
+- popup 上の RUN ボタンを押す
 
 @Udemy-page
 
--   ブラウザのサイズを変更する
--   字幕を変更する
--   トランスクリプトを ON/OFF にする
--   URL が変わる(動画が切り替わる)
--   tab を閉じる（ブラウザを閉じる）
+- ブラウザのサイズを変更する
+- 字幕を変更する
+- トランスクリプトを ON/OFF にする
+- URL が変わる(動画が切り替わる)
+- tab を閉じる（ブラウザを閉じる）
 
--   ExTranscript を閉じる
+- ExTranscript を閉じる
 
 #### 一般的な処理の流れ
 
@@ -76,9 +76,9 @@ microsoft の DDD の説明によれば
 
 > オブジェクト指向におけるクラスは、
 >
-> -   インスタンス変数
-> -   インスタンス変数 を正常に制御するメソッド
->     から構成されるのが基本です
+> - インスタンス変数
+> - インスタンス変数 を正常に制御するメソッド
+>   から構成されるのが基本です
 
 つまり単一責任とはある変数を変更できるクラスは一つだけで
 そのクラスが負う責任は変数の正常動作にたいして責任を負うのである
@@ -275,9 +275,9 @@ OrderManager インスタンスの execute()にはこのコンストラクタ関
 
 メリット
 
--   クラスはメソッドを持つ必要がなくなる
--   実際に実行する関数は呼び出し側のクラスのプロパティと共通の名前をもつことでプロパティを変更できる
--   呼び出し側の都合でクラスに好きなメソッドを実行させることができる
+- クラスはメソッドを持つ必要がなくなる
+- 実際に実行する関数は呼び出し側のクラスのプロパティと共通の名前をもつことでプロパティを変更できる
+- 呼び出し側の都合でクラスに好きなメソッドを実行させることができる
 
 これを応用して Queue クラスを作ってみる
 
@@ -556,8 +556,8 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 中目標として MVC モデルの導入、DDD 設計思想に近づけたい
 そのために必要なこととして
 
--   order にたいして処理に必要な関数を Queue につめて Queue を実行するシステムにする
--   state の変更内容に応じて notify するシステムにする
+- order にたいして処理に必要な関数を Queue につめて Queue を実行するシステムにする
+- state の変更内容に応じて notify するシステムにする
 
 ##### order と Queue の実装に関して
 
@@ -567,17 +567,17 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 
 前提：必要な state の生成は chrome.runtime.onInstalled で済んでいる
 
--   メッセージ受信機能がメッセージハンドラを呼び出す
--   メッセージハンドラはメッセージ内容を読んで、必要な処理（関数）を Queue へつめる
--   Queue を queue 実行関数へ渡す
--   Queue の関数が一つずつ実行される
--   実行するにつれて必要な state の変更も発生する
--   すべての処理が無事に済んだら success, うまくいかなかったら failure を返す
+- メッセージ受信機能がメッセージハンドラを呼び出す
+- メッセージハンドラはメッセージ内容を読んで、必要な処理（関数）を Queue へつめる
+- Queue を queue 実行関数へ渡す
+- Queue の関数が一つずつ実行される
+- 実行するにつれて必要な state の変更も発生する
+- すべての処理が無事に済んだら success, うまくいかなかったら failure を返す
 
 実装しようとしたときにぶち当たった障害
 
--   Queue につめる関数を一般化したいけれど、戻り値の扱いが異なるから一般化できない
-    すくなくとも今の自分の腕では...
+- Queue につめる関数を一般化したいけれど、戻り値の扱いが異なるから一般化できない
+  すくなくとも今の自分の腕では...
 
 ##### state observer の実装に関して
 
@@ -815,15 +815,15 @@ notify は setstate 内で呼出せばいいだけなので
 
 ユーザ操作：
 
--   [popup](#popupが開かれる)
--   [popup](#RUNが押される)
--   [ブラウザ] ウィンドウのサイズを変更する
--   [ブラウザ] 字幕の言語を変更する
--   [ブラウザ] (公式の)トランスクリプトを ON または OFF にする
-    一度拡張機能を実行済ならこれに合わせて閉じる、再度開かれたら開く
--   [ブラウザ](<#URLが変わる(動画が切り替わる)>)
--   [ブラウザ] タブを閉じる
--   [ExTranscript] ExTranscript を閉じる
+- [popup](#popupが開かれる)
+- [popup](#RUNが押される)
+- [ブラウザ] ウィンドウのサイズを変更する
+- [ブラウザ] 字幕の言語を変更する
+- [ブラウザ] (公式の)トランスクリプトを ON または OFF にする
+  一度拡張機能を実行済ならこれに合わせて閉じる、再度開かれたら開く
+- [ブラウザ](<#URLが変わる(動画が切り替わる)>)
+- [ブラウザ] タブを閉じる
+- [ExTranscript] ExTranscript を閉じる
 
 [設計に関する考察](#設計に関する考察)
 
@@ -944,36 +944,36 @@ const popupMessageHandler = async (m: messageTemplate): Promise<void> => {
 
 処理順序:
 
--   [poup] マウント時または毎度の useEffect()で background へ`order:[orderNames.isUrlCorrect]`を送信する
+- [poup] マウント時または毎度の useEffect()で background へ`order:[orderNames.isUrlCorrect]`を送信する
 
--   [background] メッセージハンドラが受信してメッセージに応じた処理関数へ移動する
--   [background] メッセージに含まれる sender から URL を取得する
--   [background] url を matchURL と比較して比較結果を sendResponse()で返す
-    `{complete: true, url: true}`
--   [poup] sendResponse の結果に応じて state を変更し、popup の表示内容を変える
+- [background] メッセージハンドラが受信してメッセージに応じた処理関数へ移動する
+- [background] メッセージに含まれる sender から URL を取得する
+- [background] url を matchURL と比較して比較結果を sendResponse()で返す
+  `{complete: true, url: true}`
+- [poup] sendResponse の結果に応じて state を変更し、popup の表示内容を変える
 
 popup の state について:
 
--   `matchedPage`: popup を開いたときの tab の URL が正しいかについての状態を管理する state
+- `matchedPage`: popup を開いたときの tab の URL が正しいかについての状態を管理する state
 
 #### RUN が押される
 
 前提：
 
--   RUN ボタンは`matchedPage`が true の時に有効になるとする
--   sendResponse()で返事が返されることを前提とする
--   sendResponse()はエラーが返されることも想定する
+- RUN ボタンは`matchedPage`が true の時に有効になるとする
+- sendResponse()で返事が返されることを前提とする
+- sendResponse()はエラーが返されることも想定する
 
 エラーの可能性箇条書き：
 
--   字幕が英語でない、トランスクリプトが開かれていない
-    alert で字幕を英語にするように、またはトランスクリプトを開くように促す
+- 字幕が英語でない、トランスクリプトが開かれていない
+  alert で字幕を英語にするように、またはトランスクリプトを開くように促す
 
--   処理途中で字幕の言語を変えた、トランスクリプトを閉じた
-    alert で失敗を表示し、英語とトランスクリプトを戻して再度実行してもらうように促す
+- 処理途中で字幕の言語を変えた、トランスクリプトを閉じた
+  alert で失敗を表示し、英語とトランスクリプトを戻して再度実行してもらうように促す
 
--   それ以外のエラー
-    エラーだからどうしようもないよ
+- それ以外のエラー
+  エラーだからどうしようもないよ
 
 つまり大別して、成功、失敗（アラート）、エラー
 成功：`complete: true`
@@ -1144,13 +1144,13 @@ controller.js が正常に ExTranscript を展開できたか確認
 
 orderName.run を受け取った後の処理に見られる傾向：
 
--   content script の inject
+- content script の inject
 
--   content script からのメッセージで次の処理に必要な情報を取得する
-    または
--   background script から inject した content script へ必要な情報を催促して取得する
+- content script からのメッセージで次の処理に必要な情報を取得する
+  または
+- background script から inject した content script へ必要な情報を催促して取得する
 
--   取得した情報を検査して state へ保存して次へ進むか、処理を中断してエラーを返す
+- 取得した情報を検査して state へ保存して次へ進むか、処理を中断してエラーを返す
 
 #### URL が変わる(動画が切り替わる)
 
@@ -1160,38 +1160,38 @@ orderName.run を受け取った後の処理に見られる傾向：
 
 継続条件：
 
--   拡張機能が未展開であるけど、Udemy 講義ページである
-    なにもしない
+- 拡張機能が未展開であるけど、Udemy 講義ページである
+  なにもしない
 
--   拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
-    拡張機能をリセットして引き続き展開する
+- 拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
+  拡張機能をリセットして引き続き展開する
 
--   拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
-    拡張機能は OFF にする
+- 拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
+  拡張機能は OFF にする
 
--   タブが切り替わった
-    何もしない
+- タブが切り替わった
+  何もしない
 
--   拡張機能が展開されていたタブが閉じられた
-    拡張機能を OFF にする
+- 拡張機能が展開されていたタブが閉じられた
+  拡張機能を OFF にする
 
 次の時はどうするか:
 
--   すでに拡張機能が実行されているときにページのユーザ操作によるリロードがあった
-    変わらず展開したい
-    google 翻訳アプリも変わらず展開しているし
-    OFF になるのは、
-    tab が閉じられたとき、ユーザの操作によって拡張機能上の OFF ボタンが押されたとき
-    拡張機能マネージャでが OFF にされたとき、
-    そのタブで別の Udemy 講義ページ以外に移動したとき
+- すでに拡張機能が実行されているときにページのユーザ操作によるリロードがあった
+  変わらず展開したい
+  google 翻訳アプリも変わらず展開しているし
+  OFF になるのは、
+  tab が閉じられたとき、ユーザの操作によって拡張機能上の OFF ボタンが押されたとき
+  拡張機能マネージャでが OFF にされたとき、
+  そのタブで別の Udemy 講義ページ以外に移動したとき
 
 Udemy ページの挙動と chrome.tabs.onUpdated の挙動:
 
--   リンクをたどって Udemy 講義ページへ移動したとき
-    "loading"は二度以上起こる
-    しかし、URL は同じ(#以下が変わるだけ)
+- リンクをたどって Udemy 講義ページへ移動したとき
+  "loading"は二度以上起こる
+  しかし、URL は同じ(#以下が変わるだけ)
 
-    ...よく考えたらこれ関係ないな...
+  ...よく考えたらこれ関係ないな...
 
 ...以上の挙動と事情がすべて反映されるように条件分岐を設ける
 
@@ -1254,19 +1254,19 @@ chrome.tabs.onUpdated.addListener(
 
 要確認：
 
--   state はどのようにリセットすべきか
--   content script は inject されたままなのか
--   content script は inject されたままだとして、ちゃんとリロードされたページの DOM を取得できるのか？
+- state はどのようにリセットすべきか
+- content script は inject されたままなのか
+- content script は inject されたままだとして、ちゃんとリロードされたページの DOM を取得できるのか？
 
 動画が切り替わったら
 
--   各 content script のイベントリスナを remove して再度セットする必要
--   各 content script のイベントリスナリセットを通知、完了報告管理
--   `state<iSubtitles>.subtitles: null`に
--   `state<iTabId>`はそのまま
--   `state<iContentUrl>`は URL が変わったのでその反映だけ
--   `state<iProgress>`は...
--   ExTranscript は中身をいったん空にする(空にして表示する loading circle でも表示するかい？)
+- 各 content script のイベントリスナを remove して再度セットする必要
+- 各 content script のイベントリスナリセットを通知、完了報告管理
+- `state<iSubtitles>.subtitles: null`に
+- `state<iTabId>`はそのまま
+- `state<iContentUrl>`は URL が変わったのでその反映だけ
+- `state<iProgress>`は...
+- ExTranscript は中身をいったん空にする(空にして表示する loading circle でも表示するかい？)
 
 進行状況 state：
 
@@ -1315,38 +1315,38 @@ const progressBase: iProgress = {
 
 リセットタスク：
 
--   各 content script のイベントリスナを remove して再度セットする必要
--   各 content script のイベントリスナリセットを通知、完了報告管理
--   `state<iSubtitles>.subtitles: null`に
--   `state<iTabId>`はそのまま
--   `state<iContentUrl>`は URL が変わったのでその反映だけ
--   `state<iProgress>`は...
--   ExTranscript は中身をいったん空にする(空にして表示する loading circle でも表示するかい？)
+- 各 content script のイベントリスナを remove して再度セットする必要
+- 各 content script のイベントリスナリセットを通知、完了報告管理
+- `state<iSubtitles>.subtitles: null`に
+- `state<iTabId>`はそのまま
+- `state<iContentUrl>`は URL が変わったのでその反映だけ
+- `state<iProgress>`は...
+- ExTranscript は中身をいったん空にする(空にして表示する loading circle でも表示するかい？)
 
--   [background] contentScript.js へリセット通知
--   [background] captureSubtitle.js へリセット通知
--   [background] controller.js へリセット通知
--   [background] 各 content script から`{success: boolean;}`の返事取得
--   [background] 全ての content script sucess が true だったら state を更新
--   [background] 字幕取得処理を実施
--   [background]
+- [background] contentScript.js へリセット通知
+- [background] captureSubtitle.js へリセット通知
+- [background] controller.js へリセット通知
+- [background] 各 content script から`{success: boolean;}`の返事取得
+- [background] 全ての content script sucess が true だったら state を更新
+- [background] 字幕取得処理を実施
+- [background]
 
--   [contentScript] toggle ボタンの要素は変化しないのでリセット不要
--   [contentScript] ccPopupButton 要素も変化しないのでリセット不要
-    結果、contentScript はリセット不要でした...
+- [contentScript] toggle ボタンの要素は変化しないのでリセット不要
+- [contentScript] ccPopupButton 要素も変化しないのでリセット不要
+  結果、contentScript はリセット不要でした...
 
--   [captureSubtitle] state のリセット
--   [captureSubtitle] 要素へのリスナはないのでリスナのリセット不要
--   [captureSubtitle] 毎度関数の実行時にすべて DOM を取得しなおすのでリセット不要
--   [captureSubtitle] 実行関数をサイド呼出せばいいだけっぽい
--   [captureSubtitle] 処理完了したら background へ字幕データを送信する
+- [captureSubtitle] state のリセット
+- [captureSubtitle] 要素へのリスナはないのでリスナのリセット不要
+- [captureSubtitle] 毎度関数の実行時にすべて DOM を取得しなおすのでリセット不要
+- [captureSubtitle] 実行関数をサイド呼出せばいいだけっぽい
+- [captureSubtitle] 処理完了したら background へ字幕データを送信する
 
--   [controller] state は...
-    \_state: iControllerState 不要
-    \_subtitles リセット
-    \_highlight リセット
-    \_ExHighlight リセット
-    \_indexList リセット
+- [controller] state は...
+  \_state: iControllerState 不要
+  \_subtitles リセット
+  \_highlight リセット
+  \_ExHighlight リセット
+  \_indexList リセット
 
 ```TypeScript
 // background.ts
@@ -1441,9 +1441,9 @@ export interface iResponse {
 
 要確認：
 
--   state はどのようにリセットすべきか
--   content script はそのページから除去できるのか
--   除去できないとしたらどうするか
+- state はどのようにリセットすべきか
+- content script はそのページから除去できるのか
+- 除去できないとしたらどうするか
 
 ## 1/28:各処理機能の実装をしてみる
 
@@ -1551,14 +1551,14 @@ const model_ = (function() {
 
 **update**やること：
 
--   background.ts の update に伴った各 content script の update
--   エラーハンドリング：どういう場合にエラースローでどういうときに続行なのか定義する
--   Model の見直し：エラーハンドリングと伴って
--   各`TODO`の消化
--   Observer の導入: state の変化で反応させられる View に導入する
--   拡張機能の OFF 機能の実装
--   （可能ならば）transcript が ON じゃなくても、英語字幕でなくても機能を ON にできるようにする
--   見た目をイカした感じに
+- background.ts の update に伴った各 content script の update
+- エラーハンドリング：どういう場合にエラースローでどういうときに続行なのか定義する
+- Model の見直し：エラーハンドリングと伴って
+- 各`TODO`の消化
+- Observer の導入: state の変化で反応させられる View に導入する
+- 拡張機能の OFF 機能の実装
+- （可能ならば）transcript が ON じゃなくても、英語字幕でなくても機能を ON にできるようにする
+- 見た目をイカした感じに
 
 #### Observer の導入
 
@@ -1566,12 +1566,12 @@ Model の変化で View を変化させるような場面は存在した...
 
 例：
 
--   popup の`capturing`表示、`complete`表示に関して
+- popup の`capturing`表示、`complete`表示に関して
 
 state の`isSubtitleCaptured`, `isSubtitleCapturing`の値の変化を
 notify して popup を変化させてもいいね
 
--   controller.js が表示する subtitles データの変化を notify されるようにする
+- controller.js が表示する subtitles データの変化を notify されるようにする
 
 `state.subtitles`が変化したら notfy されて取得する仕組みにする
 
@@ -1595,11 +1595,11 @@ ExTranscript を展開するにあたっての機能：リセット不要
 
 要改善：
 
--   inject 時に字幕データを取得することが前提となっている仕様
+- inject 時に字幕データを取得することが前提となっている仕様
 
-    これは background の handler の処理と食い違うので要修正
-    字幕データは content script 側から要求するのではなくて、
-    background script 側から与えるものである
+  これは background の handler の処理と食い違うので要修正
+  字幕データは content script 側から要求するのではなくて、
+  background script 側から与えるものである
 
 おさらい controller.ts
 
@@ -1622,23 +1622,26 @@ ExTranscript を展開するにあたっての機能：リセット不要
 
 なので、次の通りにする
 
--   字幕データがなくても ExTranscript を展開できるようにする
--   字幕データが届き次第、ExTranscript へ展開する仕様にする
--   自動スクロールも、字幕データが届き次第リセットされる仕様にする
+- 字幕データがなくても ExTranscript を展開できるようにする
+- 字幕データが届き次第、ExTranscript へ展開する仕様にする
+- 自動スクロールも、字幕データが届き次第リセットされる仕様にする
 
 ```TypeScript
 
+
+// Annotations
+//
 interface iController {
   // 本家Transcriptのポジション2通り
-  _position: keyof_positionStatus,
+  position: keyof_positionStatus,
   // 本家Transcriptがsidebarであるときの表示のされ方2通り
-  _view: keyof_viewStatus,
+  view: keyof_viewStatus,
   // 本家Transcriptでハイライトされている字幕の要素の順番
-  _highlight: number;
+  highlight: number;
   // ExTranscriptの字幕要素のうち、いまハイライトしている要素の順番
-  _ExHighlight: number;
+  ExHighlight: number;
   // _subtitlesのindexプロパティからなる配列
-  _indexList: number[];
+  indexList: number[];
 }
 
 // 字幕データはでかいので、毎回気軽に呼び出さないでほしい
@@ -1647,21 +1650,33 @@ interface iSubtitles {
   subtitle: subtitle_piece[];
 }
 
+
+type iObserver<TYPE extends object> = (prop: {[Property in keyof TYPE]?: TYPE[Property]}, prev: TYPE) => void;
+
+
+// Constants
+//
 const controllerStateBase: iController = {
-  _position: "sidebar",
-  _view: "wideView",
-  _highlight: null,
-    _ExHighlight: null;
-  _indexList: [];
+  position: "",
+  view: "",
+  highlight: null,
+  ExHighlight: null;
+  indexList: [];
+} as const;
+
+const subtitleBase: iSubtitle = {
+    subtitles: [];
 } as const;
 
 
+// Classes
+//
 class State<TYPE extends object> {
   private _state: TYPE;
-  private _observable: Observable;
+  public observable: Observable;
   constructor(s: TYPE, o: Observable) {
     this._observable = o;
-    this._state = s;
+    this._state = {...s};
   };
 
   setState(prop: {
@@ -1683,11 +1698,6 @@ class State<TYPE extends object> {
       return {...this._state};
     };
 };
-
-
-type iObserver<TYPE extends object> = (prop: {[Property in keyof TYPE]?: TYPE[Property]}, prev: TYPE) => void;
-
-
 
 class Observable<TYPE> {
   private _observers: iObserver<TYPE>[];
@@ -1713,18 +1723,174 @@ class Observable<TYPE> {
 };
 
 
-const subtitle_observable: Observable<iSubtitles> = new Observable<iSubtitles>();
-const state_observable: Observable<iController> = new Observable<iController>();
-const state: State<iController> = new State<iController>(controllerStateBase, observable);
 
-// subtitle
 
+// Observer aka Updater
+//
+
+// 字幕アップデート
+// 常に受け取った字幕に再レンダリングする
 const updateSubtitle: iObserver<iSubtitles> = (prop, prev): void => {
   if(prop.subtitles === undefined) return;
 
   // 字幕データのアップデート
-  const { position, view } =
-
+  const { position, view } = status.getState();
+    if(position === "sidebar") {
+      renderSidebarTranscript();
+    //   sidebarのrenderingの後は
+    // 高さと幅の更新を必ずしないといかん...のか?
+    // 未確認なので念のため更新することにする
+      sidebarTranscriptView.updateContentHeight();
+      view === "middleView"
+        ? sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.middleview)
+        : sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.wideview);
+    }
+    if(position === "noSidebar"){
+        renderBottomTranscript();
+    }
 }
+
+const updatePosition = (prop, prev): void => {
+    const { position } = prop;
+    if(position === undefined) return;
+
+    if(position === "sidebar") renderSidebarTranscript();
+    else if(position === "noSidebar") renderBottomTranscript();
+};
+
+const updateSidebarView = (prop, prev): void => {
+    const { view } = prop;
+    if(view === undefined) return;
+
+    if(view === "middleView") sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.middleview);
+    else if(view === "wideView") sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.wideview);
+}
+
+const updateHighlight = (prop, prev): void => {
+    const { highlight } = prop;
+    if(highlight === undefined) return;
+}
+
+const updateExHighlight = (prop, prev): void => {
+    const { highlight } = prop;
+    if(highlight === undefined) return;
+}
+
+
+// Instantiate
+//
+// controllerのstatusとsubtitleは分けるので2つ作る
+//
+const subtitle_observable: Observable<iSubtitles> = new Observable<iSubtitles>();
+const status_observable: Observable<iController> = new Observable<iController>();
+const sStatus: State<iController> = new State<iController>(controllerStateBase, status_observable);
+const sSubtitle: State<iSubtitle> = new State<iSubtitle>(subtitleBase, subtitle_observable);
+
+
+// Registration of observer
+//
+sSubtitle.observable.register(updateSubtitle);
+sStatus.observable.register(updatePosition);
+sStatus.observable.register(updateSidebarView);
+sStatus.observable.register(updateHighlight);
+sStatus.observable.register(updateExHighlight);
+
+
+// Updated 
+// 
+chrome.runtime.onMessage.addListener(
+  async (
+    message: iMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response: iResponse) => void
+  ): Promise<boolean> => {
+    try {
+      if (message.to !== extensionNames.controller) return;
+      console.log("CONTROLLER GOT MESSAGE");
+      const { order, ...rest } = message;
+      if (order && order.length) {}
+      // 字幕データが送られてきたら
+      if(rest.subtitles) {
+        //  setStateのnotify()がこの変更に必要な関数を実行してくれる
+          sSubtitle.setState({subtitles: subtitles});
+      }
+      return true;
+    } catch (err) {
+      console.error(err.message);
+    }
+  }
+);
+
+// Updated 
+// 
+const onWindowResizeHandler = (): void => {
+  console.log("[onWindowResizeHandler]");
+
+  const w: number = document.documentElement.clientWidth;
+  const { position, view } = sStatus.getState();
+
+  // ブラウザの幅がRESIZE_BOUNDARYを上回るとき
+  // Transcriptをsidebarに設置する
+  if (w > RESIZE_BOUNDARY && position !== positionStatusNames.sidebar) {
+    sStatus.setState({ position: positionStatusNames.sidebar });
+    sStatus.setState({ view: viewStatusNames.middleView });
+
+    // 同時に、sidebar時のTranscriptの表示方法の変更
+    sStatus.setState({ 
+        view: w > SIDEBAR_WIDTH_BOUNDARY 
+            ? viewStatusNames.wideView : viewStatusNames.middleView 
+    });
+  }
+
+  // ブラウザの幅がRESIZE＿BOUNDARYを下回るとき
+  // Transcriptを動画下部に表示する
+  if (w < RESIZE_BOUNDARY && position !== positionStatusNames.noSidebar) {
+    sStatus.setState({ position: positionStatusNames.noSidebar });
+  }
+
+  // Transcriptがsidebarの時、
+  // 2通りある表示方法を決定する
+  if (position === positionStatusNames.sidebar) {
+    sidebarTranscriptView.updateContentHeight();
+    if (view === viewStatusNames.middleView && w > SIDEBAR_WIDTH_BOUNDARY) {
+      // sidebar widthを300pxから25%へ
+      sStatus.setState({ view: viewStatusNames.wideView });
+    }
+    if (view === viewStatusNames.wideView && w < SIDEBAR_WIDTH_BOUNDARY) {
+      // sideba widthを25%から300pxへ
+      sStatus.setState({ view: viewStatusNames.middleView });
+    }
+  }
+};
+
+
+
+// Updated 
+// 
+(function(): void{
+    console.log("[controller] Initializing...");
+
+    // 初期のExTranscriptの展開場所に関するステータスを取得する
+    const w: number = document.documentElement.clientWidth;
+    const s: keyof_positionStatus =
+      w > RESIZE_BOUNDARY
+        ? positionStatusNames.sidebar
+        : positionStatusNames.noSidebar;
+    state.setState({ position: s });
+
+    if (s === positionStatusNames.sidebar) {
+      sStatus.setState({ 
+          view: w > SIDEBAR_WIDTH_BOUNDARY
+            ? viewStatusNames.wideView : viewStatusNames.middleView
+      })
+    };
+
+    window.addEventListener("resize", function () {
+      clearTimeout(timerQueue);
+      timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
+    });
+
+    // TODO: 自動スクロール機能の発火条件の発見と実装
+})();
 
 ```

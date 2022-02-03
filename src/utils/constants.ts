@@ -144,7 +144,7 @@ export const SIGNAL = {
     },
 };
 
-export const positionStatusNames = {
+export const positionStatus = {
     sidebar: 'sidebar',
     noSidebar: 'noSidebar',
 } as const;
@@ -154,15 +154,11 @@ export const viewStatusNames = {
     middleView: 'middleView',
 } as const;
 
-type typeof_positionStatus = typeof positionStatusNames;
+type typeof_positionStatus = typeof positionStatus;
 type typeof_viewStatus = typeof viewStatusNames;
 export type keyof_positionStatus = keyof typeof_positionStatus;
 export type keyof_viewStatus = keyof typeof_viewStatus;
 
-export interface iControllerStatus {
-    position?: keyof_positionStatus;
-    view?: keyof_viewStatus;
-}
 
 
 

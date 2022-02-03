@@ -1,5 +1,5 @@
 import { iMessage, iResponse } from '../utils/constants';
-import { State } from "./State";
+import { State } from "./background/State";
 
 export const deepCopier = <T>(data: T): T => {
     return JSON.parse(JSON.stringify(data));
