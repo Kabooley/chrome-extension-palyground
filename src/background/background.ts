@@ -140,7 +140,10 @@ chrome.tabs.onUpdated.addListener(
                 // 動画が切り替わった
                 // TODO: リセット処理へ
                 console.log('[background] RESET this extension');
-                const result = await handlerOfReset(tabIdUpdatedOccured, changeInfo.url);
+                const result = await handlerOfReset(
+                    tabIdUpdatedOccured,
+                    changeInfo.url
+                );
             }
         }
     }
@@ -425,9 +428,12 @@ const handlerOfRun = async (
  * - controller.jsへ字幕データを渡す
  *
  * */
-const handlerOfReset = async (tabId: number, newUrl: string): Promise<boolean> => {
+const handlerOfReset = async (
+    tabId: number,
+    newUrl: string
+): Promise<boolean> => {
     try {
-        console.log("[background] RESET Begin...");
+        console.log('[background] RESET Begin...');
         const _state: State<iModel> = state.getInstance();
         // stateの更新：
         // urlをtabs.onUpdatedが起こったときのURLにする
@@ -437,69 +443,70 @@ const handlerOfReset = async (tabId: number, newUrl: string): Promise<boolean> =
             isSubtitleCaptured: false,
             isSubtitleCapturing: true,
             // TODO: 既存配列変数を再度空にするのはこの方法で大丈夫なのか?
-            // 
+            //
             subtitles: [],
         });
         // reset 処理:
         // 各content scritpのリセットを実施する
         const isResetSuccess: boolean = await resetEachContentScript(tabId);
         if (!isResetSuccess) {
-            throw new Error("Failed to reset");
+            throw new Error('Failed to reset');
         }
         // 成功したとして、
         // データ再取得処理
-        const resFromCaptureSubtitle: iResponse = await sendMessageToTabsPromise(tabId, {
-            from: extensionNames.background,
-            to: extensionNames.captureSubtitle,
-            order: [orderNames.sendSubtitles]
-        });
+        const resFromCaptureSubtitle: iResponse =
+            await sendMessageToTabsPromise(tabId, {
+                from: extensionNames.background,
+                to: extensionNames.captureSubtitle,
+                order: [orderNames.sendSubtitles],
+            });
 
         // TODO: Validate subtitles data.
-        // 
+        //
         // If okay, then save subtitles data.
         await _state.setState({
             isSubtitleCaptured: true,
             isSubtitleCapturing: false,
-            subtitles: resFromCaptureSubtitle.subtitles
+            subtitles: resFromCaptureSubtitle.subtitles,
         });
 
-        const isRestructured: iResponse = await sendMessageToTabsPromise(tabId, {
-            from: extensionNames.background,
-            to: extensionNames.controller,
-            subtitles: resFromCaptureSubtitle.subtitles
-        });
-      
-        if(!isRestructured.success){
-            throw new Error("Error: Failed to restructure ExTranscript");
+        const isRestructured: iResponse = await sendMessageToTabsPromise(
+            tabId,
+            {
+                from: extensionNames.background,
+                to: extensionNames.controller,
+                subtitles: resFromCaptureSubtitle.subtitles,
+            }
+        );
+
+        if (!isRestructured.success) {
+            throw new Error('Error: Failed to restructure ExTranscript');
         }
 
         await _state.setState({
             isTranscriptRestructured: true,
-        })
+        });
 
         // ここまで何も問題なければRESET成功
-        console.log("[background] RESET Complete!");
+        console.log('[background] RESET Complete!');
         return true;
     } catch (err) {
         console.error(err.message);
     }
 };
 
-
 /**
  * handler of Turn Off function of this extension
  * ________________________________________
- * 
- * 
+ *
+ *
  * */
-const handlerOfTrunOff = async(): Promise<boolean> => {
+const handlerOfTrunOff = async (): Promise<boolean> => {
     try {
-
-    }
-    catch(err) {
+    } catch (err) {
         console.error(err.message);
     }
-}
+};
 
 /**
  *

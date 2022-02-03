@@ -120,10 +120,54 @@ export interface iResponse {
     successDeployment?: boolean;
     // Udemy講義ページでトランスクリプトが開かれているか
     transcript?: boolean;
+};
 
+// --- constants for controller.js -------------------------------
+
+// // To pass to setTimeout
+// export const TEN_SEC: number = 10000;
+
+// transcript要素はwinodwサイズが975px以下の時にdashboardへ以上でsidebarへ移動する
+export const RESIZE_BOUNDARY: number = 975;
+
+// sidebarのwidthは2通りあって、
+// 975px < w =< 1182pxだと300px, w > 1182pxで25%
+export const SIDEBAR_WIDTH_BOUNDARY: number = 1182;
+
+// window onResize時の反応遅延速度
+export const RESIZE_TIMER: number = 100;
+
+export const SIGNAL = {
+    widthStatus: {
+        wideview: true,
+        middleview: false,
+    },
+};
+
+export const positionStatusNames = {
+    sidebar: 'sidebar',
+    noSidebar: 'noSidebar',
+} as const;
+
+export const viewStatusNames = {
+    wideView: 'wideView',
+    middleView: 'middleView',
+} as const;
+
+type typeof_positionStatus = typeof positionStatusNames;
+type typeof_viewStatus = typeof viewStatusNames;
+export type keyof_positionStatus = keyof typeof_positionStatus;
+export type keyof_viewStatus = keyof typeof_viewStatus;
+
+export interface iControllerStatus {
+    position?: keyof_positionStatus;
+    view?: keyof_viewStatus;
 }
 
+
+
 // ---- ABOUT PORT ----------------------------------
+
 export const port_names = {
     _requiring_subtitles: '_port_name_require_subtitles',
     _injected_contentScript: '_port_name_injected_contentScript',

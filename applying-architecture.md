@@ -1583,3 +1583,148 @@ class Observable {
   };
 }
 ```
+
+#### RESET 機能実装 controller.ts
+
+動画が切り替わった時だけ reset するので、
+関係ない部分は放っておけばいい
+
+ExTranscript を展開するにあたっての機能：リセット不要
+
+自動スクロール機能：リセット必要かも
+
+要改善：
+
+-   inject 時に字幕データを取得することが前提となっている仕様
+
+    これは background の handler の処理と食い違うので要修正
+    字幕データは content script 側から要求するのではなくて、
+    background script 側から与えるものである
+
+おさらい controller.ts
+
+機能：
+
+1. window で`onResize`が起こるたびに window の幅を計算して ExTranscript を新しい位置へ再生成している
+
+`RESIZE_BOUNDARY`という、ExTranscript を sidebar にするか bottom にするのかの境界線（x 軸）がある
+
+`x > RESIZE_BOUNDARY ? sidebar : bottom`
+
+さらに、sidebar の状態でも、2 種類の表示方法がある
+
+`x > SIDEBAR_WIDTH_BOUNDARY ? wideview : middleview`
+
+##### 字幕データを受け取ってから字幕展開する仕様へ変更
+
+今までは script の inject 時に controller 側から字幕データを要求していたけれど
+これからは background から送信されたものを受動する仕様にする
+
+なので、次の通りにする
+
+-   字幕データがなくても ExTranscript を展開できるようにする
+-   字幕データが届き次第、ExTranscript へ展開する仕様にする
+-   自動スクロールも、字幕データが届き次第リセットされる仕様にする
+
+```TypeScript
+
+interface iController {
+  // 本家Transcriptのポジション2通り
+  _position: keyof_positionStatus,
+  // 本家Transcriptがsidebarであるときの表示のされ方2通り
+  _view: keyof_viewStatus,
+  // 本家Transcriptでハイライトされている字幕の要素の順番
+  _highlight: number;
+  // ExTranscriptの字幕要素のうち、いまハイライトしている要素の順番
+  _ExHighlight: number;
+  // _subtitlesのindexプロパティからなる配列
+  _indexList: number[];
+}
+
+// 字幕データはでかいので、毎回気軽に呼び出さないでほしい
+// そのため別にしておく
+interface iSubtitles {
+  subtitle: subtitle_piece[];
+}
+
+const controllerStateBase: iController = {
+  _position: "sidebar",
+  _view: "wideView",
+  _highlight: null,
+    _ExHighlight: null;
+  _indexList: [];
+} as const;
+
+
+class State<TYPE extends object> {
+  private _state: TYPE;
+  private _observable: Observable;
+  constructor(s: TYPE, o: Observable) {
+    this._observable = o;
+    this._state = s;
+  };
+
+  setState(prop: {
+        [Property in keyof TYPE]?: TYPE[Property];
+    }): void {
+      const prev: TYPE = {...this._state};
+      // _stateは一段階の深さなので
+      // コピーはspread構文で充分
+      this._state = {
+        ...this._state,
+        ...prop
+      };
+      this._observable.notify(prop, prev);
+    };
+
+    getState(): TYPE {
+      // _stateは一段階の深さなので
+      // コピーはspread構文で充分
+      return {...this._state};
+    };
+};
+
+
+type iObserver<TYPE extends object> = (prop: {[Property in keyof TYPE]?: TYPE[Property]}, prev: TYPE) => void;
+
+
+
+class Observable<TYPE> {
+  private _observers: iObserver<TYPE>[];
+  constructor() {
+    this._observers = [];
+  };
+
+  register(func: iObserver<TYPE>):void {
+    this._observers.push(func);
+  };
+
+  unregister(func: iObserver<TYPE>):void {
+    this._observers = this._observers.filter(o => {
+      return o !== func;
+    };
+  };
+
+  notify(prop: {[Property in keyof TYPE]?: TYPE[Property]}, prev: TYPE): void {
+    this._observers.forEach(o => {
+      o(prop, prev);
+    });
+  };
+};
+
+
+const subtitle_observable: Observable<iSubtitles> = new Observable<iSubtitles>();
+const state_observable: Observable<iController> = new Observable<iController>();
+const state: State<iController> = new State<iController>(controllerStateBase, observable);
+
+// subtitle
+
+const updateSubtitle: iObserver<iSubtitles> = (prop, prev): void => {
+  if(prop.subtitles === undefined) return;
+
+  // 字幕データのアップデート
+  const { position, view } =
+
+}
+
+```
