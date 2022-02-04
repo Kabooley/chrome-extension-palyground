@@ -30133,20 +30133,24 @@ const Popup = () => {
     // 正常に拡張機能が実行されたらtrue
     const [complete, setComplete] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        console.log('[popup] Set onMessage listener');
+        console.log("[popup] Set onMessage listener");
         chrome.runtime.onMessage.addListener(messageHandler);
+        // DEBUG: make sure state is alive
+        //
+        console.log(correctUrl, running, complete);
+        //
         return () => {
-            console.log('[popup] Removed onMessage listener');
+            console.log("[popup] Removed onMessage listener");
             chrome.runtime.onMessage.removeListener(messageHandler);
         };
     }, []);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         // NOTE: DON'T USE AWAIT inside of useEffect().
-        // 
+        //
         // POPUPは開かれるたびに新しく生成されるので
         // 初回呼出の時だけ実行すればいい
         // 指定のURLと一致するのかbackgroundと通信する
-        console.log('[popup] OPENED');
+        console.log("[popup] OPENED");
         sendInquire();
     }, []);
     const messageHandler = () => { };
@@ -30166,6 +30170,7 @@ const Popup = () => {
     };
     const buttonClickHandler = () => {
         setRunning(true);
+        console.log("[popup] RUNNING...");
         (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
@@ -30173,10 +30178,11 @@ const Popup = () => {
         })
             .then((res) => {
             const { success } = res;
+            console.log("[popup] Successfully Complete!");
             setComplete(success);
             setRunning(false);
             if (!success) {
-                throw new Error('Error: something went wrong while extension running');
+                throw new Error("Error: something went wrong while extension running");
             }
         })
             .catch((err) => {
@@ -30187,9 +30193,10 @@ const Popup = () => {
         });
     };
     const generateCorrect = () => {
+        console.log(running);
         return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null,
             "This is correct page",
-            react__WEBPACK_IMPORTED_MODULE_0__.createElement("button", { onClick: buttonClickHandler }, "RUN")));
+            react__WEBPACK_IMPORTED_MODULE_0__.createElement("button", { onClick: buttonClickHandler, disabled: running }, "RUN")));
     };
     const generateIncorrect = () => {
         return react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, "This is INCORRECT page");
@@ -30206,7 +30213,7 @@ const Popup = () => {
         generateRunning(),
         generateComplete()));
 };
-const root = document.createElement('div');
+const root = document.createElement("div");
 document.body.appendChild(root);
 react_dom__WEBPACK_IMPORTED_MODULE_1__.render(react__WEBPACK_IMPORTED_MODULE_0__.createElement(Popup, null), root);
 

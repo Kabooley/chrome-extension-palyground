@@ -1334,11 +1334,15 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
  *
  * TODO:
  *
- * - 自動スクロール機能の発火条件の発見とそれに伴う修正
  * - 字幕データは受動的に取得する仕様にする
- * - RESET機能
- * - Stateの外部モジュール化: done
+ * 見た目があまりに変にならないように、
+ *  字幕データがなくてもExTranscriptが縮まないようにする
  *
+ * - RESET機能
+ *  まったく手つかず
+ *
+ * - [済] Stateの外部モジュール化
+ * - [済] 自動スクロール機能の発火条件の発見とそれに伴う修正
  * *******************************************************/
 
 
@@ -1354,6 +1358,7 @@ const statusBase = {
     highlight: null,
     ExHighlight: null,
     indexList: [],
+    isAutoscrollInitialized: false,
 };
 const subtitleBase = {
     subtitles: [],
@@ -1406,6 +1411,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaite
 const renderSidebarTranscript = () => {
     const { subtitles } = sSubtitles.getState();
     _bottomTranscriptView__WEBPACK_IMPORTED_MODULE_1__["default"].clear();
+    _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].clear();
     _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].render(subtitles);
     _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateContentHeight();
     // sidebarの時だけに必要
@@ -1414,6 +1420,7 @@ const renderSidebarTranscript = () => {
 const renderBottomTranscript = () => {
     const { subtitles } = sSubtitles.getState();
     _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].clear();
+    _bottomTranscriptView__WEBPACK_IMPORTED_MODULE_1__["default"].clear();
     _bottomTranscriptView__WEBPACK_IMPORTED_MODULE_1__["default"].render(subtitles);
     // noSidebarの時は不要
     window.removeEventListener("scroll", onWindowScrollHandler);
@@ -1654,32 +1661,6 @@ const scrollToHighlight = () => {
         }
     }
 };
-/*
-    movieContainerClickHandler
-    _____________________________________
-    Udemyの講義ページで動画が再生開始したかどうかを判断する
-    これは一時停止かどうかではなく
-    ページのリロード時などに動画の上にリプレイボタンが表示されているかどうかである
-
-    リプレイボタン要素がなければ再生中という判断である
-
-    再生が始まったら初めて自動スクロール機能をセットできる
-
-    ...とおもったらclickイベントでbuttonがなくなったかチェックしようと思ったら
-    clickイベントが終わってからじゃにとbuttonは消去されないので
-    clickイベント中だと確認できない
-
-    MutationObserverつかうしかない？
-
-*/
-const movieReplayClickHandler = (ev) => {
-    console.log("[controller] Movie clicked");
-    const movieContainer = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.transcript.movieContainer);
-    movieContainer.removeEventListener("click", movieReplayClickHandler);
-    //   set up auto scroll handling
-    //   initializeDetecting();
-    detectScroll();
-};
 //
 // --- UPDATE METHODS -----------------------------------
 //
@@ -1689,7 +1670,7 @@ const updateSubtitle = (prop, prev) => {
     if (prop.subtitles === undefined)
         return;
     // 字幕データのアップデート
-    const { position, view } = sStatus.getState();
+    const { position, view, isAutoscrollInitialized } = sStatus.getState();
     if (position === "sidebar") {
         renderSidebarTranscript();
         // TODO:
@@ -1703,6 +1684,10 @@ const updateSubtitle = (prop, prev) => {
     }
     if (position === "noSidebar") {
         renderBottomTranscript();
+    }
+    if (!isAutoscrollInitialized) {
+        detectScroll();
+        sStatus.setState({ isAutoscrollInitialized: true });
     }
 };
 const updatePosition = (prop, prev) => {
@@ -1890,6 +1875,29 @@ const updateExHighlight = (prop, prev) => {
 //   transcriptList.forEach((ts) => {
 //     observer.observe(ts, config);
 //   });
+// };
+// /*
+//     movieContainerClickHandler
+//     _____________________________________
+//     Udemyの講義ページで動画が再生開始したかどうかを判断する
+//     これは一時停止かどうかではなく
+//     ページのリロード時などに動画の上にリプレイボタンが表示されているかどうかである
+//     リプレイボタン要素がなければ再生中という判断である
+//     再生が始まったら初めて自動スクロール機能をセットできる
+//     ...とおもったらclickイベントでbuttonがなくなったかチェックしようと思ったら
+//     clickイベントが終わってからじゃにとbuttonは消去されないので
+//     clickイベント中だと確認できない
+//     MutationObserverつかうしかない？
+// */
+// const movieReplayClickHandler = (ev: PointerEvent): void => {
+//   console.log("[controller] Movie clicked");
+//   const movieContainer: HTMLElement = document.querySelector<HTMLElement>(
+//     selectors.transcript.movieContainer
+//   );
+//   movieContainer.removeEventListener("click", movieReplayClickHandler);
+//   //   set up auto scroll handling
+//   //   initializeDetecting();
+//   detectScroll();
 // };
 
 })();

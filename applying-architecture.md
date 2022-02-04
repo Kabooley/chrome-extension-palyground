@@ -1895,138 +1895,69 @@ const onWindowResizeHandler = (): void => {
 
 ```
 
-#### OFF 機能 ユーザ操作による OFF の発生
+#### OFF 機能 実装
+
+##### ユーザ操作による OFF の発生
 
 条件：
 
--   [webpage]トランスクリプトを OFF にした
--   [webpage] 字幕を英語以外にした
--   [webpage] ブラウザのサイズを小さくしすぎた
--   [popup] OFF ボタンを押した
+- [webpage] 字幕を英語以外にした
+- [webpage] ブラウザのサイズを小さくしすぎた
+- [webpage] トランスクリプト上の×ボタンを押した
+上記までの操作は、トランスクリプトをONにすることでExTranscriptは復活する
 
-トランスクリプト・トグルボタン：
+- [ExTranscript] OFFボタンを押した
+- [popup] OFFボタンを押した
+上記の操作の場合、ExTranscriptは消え、再度POPUP上の実行ボタンを押さないと再展開しない
 
-すでにクリックされたら発信される仕組みはできている
 
-window サイズによってリスナの取り付け取り外しができるように
 
-CC ボタン：
 
-すでにクリックされたら発信される仕組みはできている
+ブラウザのサイズが変化したことによるトランスクリプトの消失：
 
-window サイズハンドラの実装
+トランスクリプトがONであるときに...
+    ウィンドウが境界値より大きい 何もしない
+    ウィンドウが境界値より小さくなった then notify 
+    ウィンドウが境界値より小さかった時から大きくなった then notify
+    トランスクリプトをOFFにしたら then notify
+
+トランスクリプトトグルボタンがあるかどうか...
+    windowのサイズが境界値以上ならある、それより小さいならない
+
+
 
 ```TypeScript
-
-let tooSmallWindow: boolean;
-let timerQueue: NodeJS.Timeout = null;
-
-const onWindowResizeHandler = (ev): void => {
-
-  const w: number = document.documentElement.clientWidth;
-  // When window shrinks less than the boundary
-  // Then send status.
-  if(w < VANISH_BOUNDARY && !tooSmallWindow){
-    tooSmallWindow = true;
-    // windowサイズが小さくなりすぎると、トグルボタンのDOMは消えるから
-    // イベントリスナはremoveする必要がない
-    // 念のため
-    const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
-        selectors.controlBar.transcript.toggleButton
-      );
-    if(!toggleButton) {
-    sendToBackgroud({ isOpened: false});}
-  }
-  // When window bend over vanish boundary
-  // Then reset toggle button to add listener.
-  if(w > VANISH_BOUNDARY && tooSmallWindow){
-      tooSmallWindow = false;
-      const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
-        selectors.controlBar.transcript.toggleButton
-      );
-      toggleButton.addEventListener('click', transcriptToggleButtonHandler, false);
-  }
+interface iStatus {
+    isTranscriptOpened: boolean;
+    isTranscriptON: boolean;
+    isEnglish: boolean;
+    isWindowTooSmall: boolean;
+    windowWidth: null;
 }
-
-
-const initialize = async (): Promise<void> => {
-    console.log('CONTENT SCRIPT INITIALIZING...');
-    try {
-        // Set up listeners
-
-        const w: number = document.documentElement.clientWidth;
-        if(w > VANISH_BOUNDARY){
-          const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
-            selectors.controlBar.transcript.toggleButton
-          );
-          toggleButton.addEventListener('click', transcriptToggleButtonHandler, false);
-          tooSmallWindow = false;
-        }
-        else {
-          tooSmallWindow = true;
-        }
-
-        window.addEventListener("resize", function () {
-          clearTimeout(timerQueue);
-          timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
-        });
-
-        const ccButton: HTMLElement = document.querySelector<HTMLElement>(
-            selectors.controlBar.cc.popupButton
-        );
-        ccButton.addEventListener('click', ccPopupButtonHandler, true);
-        console.log('content script initialize has been done');
-    } catch (err) {
-        console.error(err.message);
-    }
+const stateBase = {
+    // トランスクリプトが実際に展開されているかどうか
+    isTranscriptOpened: false,
+    // トランスクリプトがONなのかどうか(ONでも展開されていない場合もある)
+    isTranscriptON: false,
+    isEnglish: false,
+    isWindowTooSmall: false,
+    windowWidth: null
 };
 
+const observable: Observable = new Observable();
 
-chrome.runtime.onMessage.addListener(
-    async (
-        message: iMessage,
-        sender,
-        sendResponse: (response: iResponse) => void
-    ): Promise<boolean> => {
-        console.log('CONTENT SCRIPT GOT MESSAGE');
-        const { from, order, to } = message;
-        const response: iResponse = {
-            from: extensionNames.contentScript,
-            to: from,
-        };
-        if (
-            to !== extensionNames.contentScript ||
-            from !== extensionNames.background
-        )
-            return;
+const state: State<iStatus> = new State<iStatus>(stateBase, observable);
 
-        try {
-            // ORDERS:
-            if (order && order.length) {
-                // SEND STATUS
-                if (order.includes(orderNames.sendStatus)) {
-                    console.log('Order: send status');
-                    const isEnglish: boolean = isSubtitleEnglish();
-                    const isOpen: boolean = tooSmallWindow ? false : isTranscriptOpen();
-                    response.language = isEnglish;
-                    response.transcript = isOpen;
-                }
-            }
-            response.complete = true;
+state.observable.register();
 
-            // DEBUG:
-            //
-            // LOG response
-            console.log('-----------------------------------');
-            console.log('LOG: response object before send');
-            console.log(response);
-            console.log('-----------------------------------');
-            sendResponse(response);
-            return true;
-        } catch (err) {
-            console.error(err.message);
-        }
-    }
-);
-
+// こいつがisWindowTooSmallと、windowWidthの変更を取得するとして...
+const updateTranscript = (prop, prev):void => {
+    const { isTranscriptOpened, isTranscriptON, isWindowTooSmall } = prop;
+    if(!isTranscriptON && !prev.isTranscriptON)return;
+    
+};
 ```
+
+state.isWindowTooSmall = true
+    update()
+        if state.isTranscriptOpened === 

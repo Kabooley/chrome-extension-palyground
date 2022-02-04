@@ -2,7 +2,6 @@
 static content script
 ___________________________________________________________
 
-run_at: document_idle
 
 機能：
     1. Udemy講義ページのトランスクリプト機能がONになっているか検知する
@@ -16,7 +15,6 @@ Inject:
 
 通信に関して：
     single message passing機能でbackground.jsと通信する
-    今のところ、こちらからメッセージを送信することはない
 
 TODO:
 - ブラウザサイズが小さすぎると、トランスクリプトが表示されないことへの対応
@@ -31,23 +29,22 @@ TODO:
     アプリケーションのリセット機能にかかわるので結構大きな問題
 ************************************************************/
 
-import * as selectors from '../utils/selectors';
+import * as selectors from "../utils/selectors";
 import {
-    iMessage,
-    iResponse,
-    extensionNames,
-    orderNames,
-    RESIZE_TIMER,
-} from '../utils/constants';
-import { sendMessagePromise } from '../utils/helpers';
-// import { Porter } from "../utils/Porter";
+  iMessage,
+  iResponse,
+  extensionNames,
+  orderNames,
+  RESIZE_TIMER,
+} from "../utils/constants";
+import { sendMessagePromise } from "../utils/helpers";
 
 //
 // --- GLOBALS ---------------------------------------------------
 //
 
 // Transcriptが消えるブラウザウィンドウX軸の境界値
-const VANISH_BOUNDARY: number = 601;
+const VANISH_BOUNDARY: number = 584;
 // Transcriptがブラウザサイズによって消えているのかどうか
 let isWindowTooSmall: boolean;
 // windowのonResizeイベント発火遅延用
@@ -69,52 +66,50 @@ let timerQueue: NodeJS.Timeout = null;
         sendSectionTitle
 */
 chrome.runtime.onMessage.addListener(
-    async (
-        message: iMessage,
-        sender,
-        sendResponse: (response: iResponse) => void
-    ): Promise<boolean> => {
-        console.log('CONTENT SCRIPT GOT MESSAGE');
-        const { from, order, to } = message;
-        const response: iResponse = {
-            from: extensionNames.contentScript,
-            to: from,
-        };
-        if (
-            to !== extensionNames.contentScript ||
-            from !== extensionNames.background
-        )
-            return;
+  async (
+    message: iMessage,
+    sender,
+    sendResponse: (response: iResponse) => void
+  ): Promise<boolean> => {
+    console.log("CONTENT SCRIPT GOT MESSAGE");
+    const { from, order, to } = message;
+    const response: iResponse = {
+      from: extensionNames.contentScript,
+      to: from,
+    };
+    if (
+      to !== extensionNames.contentScript ||
+      from !== extensionNames.background
+    )
+      return;
 
-        try {
-            // ORDERS:
-            if (order && order.length) {
-                // SEND STATUS
-                if (order.includes(orderNames.sendStatus)) {
-                    console.log('Order: send status');
-                    const isEnglish: boolean = isSubtitleEnglish();
-                    const isOpen: boolean = isWindowTooSmall
-                        ? false
-                        : isTranscriptOpen();
-                    response.language = isEnglish;
-                    response.transcript = isOpen;
-                }
-            }
-            response.complete = true;
-
-            // DEBUG:
-            //
-            // LOG response
-            console.log('-----------------------------------');
-            console.log('LOG: response object before send');
-            console.log(response);
-            console.log('-----------------------------------');
-            sendResponse(response);
-            return true;
-        } catch (err) {
-            console.error(err.message);
+    try {
+      // ORDERS:
+      if (order && order.length) {
+        // SEND STATUS
+        if (order.includes(orderNames.sendStatus)) {
+          console.log("Order: send status");
+          const isEnglish: boolean = isSubtitleEnglish();
+          const isOpen: boolean = isWindowTooSmall ? false : isTranscriptOpen();
+          response.language = isEnglish;
+          response.transcript = isOpen;
         }
+      }
+      response.complete = true;
+
+      // DEBUG:
+      //
+      // LOG response
+      console.log("-----------------------------------");
+      console.log("LOG: response object before send");
+      console.log(response);
+      console.log("-----------------------------------");
+      sendResponse(response);
+      return true;
+    } catch (err) {
+      console.error(err.message);
     }
+  }
 );
 
 /*
@@ -124,35 +119,35 @@ chrome.runtime.onMessage.addListener(
 
 */
 const sendToBackgroud = async (order: {
-    isOpened?: boolean;
-    isEnglish?: boolean;
+  isOpened?: boolean;
+  isEnglish?: boolean;
 }): Promise<void> => {
-    console.log('SENDING MESSAGE TO BACKGROUND');
-    const { isOpened, isEnglish } = order;
-    const message: iMessage = {
-        from: extensionNames.contentScript,
-        to: extensionNames.background,
-    };
+  console.log("SENDING MESSAGE TO BACKGROUND");
+  const { isOpened, isEnglish } = order;
+  const message: iMessage = {
+    from: extensionNames.contentScript,
+    to: extensionNames.background,
+  };
 
-    if (isOpened !== undefined) {
-        message['transcriptExpanded'] = isOpened;
-    }
-    if (isEnglish !== undefined) {
-        message['language'] = isEnglish;
-    }
+  if (isOpened !== undefined) {
+    message["transcriptExpanded"] = isOpened;
+  }
+  if (isEnglish !== undefined) {
+    message["language"] = isEnglish;
+  }
 
-    //
-    // DEBUG:
-    //
-    console.log('DEBUG: make sure message object');
-    console.log(message);
-    //
-    //
-    try {
-        await sendMessagePromise(message);
-    } catch (err) {
-        console.error(err.message);
-    }
+  //
+  // DEBUG:
+  //
+  console.log("DEBUG: make sure message object");
+  console.log(message);
+  //
+  //
+  try {
+    await sendMessagePromise(message);
+  } catch (err) {
+    console.error(err.message);
+  }
 };
 
 //
@@ -164,166 +159,168 @@ const sendToBackgroud = async (order: {
  *
  * */
 const onWindowResizeHandler = (ev): void => {
-    const w: number = document.documentElement.clientWidth;
-    // When window shrinks less than the boundary
-    // Then send status.
-    if (w < VANISH_BOUNDARY && !isWindowTooSmall) {
-        isWindowTooSmall = true;
-        // windowサイズが小さくなりすぎると、トグルボタンのDOMは消えるから
-        // イベントリスナはremoveする必要がないけど、
-        // 念のため
-        const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
-            selectors.controlBar.transcript.toggleButton
-        );
-        if (!toggleButton) {
-            sendToBackgroud({ isOpened: false });
-        }
-    }
-    // When window bend over vanish boundary
-    // Then reset toggle button to add listener.
-    if (w >= VANISH_BOUNDARY && isWindowTooSmall) {
-        isWindowTooSmall = false;
-        const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
-            selectors.controlBar.transcript.toggleButton
-        );
-        toggleButton.addEventListener(
-            'click',
-            transcriptToggleButtonHandler,
-            false
-        );
-    }
-};
-
-/*
-    transcriptToggleButtonHandler
-    ________________________________________________________________
-
-    Udemy講義ページのtranscriptトグルボタンがonClick時、
-    transcriptが開かれているのかどうかを判定する
-
-    >>NOTE<<
-
-    このハンドラ関数はトグルボタンがクリックされたときにのみ使うこと
-    トグルボタンと関係なくtranscriptが開かれているかどうか知りたいときは
-    こちらの関数を使うこと: isTranscriptOpen()
-*/
-const transcriptToggleButtonHandler = (ev?: MouseEvent): void => {
-    const latest: HTMLElement = document.querySelector<HTMLElement>(
-        selectors.controlBar.transcript.toggleButton
-    );
-
-    // 動的な変更が反映される前の属性値を取得するので
-    //
-    latest.getAttribute('aria-expanded') === 'true'
-        ? sendToBackgroud({ isOpened: false })
-        : sendToBackgroud({ isOpened: true });
-};
-
-/*
-    ccPopupMenuClickHandler
-    __________________________________________________
-    closed caption popup menu click handler
-
-    CC Popup Menuの中をクリックされたのか否かを判断する
-    このハンドラはdocumentのイベントリスナに渡される
-*/
-const ccPopupMenuClickHandler = (ev: PointerEvent): void => {
-    const menu: HTMLElement = document.querySelector<HTMLElement>(
-        selectors.controlBar.cc.menuListParent
-    );
-
-    const path: EventTarget[] = ev.composedPath();
-    if (path.includes(menu)) {
-        // menuの内側でclickが発生した
-        // 何もしない
-        console.log('clicked inside');
-    } else {
-        // menuの外側でclickが発生した
-        const r: boolean = isSubtitleEnglish();
-        sendToBackgroud({ isEnglish: r });
-        document.removeEventListener('click', ccPopupMenuClickHandler, true);
-    }
-};
-
-/*
-    ccPopupButtonHandler
-    ______________________________________________________
-    CC popupメニューとdocumentにイベントリスナをつけるための関数
-  */
-const ccPopupButtonHandler = (ev: MouseEvent): void => {
-    // popupメニューが開かれているかチェック
-    // 開かれているならclickリスナをメニューラッパーとdocumentに着ける
-    // とにかく
-    // メニューの外側をクリックしたらすべてのリスナをremoveする
-    console.log('CC popup button was clicked');
-    // is it opening?
-    const e: HTMLElement = document.querySelector<HTMLElement>(
-        selectors.controlBar.cc.popupButton
-    );
-
-    // やっぱりaria-expanded === trueのときになぜかfalseを返すので
-    // 反対の結果を送信する
-    if (e.getAttribute('aria-expanded') !== 'true') {
-        // CC popupメニューが表示された
-        document.removeEventListener('click', ccPopupMenuClickHandler, true);
-        document.addEventListener('click', ccPopupMenuClickHandler, true);
-    }
-};
-
-/*
-    Transcript トグルボタンのaria-expandedから
-    Transcript が開かれているのかを取得する
-
-    >>NOTE<<
-
-    トグルボタンのonclick時のイベントハンドラとして使わないこと
-    属性値はonclick時は挙動がことなるので
-    transcriptToggleButtonHandlerを代わりに使うこと
-*/
-const isTranscriptOpen = (): boolean => {
+  const w: number = document.documentElement.clientWidth;
+  console.log(w);
+  // When window shrinks less than the boundary
+  // Then send status.
+  if (w < VANISH_BOUNDARY && !isWindowTooSmall) {
+    console.log("window is too small");
+    isWindowTooSmall = true;
+    // windowサイズが小さくなりすぎると、トグルボタンのDOMは消えるから
+    // イベントリスナはremoveする必要がないけど、
+    // 念のため
     const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
-        selectors.controlBar.transcript.toggleButton
+      selectors.controlBar.transcript.toggleButton
     );
-    return toggleButton.getAttribute('aria-expanded') ? true : false;
+    if (!toggleButton) {
+      sendToBackgroud({ isOpened: false });
+    }
+  }
+  // When window bend over vanish boundary
+  // Then reset toggle button to add listener.
+  if (w >= VANISH_BOUNDARY && isWindowTooSmall) {
+    console.log("window is not small");
+    isWindowTooSmall = false;
+    const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
+      selectors.controlBar.transcript.toggleButton
+    );
+    toggleButton.addEventListener(
+      "click",
+      transcriptToggleButtonHandler,
+      false
+    );
+  }
 };
 
-/*
-    字幕の言語が英語か否か判定する
-    Return {boolean}: 英語だったらtrue そうでないならfalse
-*/
+
+/**
+ * Callback of ClickEvent on toggle button of Transcript.
+ * 
+ * NOTE: When click event fired, "aria-expanded" is not change its value yet.
+ * So if this get true, then take that as "aria-expanded" about to be false.
+ * */ 
+const transcriptToggleButtonHandler = (ev?: MouseEvent): void => {
+  const latest: HTMLElement = document.querySelector<HTMLElement>(
+    selectors.controlBar.transcript.toggleButton
+  );
+
+    // "aria-expanded"変更直前の値なので反対を返す
+  latest.getAttribute("aria-expanded") === "true"
+    ? sendToBackgroud({ isOpened: false })
+    : sendToBackgroud({ isOpened: true });
+};
+
+
+/**
+ * Callback of ClickEvent on CC Popup MENU
+ * 
+ * If user click outside of menu, 
+ * check subtitle has been changed.
+ * If so, notify to background and remove listener from document.
+ * Click inside do nothing.
+ * */ 
+const ccPopupMenuClickHandler = (ev: PointerEvent): void => {
+  const menu: HTMLElement = document.querySelector<HTMLElement>(
+    selectors.controlBar.cc.menuListParent
+  );
+
+  const path: EventTarget[] = ev.composedPath();
+  if (path.includes(menu)) {
+    // menuの内側でclickが発生した
+    // 何もしない
+    console.log("clicked inside");
+  } else {
+    // menuの外側でclickが発生した
+    const r: boolean = isSubtitleEnglish();
+    sendToBackgroud({ isEnglish: r });
+    document.removeEventListener("click", ccPopupMenuClickHandler, true);
+  }
+};
+
+
+/**
+ * Callback of ClickEvent on CC Popup BUTTON
+ * 
+ * Check if ClosedCaption Popup menu is opened.
+ * If it's opened, then add onClick event listener to document
+ * to detect subtitle change.
+ * 
+ * NOTE: 変化タイミングの誤差のため"aria-expanded"がfalseの時にイベントリスナを取り付ける
+ * */ 
+const ccPopupButtonHandler = (ev: MouseEvent): void => {
+  // popupメニューが開かれているかチェック
+  // 開かれているならclickリスナをメニューラッパーとdocumentに着ける
+  // とにかく
+  // メニューの外側をクリックしたらすべてのリスナをremoveする
+  console.log("CC popup button was clicked");
+  // is it opening?
+  const e: HTMLElement = document.querySelector<HTMLElement>(
+    selectors.controlBar.cc.popupButton
+  );
+
+  // aria-expanded === trueのときになぜかfalseを返すので
+  // 反対の結果を送信する
+  if (e.getAttribute("aria-expanded") !== "true") {
+    // CC popupメニューが表示された
+    document.removeEventListener("click", ccPopupMenuClickHandler, true);
+    document.addEventListener("click", ccPopupMenuClickHandler, true);
+  }
+};
+
+
+/**
+ * Check Transcript is open or not.
+ * 
+ * @returns {boolean}: true for open, false for not open.
+ * 
+ * Get DOM everytime this function invoked. 
+ * */ 
+const isTranscriptOpen = (): boolean => {
+  const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
+    selectors.controlBar.transcript.toggleButton
+  );
+  return toggleButton.getAttribute("aria-expanded") === "true" ? true : false;
+};
+
+
+/**
+ * Check Subtitle language is English or not.
+ * 
+ * @returns {boolean}: true if it's English, false if not.
+ * 
+ * Get DOM everytime this function invoked.
+ */
 const isSubtitleEnglish = (): boolean => {
-    const listParent: HTMLElement = document.querySelector<HTMLElement>(
-        selectors.controlBar.cc.menuListParent
+  const listParent: HTMLElement = document.querySelector<HTMLElement>(
+    selectors.controlBar.cc.menuListParent
+  );
+  const checkButtons: NodeListOf<HTMLElement> =
+    listParent.querySelectorAll<HTMLElement>(
+      selectors.controlBar.cc.menuCheckButtons
     );
-    const checkButtons: NodeListOf<HTMLElement> =
-        listParent.querySelectorAll<HTMLElement>(
-            selectors.controlBar.cc.menuCheckButtons
-        );
-    const menuList: NodeListOf<HTMLElement> =
-        listParent.querySelectorAll<HTMLElement>(
-            selectors.controlBar.cc.menuList
-        );
+  const menuList: NodeListOf<HTMLElement> =
+    listParent.querySelectorAll<HTMLElement>(selectors.controlBar.cc.menuList);
 
-    let counter: number = 0;
-    let i: number = null;
-    const els: HTMLElement[] = Array.from<HTMLElement>(checkButtons);
-    for (const btn of els) {
-        if (btn.getAttribute('aria-checked') === 'true') {
-            i = counter;
-            break;
-        }
-        counter++;
+  let counter: number = 0;
+  let i: number = null;
+  const els: HTMLElement[] = Array.from<HTMLElement>(checkButtons);
+  for (const btn of els) {
+    if (btn.getAttribute("aria-checked") === "true") {
+      i = counter;
+      break;
     }
+    counter++;
+  }
 
-    if (i === null) {
-        throw new Error(
-            'Error: [isSubtitleEnglish()] Something went wrong but No language is selected'
-        );
-    }
-    const currentLanguage: string = Array.from(menuList)[i].innerText;
-    if (currentLanguage.includes('English') || currentLanguage.includes('英語'))
-        return true;
-    else return false;
+  if (i === null) {
+    throw new Error(
+      "Error: [isSubtitleEnglish()] Something went wrong but No language is selected"
+    );
+  }
+  const currentLanguage: string = Array.from(menuList)[i].innerText;
+  if (currentLanguage.includes("English") || currentLanguage.includes("英語"))
+    return true;
+  else return false;
 };
 
 /*
@@ -334,39 +331,38 @@ const isSubtitleEnglish = (): boolean => {
 */
 
 const initialize = async (): Promise<void> => {
-    console.log('CONTENT SCRIPT INITIALIZING...');
-    try {
-        // Set up listeners
+  console.log("CONTENT SCRIPT INITIALIZING...");
+  try {
+    // Set up listeners
 
-        const w: number = document.documentElement.clientWidth;
-        if (w > VANISH_BOUNDARY) {
-            const toggleButton: HTMLElement =
-                document.querySelector<HTMLElement>(
-                    selectors.controlBar.transcript.toggleButton
-                );
-            toggleButton.addEventListener(
-                'click',
-                transcriptToggleButtonHandler,
-                false
-            );
-            isWindowTooSmall = false;
-        } else {
-            isWindowTooSmall = true;
-        }
-
-        window.addEventListener('resize', function () {
-            clearTimeout(timerQueue);
-            timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
-        });
-
-        const ccButton: HTMLElement = document.querySelector<HTMLElement>(
-            selectors.controlBar.cc.popupButton
-        );
-        ccButton.addEventListener('click', ccPopupButtonHandler, true);
-        console.log('content script initialize has been done');
-    } catch (err) {
-        console.error(err.message);
+    const w: number = document.documentElement.clientWidth;
+    if (w > VANISH_BOUNDARY) {
+      const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
+        selectors.controlBar.transcript.toggleButton
+      );
+      toggleButton.addEventListener(
+        "click",
+        transcriptToggleButtonHandler,
+        false
+      );
+      isWindowTooSmall = false;
+    } else {
+      isWindowTooSmall = true;
     }
+
+    window.addEventListener("resize", function () {
+      clearTimeout(timerQueue);
+      timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
+    });
+
+    const ccButton: HTMLElement = document.querySelector<HTMLElement>(
+      selectors.controlBar.cc.popupButton
+    );
+    ccButton.addEventListener("click", ccPopupButtonHandler, true);
+    console.log("content script initialize has been done");
+  } catch (err) {
+    console.error(err.message);
+  }
 };
 
 /*
@@ -374,7 +370,7 @@ const initialize = async (): Promise<void> => {
     _________________________________________________
 */
 (function () {
-    initialize();
+  initialize();
 })();
 
 // -- LEGACY CODE -----------------------------------------------

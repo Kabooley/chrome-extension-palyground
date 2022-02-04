@@ -405,7 +405,6 @@ __webpack_require__.r(__webpack_exports__);
 static content script
 ___________________________________________________________
 
-run_at: document_idle
 
 機能：
     1. Udemy講義ページのトランスクリプト機能がONになっているか検知する
@@ -419,7 +418,6 @@ Inject:
 
 通信に関して：
     single message passing機能でbackground.jsと通信する
-    今のところ、こちらからメッセージを送信することはない
 
 TODO:
 - ブラウザサイズが小さすぎると、トランスクリプトが表示されないことへの対応
@@ -445,12 +443,11 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
-// import { Porter } from "../utils/Porter";
 //
 // --- GLOBALS ---------------------------------------------------
 //
 // Transcriptが消えるブラウザウィンドウX軸の境界値
-const VANISH_BOUNDARY = 601;
+const VANISH_BOUNDARY = 584;
 // Transcriptがブラウザサイズによって消えているのかどうか
 let isWindowTooSmall;
 // windowのonResizeイベント発火遅延用
@@ -470,7 +467,7 @@ let timerQueue = null;
         sendSectionTitle
 */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('CONTENT SCRIPT GOT MESSAGE');
+    console.log("CONTENT SCRIPT GOT MESSAGE");
     const { from, order, to } = message;
     const response = {
         from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
@@ -484,11 +481,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaite
         if (order && order.length) {
             // SEND STATUS
             if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.sendStatus)) {
-                console.log('Order: send status');
+                console.log("Order: send status");
                 const isEnglish = isSubtitleEnglish();
-                const isOpen = isWindowTooSmall
-                    ? false
-                    : isTranscriptOpen();
+                const isOpen = isWindowTooSmall ? false : isTranscriptOpen();
                 response.language = isEnglish;
                 response.transcript = isOpen;
             }
@@ -497,10 +492,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaite
         // DEBUG:
         //
         // LOG response
-        console.log('-----------------------------------');
-        console.log('LOG: response object before send');
+        console.log("-----------------------------------");
+        console.log("LOG: response object before send");
         console.log(response);
-        console.log('-----------------------------------');
+        console.log("-----------------------------------");
         sendResponse(response);
         return true;
     }
@@ -515,22 +510,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaite
 
 */
 const sendToBackgroud = (order) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('SENDING MESSAGE TO BACKGROUND');
+    console.log("SENDING MESSAGE TO BACKGROUND");
     const { isOpened, isEnglish } = order;
     const message = {
         from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
         to: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.background,
     };
     if (isOpened !== undefined) {
-        message['transcriptExpanded'] = isOpened;
+        message["transcriptExpanded"] = isOpened;
     }
     if (isEnglish !== undefined) {
-        message['language'] = isEnglish;
+        message["language"] = isEnglish;
     }
     //
     // DEBUG:
     //
-    console.log('DEBUG: make sure message object');
+    console.log("DEBUG: make sure message object");
     console.log(message);
     //
     //
@@ -550,9 +545,11 @@ const sendToBackgroud = (order) => __awaiter(void 0, void 0, void 0, function* (
  * */
 const onWindowResizeHandler = (ev) => {
     const w = document.documentElement.clientWidth;
+    console.log(w);
     // When window shrinks less than the boundary
     // Then send status.
     if (w < VANISH_BOUNDARY && !isWindowTooSmall) {
+        console.log("window is too small");
         isWindowTooSmall = true;
         // windowサイズが小さくなりすぎると、トグルボタンのDOMは消えるから
         // イベントリスナはremoveする必要がないけど、
@@ -565,94 +562,91 @@ const onWindowResizeHandler = (ev) => {
     // When window bend over vanish boundary
     // Then reset toggle button to add listener.
     if (w >= VANISH_BOUNDARY && isWindowTooSmall) {
+        console.log("window is not small");
         isWindowTooSmall = false;
         const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
-        toggleButton.addEventListener('click', transcriptToggleButtonHandler, false);
+        toggleButton.addEventListener("click", transcriptToggleButtonHandler, false);
     }
 };
-/*
-    transcriptToggleButtonHandler
-    ________________________________________________________________
-
-    Udemy講義ページのtranscriptトグルボタンがonClick時、
-    transcriptが開かれているのかどうかを判定する
-
-    >>NOTE<<
-
-    このハンドラ関数はトグルボタンがクリックされたときにのみ使うこと
-    トグルボタンと関係なくtranscriptが開かれているかどうか知りたいときは
-    こちらの関数を使うこと: isTranscriptOpen()
-*/
+/**
+ * Callback of ClickEvent on toggle button of Transcript.
+ *
+ * NOTE: When click event fired, "aria-expanded" is not change its value yet.
+ * So if this get true, then take that as "aria-expanded" about to be false.
+ * */
 const transcriptToggleButtonHandler = (ev) => {
     const latest = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
-    // 動的な変更が反映される前の属性値を取得するので
-    //
-    latest.getAttribute('aria-expanded') === 'true'
+    // "aria-expanded"変更直前の値なので反対を返す
+    latest.getAttribute("aria-expanded") === "true"
         ? sendToBackgroud({ isOpened: false })
         : sendToBackgroud({ isOpened: true });
 };
-/*
-    ccPopupMenuClickHandler
-    __________________________________________________
-    closed caption popup menu click handler
-
-    CC Popup Menuの中をクリックされたのか否かを判断する
-    このハンドラはdocumentのイベントリスナに渡される
-*/
+/**
+ * Callback of ClickEvent on CC Popup MENU
+ *
+ * If user click outside of menu,
+ * check subtitle has been changed.
+ * If so, notify to background and remove listener from document.
+ * Click inside do nothing.
+ * */
 const ccPopupMenuClickHandler = (ev) => {
     const menu = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuListParent);
     const path = ev.composedPath();
     if (path.includes(menu)) {
         // menuの内側でclickが発生した
         // 何もしない
-        console.log('clicked inside');
+        console.log("clicked inside");
     }
     else {
         // menuの外側でclickが発生した
         const r = isSubtitleEnglish();
         sendToBackgroud({ isEnglish: r });
-        document.removeEventListener('click', ccPopupMenuClickHandler, true);
+        document.removeEventListener("click", ccPopupMenuClickHandler, true);
     }
 };
-/*
-    ccPopupButtonHandler
-    ______________________________________________________
-    CC popupメニューとdocumentにイベントリスナをつけるための関数
-  */
+/**
+ * Callback of ClickEvent on CC Popup BUTTON
+ *
+ * Check if ClosedCaption Popup menu is opened.
+ * If it's opened, then add onClick event listener to document
+ * to detect subtitle change.
+ *
+ * NOTE: 変化タイミングの誤差のため"aria-expanded"がfalseの時にイベントリスナを取り付ける
+ * */
 const ccPopupButtonHandler = (ev) => {
     // popupメニューが開かれているかチェック
     // 開かれているならclickリスナをメニューラッパーとdocumentに着ける
     // とにかく
     // メニューの外側をクリックしたらすべてのリスナをremoveする
-    console.log('CC popup button was clicked');
+    console.log("CC popup button was clicked");
     // is it opening?
     const e = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.popupButton);
-    // やっぱりaria-expanded === trueのときになぜかfalseを返すので
+    // aria-expanded === trueのときになぜかfalseを返すので
     // 反対の結果を送信する
-    if (e.getAttribute('aria-expanded') !== 'true') {
+    if (e.getAttribute("aria-expanded") !== "true") {
         // CC popupメニューが表示された
-        document.removeEventListener('click', ccPopupMenuClickHandler, true);
-        document.addEventListener('click', ccPopupMenuClickHandler, true);
+        document.removeEventListener("click", ccPopupMenuClickHandler, true);
+        document.addEventListener("click", ccPopupMenuClickHandler, true);
     }
 };
-/*
-    Transcript トグルボタンのaria-expandedから
-    Transcript が開かれているのかを取得する
-
-    >>NOTE<<
-
-    トグルボタンのonclick時のイベントハンドラとして使わないこと
-    属性値はonclick時は挙動がことなるので
-    transcriptToggleButtonHandlerを代わりに使うこと
-*/
+/**
+ * Check Transcript is open or not.
+ *
+ * @returns {boolean}: true for open, false for not open.
+ *
+ * Get DOM everytime this function invoked.
+ * */
 const isTranscriptOpen = () => {
     const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
-    return toggleButton.getAttribute('aria-expanded') ? true : false;
+    return toggleButton.getAttribute("aria-expanded") === "true" ? true : false;
 };
-/*
-    字幕の言語が英語か否か判定する
-    Return {boolean}: 英語だったらtrue そうでないならfalse
-*/
+/**
+ * Check Subtitle language is English or not.
+ *
+ * @returns {boolean}: true if it's English, false if not.
+ *
+ * Get DOM everytime this function invoked.
+ */
 const isSubtitleEnglish = () => {
     const listParent = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuListParent);
     const checkButtons = listParent.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuCheckButtons);
@@ -661,17 +655,17 @@ const isSubtitleEnglish = () => {
     let i = null;
     const els = Array.from(checkButtons);
     for (const btn of els) {
-        if (btn.getAttribute('aria-checked') === 'true') {
+        if (btn.getAttribute("aria-checked") === "true") {
             i = counter;
             break;
         }
         counter++;
     }
     if (i === null) {
-        throw new Error('Error: [isSubtitleEnglish()] Something went wrong but No language is selected');
+        throw new Error("Error: [isSubtitleEnglish()] Something went wrong but No language is selected");
     }
     const currentLanguage = Array.from(menuList)[i].innerText;
-    if (currentLanguage.includes('English') || currentLanguage.includes('英語'))
+    if (currentLanguage.includes("English") || currentLanguage.includes("英語"))
         return true;
     else
         return false;
@@ -683,25 +677,25 @@ const isSubtitleEnglish = () => {
     Inject時に実行する処理
 */
 const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('CONTENT SCRIPT INITIALIZING...');
+    console.log("CONTENT SCRIPT INITIALIZING...");
     try {
         // Set up listeners
         const w = document.documentElement.clientWidth;
         if (w > VANISH_BOUNDARY) {
             const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
-            toggleButton.addEventListener('click', transcriptToggleButtonHandler, false);
+            toggleButton.addEventListener("click", transcriptToggleButtonHandler, false);
             isWindowTooSmall = false;
         }
         else {
             isWindowTooSmall = true;
         }
-        window.addEventListener('resize', function () {
+        window.addEventListener("resize", function () {
             clearTimeout(timerQueue);
             timerQueue = setTimeout(onWindowResizeHandler, _utils_constants__WEBPACK_IMPORTED_MODULE_1__.RESIZE_TIMER);
         });
         const ccButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.popupButton);
-        ccButton.addEventListener('click', ccPopupButtonHandler, true);
-        console.log('content script initialize has been done');
+        ccButton.addEventListener("click", ccPopupButtonHandler, true);
+        console.log("content script initialize has been done");
     }
     catch (err) {
         console.error(err.message);

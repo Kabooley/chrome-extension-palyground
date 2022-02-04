@@ -761,7 +761,7 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
     const _state = state.getInstance();
     const { url, tabId, isTranscriptRestructured } = yield _state.getState();
     // 拡張機能が未展開、changeInfo.statusがloadingでないなら無視する
-    if (changeInfo.status !== 'loading' || !isTranscriptRestructured)
+    if (changeInfo.status !== "loading" || !isTranscriptRestructured)
         return;
     // 拡張機能が展開済だとして、tabIdが展開済のtabId以外に切り替わったなら無視する
     // return;
@@ -778,15 +778,14 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
         else if (!changeInfo.url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.urlPattern)) {
             // Udemy講義ページ以外に移動した
             // TODO: 拡張機能OFF処理へ
-            console.log('[background] OFF this extension');
+            console.log("[background] OFF this extension");
         }
         // 展開中のtabIdである && changeInfo.urlが講義ページだけど末尾が変化した(#以下は無視)
         // 動画が切り替わった判定
-        else if (changeInfo.url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.urlPattern) &&
-            changeInfo.url !== url) {
+        else if (changeInfo.url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.urlPattern) && changeInfo.url !== url) {
             // 動画が切り替わった
             // TODO: リセット処理へ
-            console.log('[background] RESET this extension');
+            console.log("[background] RESET this extension");
             const result = yield handlerOfReset(tabIdUpdatedOccured, changeInfo.url);
         }
     }
@@ -827,12 +826,12 @@ const sortMessage = (message, sender, sendResponse) => {
  *
  * */
 const handlerOfPopupMessage = (message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('[background] Message from Popup');
+    console.log("[background] Message from Popup");
     try {
         const { order } = message, rest = __rest(message, ["order"]);
         if (order && order.length) {
             // DEBUG: make sure what message got
-            console.log('[background] Validate URL');
+            console.log("[background] Validate URL");
             //
             // popupが開かれるたびに呼び出される処理
             //
@@ -845,10 +844,10 @@ const handlerOfPopupMessage = (message, sender, sendResponse) => __awaiter(void 
             // 拡張機能の実行命令
             if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.run)) {
                 // DEBUG: make sure what message got
-                console.log('[background] RUN');
+                console.log("[background] RUN");
                 //
                 const isSuccess = yield handlerOfRun();
-                sendResponse({ successDeployment: isSuccess, complete: true });
+                // sendResponse({ successDeployment: isSuccess, complete: true });
                 if (!isSuccess) {
                     // ここでエラーを出すのか
                     // handlerOfRunでエラーを出すのか
@@ -870,7 +869,7 @@ const handlerOfPopupMessage = (message, sender, sendResponse) => __awaiter(void 
  *
  * */
 const handlerOfContentScriptMessage = (message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('[background] Message from contentScript.js');
+    console.log("[background] Message from contentScript.js");
     try {
         const { order } = message, rest = __rest(message, ["order"]);
     }
@@ -909,7 +908,7 @@ const handlerOfControllerMessage = (message, sender, sendResponse) => __awaiter(
  * */
 const handlerOfVerifyValidPage = (_url) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let url = '';
+        let url = "";
         if (_url === undefined) {
             const tab = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.tabsQuery)();
             url = tab.url;
@@ -961,7 +960,7 @@ const handlerOfRun = () => __awaiter(void 0, void 0, void 0, function* () {
         const { tabId } = yield _state.getState();
         yield chrome.scripting.executeScript({
             target: { tabId: tabId },
-            files: ['contentScript.js'],
+            files: ["contentScript.js"],
         });
         yield _state.setState({ isContentScriptInjected: true });
         // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...実装する技術がない...
@@ -986,7 +985,7 @@ const handlerOfRun = () => __awaiter(void 0, void 0, void 0, function* () {
         // 字幕データを取得する
         yield chrome.scripting.executeScript({
             target: { tabId: tabId },
-            files: ['captureSubtitle.js'],
+            files: ["captureSubtitle.js"],
         });
         yield _state.setState({ isCaptureSubtitleInjected: true });
         // TODO: ここでcontent scriptが展開完了したのを確認したうえで次に行きたいのだが...
@@ -1002,7 +1001,7 @@ const handlerOfRun = () => __awaiter(void 0, void 0, void 0, function* () {
         // <phase 4> inject controller.js
         yield chrome.scripting.executeScript({
             target: { tabId: tabId },
-            files: ['controller.js'],
+            files: ["controller.js"],
         });
         yield _state.setState({ isControllerInjected: true });
         // const { success } = await sendMessageToTabsPromise(tabId, {
@@ -1052,7 +1051,7 @@ const handlerOfRun = () => __awaiter(void 0, void 0, void 0, function* () {
  * */
 const handlerOfReset = (tabId, newUrl) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log('[background] RESET Begin...');
+        console.log("[background] RESET Begin...");
         const _state = state.getInstance();
         // stateの更新：
         // urlをtabs.onUpdatedが起こったときのURLにする
@@ -1069,7 +1068,7 @@ const handlerOfReset = (tabId, newUrl) => __awaiter(void 0, void 0, void 0, func
         // 各content scritpのリセットを実施する
         const isResetSuccess = yield resetEachContentScript(tabId);
         if (!isResetSuccess) {
-            throw new Error('Failed to reset');
+            throw new Error("Failed to reset");
         }
         // 成功したとして、
         // データ再取得処理
@@ -1092,13 +1091,13 @@ const handlerOfReset = (tabId, newUrl) => __awaiter(void 0, void 0, void 0, func
             subtitles: resFromCaptureSubtitle.subtitles,
         });
         if (!isRestructured.success) {
-            throw new Error('Error: Failed to restructure ExTranscript');
+            throw new Error("Error: Failed to restructure ExTranscript");
         }
         yield _state.setState({
             isTranscriptRestructured: true,
         });
         // ここまで何も問題なければRESET成功
-        console.log('[background] RESET Complete!');
+        console.log("[background] RESET Complete!");
         return true;
     }
     catch (err) {
@@ -1147,7 +1146,7 @@ const resetEachContentScript = (tabId) => __awaiter(void 0, void 0, void 0, func
                 return r;
         });
         if (failures.length) {
-            throw new Error(`Failed to reset content script. ${failures.join(' ')}`);
+            throw new Error(`Failed to reset content script. ${failures.join(" ")}`);
         }
         else
             return true;
