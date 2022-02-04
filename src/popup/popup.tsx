@@ -1,107 +1,112 @@
-import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom";
+import React, { useEffect, useState } from 'react';
+import ReactDOM from 'react-dom';
 import {
-  iMessage,
-  iResponse,
-  extensionNames,
-  orderNames,
-} from "../utils/constants";
-import { sendMessagePromise } from "../utils/helpers";
+    iMessage,
+    iResponse,
+    extensionNames,
+    orderNames,
+} from '../utils/constants';
+import { sendMessagePromise } from '../utils/helpers';
 
 const Popup = (): JSX.Element => {
-  // popupが開かれたときのURLが、拡張機能が有効になるべきURLなのか
-  const [correctUrl, setCorrectUrl] = useState<boolean>(false);
-  // RUNボタンが押されて、結果待ちの状態ならばtrue それ以外はfalse
-  const [running, setRunning] = useState<boolean>(false);
-  // 正常に拡張機能が実行されたらtrue
-  const [complete, setComplete] = useState<boolean>(false);
+    // popupが開かれたときのURLが、拡張機能が有効になるべきURLなのか
+    const [correctUrl, setCorrectUrl] = useState<boolean>(false);
+    // RUNボタンが押されて、結果待ちの状態ならばtrue それ以外はfalse
+    const [running, setRunning] = useState<boolean>(false);
+    // 正常に拡張機能が実行されたらtrue
+    const [complete, setComplete] = useState<boolean>(false);
 
-  useEffect(() => {
-    console.log("[popup] Set onMessage listener");
-    chrome.runtime.onMessage.addListener(messageHandler);
-    return () => {
-      console.log("[popup] Removed onMessage listener");
-      chrome.runtime.onMessage.removeListener(messageHandler);
+    useEffect(() => {
+        console.log('[popup] Set onMessage listener');
+        chrome.runtime.onMessage.addListener(messageHandler);
+        return () => {
+            console.log('[popup] Removed onMessage listener');
+            chrome.runtime.onMessage.removeListener(messageHandler);
+        };
+    }, []);
+
+    useEffect(() => {
+        // NOTE: DON'T USE AWAIT inside of useEffect().
+        // 
+        // POPUPは開かれるたびに新しく生成されるので
+        // 初回呼出の時だけ実行すればいい
+        // 指定のURLと一致するのかbackgroundと通信する
+        console.log('[popup] OPENED');
+        sendInquire();
+    }, []);
+
+    const messageHandler = (): void => {};
+
+    const sendInquire = (): void => {
+        sendMessagePromise({
+            from: extensionNames.popup,
+            to: extensionNames.background,
+            order: [orderNames.inquireUrl],
+        })
+            .then((res: iResponse) => {
+                const { correctUrl } = res;
+                // DEBUG:
+                console.log(`[popup] is valid page?: ${correctUrl}`);
+                setCorrectUrl(correctUrl);
+            })
+            .catch((err) => console.error(err.message));
     };
-  }, []);
 
-  useEffect(() => {
-    // NOTE: DON'T USE AWAIT inside of useEffect().
-    // 
-    // popupが開かれるたびに開かれたタブのURLが
-    // 指定のURLと一致するのかbackgroundと通信する
-    sendInquire();
-  });
+    const buttonClickHandler = (): void => {
+        setRunning(true);
+        sendMessagePromise({
+            from: extensionNames.popup,
+            to: extensionNames.background,
+            order: [orderNames.run],
+        })
+            .then((res) => {
+                const { success } = res;
+                setComplete(success);
+                setRunning(false);
+                if (!success) {
+                    throw new Error(
+                        'Error: something went wrong while extension running'
+                    );
+                }
+            })
+            .catch((err) => {
+                setComplete(false);
+                setRunning(false);
+                console.error(err.message);
+                // alert出した方がいいかな？
+            });
+    };
 
-  const messageHandler = (): void => {};
+    const generateCorrect = (): JSX.Element => {
+        return (
+            <div>
+                This is correct page
+                <button onClick={buttonClickHandler}>RUN</button>
+            </div>
+        );
+    };
 
-  const sendInquire = (): void => {
-    sendMessagePromise({
-      from: extensionNames.popup,
-      to: extensionNames.background,
-      order: [orderNames.inquireUrl],
-    })
-      .then((res: iResponse) => {
-        const { correctUrl } = res;
-        setCorrectUrl(correctUrl);
-      })
-      .catch((err) => console.error(err.message));
-  };
+    const generateIncorrect = (): JSX.Element => {
+        return <div>This is INCORRECT page</div>;
+    };
 
-  const buttonClickHandler = (): void => {
-    setRunning(true);
-    sendMessagePromise({
-      from: extensionNames.popup,
-      to: extensionNames.background,
-      order: [orderNames.run],
-    })
-      .then((res) => {
-        const { complete } = res;
-        setComplete(complete);
-        setRunning(false);
-        if (!complete) {
-          throw new Error("Error: something went wrong while extension running");
-        }
-      })
-      .catch((err) => {
-        setComplete(false);
-        setRunning(false);
-        console.error(err.message);
-        // alert出した方がいいかな？
-      });
-  };
+    const generateRunning = (): JSX.Element => {
+        return running ? <div> RUNNING...</div> : null;
+    };
 
-  const generateCorrect = (): JSX.Element => {
+    const generateComplete = (): JSX.Element => {
+        return complete ? <div> Complete!</div> : null;
+    };
     return (
-      <div>
-        This is correct page
-        <button onClick={buttonClickHandler}>RUN</button>
-      </div>
+        <div className="container">
+            POPUP
+            {correctUrl ? generateCorrect() : generateIncorrect()}
+            {generateRunning()}
+            {generateComplete()}
+        </div>
     );
-  };
-
-  const generateIncorrect = (): JSX.Element => {
-    return <div>This is INCORRECT page</div>;
-  };
-
-  const generateRunning = (): JSX.Element => {
-    return running ? <div> RUNNING...</div> : null;
-  };
-
-  const generateComplete = (): JSX.Element => {
-    return complete ? <div> Complete!</div> : null;
-  };
-  return (
-    <div className="container">
-      POPUP
-      {correctUrl ? generateCorrect() : generateIncorrect()}
-      {generateRunning()}
-      {generateComplete()}
-      <button onClick={buttonClickHandler}>RUN</button>
-    </div>
-  );
 };
 
-const root = document.createElement("div");
+const root = document.createElement('div');
 document.body.appendChild(root);
 ReactDOM.render(<Popup />, root);

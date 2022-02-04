@@ -10,9 +10,17 @@
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "_key_of_model_state__": () => (/* binding */ _key_of_model_state__),
+/* harmony export */   "urlPattern": () => (/* binding */ urlPattern),
 /* harmony export */   "extensionStatus": () => (/* binding */ extensionStatus),
 /* harmony export */   "extensionNames": () => (/* binding */ extensionNames),
 /* harmony export */   "orderNames": () => (/* binding */ orderNames),
+/* harmony export */   "RESIZE_BOUNDARY": () => (/* binding */ RESIZE_BOUNDARY),
+/* harmony export */   "SIDEBAR_WIDTH_BOUNDARY": () => (/* binding */ SIDEBAR_WIDTH_BOUNDARY),
+/* harmony export */   "RESIZE_TIMER": () => (/* binding */ RESIZE_TIMER),
+/* harmony export */   "SIGNAL": () => (/* binding */ SIGNAL),
+/* harmony export */   "positionStatus": () => (/* binding */ positionStatus),
+/* harmony export */   "viewStatusNames": () => (/* binding */ viewStatusNames),
 /* harmony export */   "port_names": () => (/* binding */ port_names)
 /* harmony export */ });
 /**************************************************
@@ -20,6 +28,8 @@ __webpack_require__.r(__webpack_exports__);
  * ________________________________________________
  *
  * ************************************************/
+const _key_of_model_state__ = "_key_of_model_state__@&%8=8";
+const urlPattern = /https:\/\/www.udemy.com\/course\/*/gm;
 const extensionStatus = {
     working: 'working',
     notWorking: 'notWorking',
@@ -49,8 +59,35 @@ const orderNames = {
     inquireUrl: "inquireUrl",
     // from popup, run process
     run: "run",
+    // reset content script
+    reset: "reset",
     // something succeeded
     success: "success"
+};
+;
+// --- constants for controller.js -------------------------------
+// // To pass to setTimeout
+// export const TEN_SEC: number = 10000;
+// transcript要素はwinodwサイズが975px以下の時にdashboardへ以上でsidebarへ移動する
+const RESIZE_BOUNDARY = 975;
+// sidebarのwidthは2通りあって、
+// 975px < w =< 1182pxだと300px, w > 1182pxで25%
+const SIDEBAR_WIDTH_BOUNDARY = 1182;
+// window onResize時の反応遅延速度
+const RESIZE_TIMER = 100;
+const SIGNAL = {
+    widthStatus: {
+        wideview: true,
+        middleview: false,
+    },
+};
+const positionStatus = {
+    sidebar: 'sidebar',
+    noSidebar: 'noSidebar',
+};
+const viewStatusNames = {
+    wideView: 'wideView',
+    middleView: 'middleView',
 };
 // ---- ABOUT PORT ----------------------------------
 const port_names = {
@@ -142,7 +179,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "deepCopier": () => (/* binding */ deepCopier),
 /* harmony export */   "sendMessageToTabsPromise": () => (/* binding */ sendMessageToTabsPromise),
-/* harmony export */   "sendMessagePromise": () => (/* binding */ sendMessagePromise)
+/* harmony export */   "sendMessagePromise": () => (/* binding */ sendMessagePromise),
+/* harmony export */   "tabsQuery": () => (/* binding */ tabsQuery)
 /* harmony export */ });
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -188,6 +226,111 @@ const sendMessagePromise = (message) => __awaiter(void 0, void 0, void 0, functi
         }));
     }));
 });
+const tabsQuery = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const w = yield chrome.windows.getCurrent();
+        const tabs = yield chrome.tabs.query({
+            active: true,
+            windowId: w.id,
+        });
+        return tabs[0];
+    }
+    catch (err) {
+        console.error(err.message);
+    }
+});
+
+
+/***/ }),
+
+/***/ "./src/utils/selectors.ts":
+/*!********************************!*\
+  !*** ./src/utils/selectors.ts ***!
+  \********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "transcript": () => (/* binding */ transcript),
+/* harmony export */   "controlBar": () => (/* binding */ controlBar),
+/* harmony export */   "EX": () => (/* binding */ EX)
+/* harmony export */ });
+/***************************************************
+ * SELECTORS
+ * ________________________________________________
+ *
+ *
+ *
+ *
+ * **************************************************/
+// --- Selectors related to Transcript ---------------------------
+const transcript = {
+    // HTMLSpanElement which is Highlight as current subtitle on movie.
+    highlight: 'span.transcript--highlight-cue--1bEgq',
+    // NodeListOf<HTMLSpanElement> which are list of subtitle element.
+    transcripts: 'div.transcript--cue-container--wu3UY p.transcript--underline-cue--3osdw span',
+    // top element of side bar
+    noSidebar: 'div.app--no-sidebar--1naXE',
+    sidebar: 'div.has-sidebar',
+    // High level element of Movie element
+    movieContainer: 'div.app--curriculum-item--2GBGE',
+    // Movie Replay button
+    replayButton: "button[data-purpose='video-play-button-initial']",
+};
+// --- Selectors related to control bar. -------------------------
+const controlBar = {
+    // "closed captioning"
+    cc: {
+        // 字幕メニューpopupボタン
+        popupButton: "button[data-purpose='captions-dropdown-button']",
+        // textContentで取得できる言語を取得可能
+        //   languageList:
+        //     "button.udlite-btn.udlite-btn-large.udlite-btn-ghost.udlite-text-sm.udlite-block-list-item.udlite-block-list-item-small.udlite-block-list-item-neutral > div.udlite-block-list-item-content",
+        //
+        // 言語リストを取得するには一旦languageButtonsを取得してからそれからquerySelectorする
+        // いらないかも
+        menuCheckButtons: 'button',
+        menuList: '.udlite-block-list-item-content',
+        menuListParent: "ul[role='menu'][data-purpose='captions-dropdown-menu']",
+        // 上記のセレクタのラッパーボタン。
+        // 属性`aria-checked`で選択されているかどうかわかる
+        checkButtons: 'button.udlite-btn.udlite-btn-large.udlite-btn-ghost.udlite-text-sm.udlite-block-list-item.udlite-block-list-item-small.udlite-block-list-item-neutral',
+    },
+    transcript: {
+        toggleButton: "button[data-purpose='transcript-toggle']",
+    },
+};
+// --- Selectors related ex-transcript -----------------------
+const EX = {
+    // Udemy page-specific selector
+    sidebarParent: '.app--content-column--HC_i1',
+    noSidebarParent: '.app--dashboard-content--r2Ce9',
+    movieContainer: '.app--body-container',
+    // 独自selector `ex--`を接頭辞とする
+    // sidebar ex-transcript selectors
+    sidebarWrapper: '.ex--sidebar-column',
+    sidebarSection: '.ex--sidebar--sidebar',
+    sidebarHeader: '.ex--sidebar--sidebar-header',
+    sidebarContent: '.ex--sidebar--content',
+    sidebarContentPanel: '.ex--sidebar-content-panel',
+    sidebarFooter: '.ex--sidebar-transcript--autoscroll-wrapper',
+    // sidebar width in case more than SIDEBAR_WIDTH_BOUNDARY
+    wideView: '.ex--sidebar--wideview',
+    // sidebar width in case less than SIDEBAR_WIDTH_BOUNDARY
+    middleView: '.ex--sidebar--middleview',
+    // bottom ex-transcript selectors
+    dashboardTranscriptWrapper: '.ex--dashboard-transcript-wrapper',
+    dashboardTranscriptHeader: '.ex--dashboard-transcript--header',
+    dashboardTranscriptPanel: '.ex--dashboard-transcript--transcript-panel',
+    dashboardTranscriptCueContainer: '.ex--dashboard-transcript--cue-container',
+    dashboardTranscriptCue: '.ex--dashboard-transcript--cue--underline',
+    dashboardTranscriptCueText: "span[data-purpose='ex--dashboard-cue-text']",
+    dashboardTranscriptBottom: '.ex--dashboard-transcript--autoscroll-wrapper',
+    // To Highlight Transcriot Cue Container
+    highlight: '.--highlight--',
+};
+// --- LEGACY -------------------------
+// sectionTitle: 'div.udlite-text-md.video-viewer--title-overlay--OoQ6e',
 
 
 /***/ })
@@ -255,8 +398,41 @@ var __webpack_exports__ = {};
   !*** ./src/contentScript/contentScript.ts ***!
   \********************************************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _utils_constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/constants */ "./src/utils/constants.ts");
-/* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
+/* harmony import */ var _utils_selectors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/selectors */ "./src/utils/selectors.ts");
+/* harmony import */ var _utils_constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/constants */ "./src/utils/constants.ts");
+/* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
+/***********************************************************
+static content script
+___________________________________________________________
+
+run_at: document_idle
+
+機能：
+    1. Udemy講義ページのトランスクリプト機能がONになっているか検知する
+    2. Udemy講義ページの字幕の言語が英語になっているか検知する
+    3. 1, 2を調査して必要に応じてbackground scriptへ送信する
+
+Inject:
+    動的content scriptとして、
+    Udemyの講義ページURLへマッチするwebページにおいて、
+    POPUP上の実行ボタンが押されたらinjectされる
+
+通信に関して：
+    single message passing機能でbackground.jsと通信する
+    今のところ、こちらからメッセージを送信することはない
+
+TODO:
+- ブラウザサイズが小さすぎると、トランスクリプトが表示されないことへの対応
+    トランスクリプトトグルボタンも、表示中だったトランスクリプトも非表示になる
+    こうなると拡張機能が使えない
+    つまり、
+    字幕：英語
+    トランスクリプト：ONになっている
+        実際にONになっている
+        かつ
+        windowサイズが小さい
+    アプリケーションのリセット機能にかかわるので結構大きな問題
+************************************************************/
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -268,79 +444,325 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 };
 
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log("[content script] ONMESSAGE");
-    const { from, to, order } = message;
-    if (to !== _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript)
+
+// import { Porter } from "../utils/Porter";
+//
+// --- GLOBALS ---------------------------------------------------
+//
+// Transcriptが消えるブラウザウィンドウX軸の境界値
+const VANISH_BOUNDARY = 601;
+// Transcriptがブラウザサイズによって消えているのかどうか
+let isWindowTooSmall;
+// windowのonResizeイベント発火遅延用
+let timerQueue = null;
+//
+// --- chrome API Listeners -------------------------------------
+//
+/*
+    onMessage listener
+    ______________________________________________
+    background.jsからのメッセージを受信して応対する
+
+    非同期sendResponse()を許可している(return trueしている)
+
+    order:
+        sendStatus
+        sendSectionTitle
+*/
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('CONTENT SCRIPT GOT MESSAGE');
+    const { from, order, to } = message;
+    const response = {
+        from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
+        to: from,
+    };
+    if (to !== _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript ||
+        from !== _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.background)
         return;
-    if (order && order.length) {
-        //
+    try {
+        // ORDERS:
+        if (order && order.length) {
+            // SEND STATUS
+            if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.sendStatus)) {
+                console.log('Order: send status');
+                const isEnglish = isSubtitleEnglish();
+                const isOpen = isWindowTooSmall
+                    ? false
+                    : isTranscriptOpen();
+                response.language = isEnglish;
+                response.transcript = isOpen;
+            }
+        }
+        response.complete = true;
         // DEBUG:
         //
-        // 検証１：sendResponse()を実行しなかったら
-        // 呼び出し側はどうなるか
-        //
-        console.log("[content script] GOT ORDER");
-        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendStatus)) {
-            console.log("[content script] SEND STATUS");
-        }
-        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.disconnect)) {
-            console.log("[content script] DISCONNECT");
-        }
-        // if (order.includes(orderNames.injectCaptureSubtitleScript)) {
-        //     console.log('[content script] injectCaptureSubtitleScript');
-        // }
-        // if (order.includes(orderNames.injectExTranscriptScript)) {
-        //     console.log('[content script] injectExTranscriptScript');
-        // }
-    }
-    return true;
-});
-(function () {
-    try {
-        setTimeout(function () {
-            return __awaiter(this, void 0, void 0, function* () {
-                console.log("content script injected");
-                const response = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessagePromise)({
-                    from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
-                    to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
-                    activated: true,
-                });
-                if (response)
-                    console.log(response);
-                const response2 = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessagePromise)({
-                    from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
-                    to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
-                    order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendStatus, _utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.disconnect],
-                });
-                if (response2)
-                    console.log(response2);
-                const response3 = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessagePromise)({
-                    from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
-                    to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
-                    language: true,
-                    order: [
-                    // orderNames.injectCaptureSubtitleScript,
-                    // orderNames.injectExTranscriptScript,
-                    ],
-                });
-                if (response3)
-                    console.log(response3);
-                const response4 = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessagePromise)({
-                    from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
-                    to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
-                    title: "Awesome title",
-                    complete: true,
-                });
-                if (response4)
-                    console.log(response4);
-            });
-        }, 3000);
+        // LOG response
+        console.log('-----------------------------------');
+        console.log('LOG: response object before send');
+        console.log(response);
+        console.log('-----------------------------------');
+        sendResponse(response);
+        return true;
     }
     catch (err) {
         console.error(err.message);
     }
+}));
+/*
+    sendToBackground()
+    _________________________________________
+    background.tsへメッセージを送信する
+
+*/
+const sendToBackgroud = (order) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('SENDING MESSAGE TO BACKGROUND');
+    const { isOpened, isEnglish } = order;
+    const message = {
+        from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
+        to: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.background,
+    };
+    if (isOpened !== undefined) {
+        message['transcriptExpanded'] = isOpened;
+    }
+    if (isEnglish !== undefined) {
+        message['language'] = isEnglish;
+    }
+    //
+    // DEBUG:
+    //
+    console.log('DEBUG: make sure message object');
+    console.log(message);
+    //
+    //
+    try {
+        yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_2__.sendMessagePromise)(message);
+    }
+    catch (err) {
+        console.error(err.message);
+    }
+});
+//
+// ---- Event Handlers -----------------------------------------
+//
+/**
+ * ブラウザウィンドウがX軸方向に境界線をまたいだときだけ機能する
+ *
+ * */
+const onWindowResizeHandler = (ev) => {
+    const w = document.documentElement.clientWidth;
+    // When window shrinks less than the boundary
+    // Then send status.
+    if (w < VANISH_BOUNDARY && !isWindowTooSmall) {
+        isWindowTooSmall = true;
+        // windowサイズが小さくなりすぎると、トグルボタンのDOMは消えるから
+        // イベントリスナはremoveする必要がないけど、
+        // 念のため
+        const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
+        if (!toggleButton) {
+            sendToBackgroud({ isOpened: false });
+        }
+    }
+    // When window bend over vanish boundary
+    // Then reset toggle button to add listener.
+    if (w >= VANISH_BOUNDARY && isWindowTooSmall) {
+        isWindowTooSmall = false;
+        const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
+        toggleButton.addEventListener('click', transcriptToggleButtonHandler, false);
+    }
+};
+/*
+    transcriptToggleButtonHandler
+    ________________________________________________________________
+
+    Udemy講義ページのtranscriptトグルボタンがonClick時、
+    transcriptが開かれているのかどうかを判定する
+
+    >>NOTE<<
+
+    このハンドラ関数はトグルボタンがクリックされたときにのみ使うこと
+    トグルボタンと関係なくtranscriptが開かれているかどうか知りたいときは
+    こちらの関数を使うこと: isTranscriptOpen()
+*/
+const transcriptToggleButtonHandler = (ev) => {
+    const latest = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
+    // 動的な変更が反映される前の属性値を取得するので
+    //
+    latest.getAttribute('aria-expanded') === 'true'
+        ? sendToBackgroud({ isOpened: false })
+        : sendToBackgroud({ isOpened: true });
+};
+/*
+    ccPopupMenuClickHandler
+    __________________________________________________
+    closed caption popup menu click handler
+
+    CC Popup Menuの中をクリックされたのか否かを判断する
+    このハンドラはdocumentのイベントリスナに渡される
+*/
+const ccPopupMenuClickHandler = (ev) => {
+    const menu = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuListParent);
+    const path = ev.composedPath();
+    if (path.includes(menu)) {
+        // menuの内側でclickが発生した
+        // 何もしない
+        console.log('clicked inside');
+    }
+    else {
+        // menuの外側でclickが発生した
+        const r = isSubtitleEnglish();
+        sendToBackgroud({ isEnglish: r });
+        document.removeEventListener('click', ccPopupMenuClickHandler, true);
+    }
+};
+/*
+    ccPopupButtonHandler
+    ______________________________________________________
+    CC popupメニューとdocumentにイベントリスナをつけるための関数
+  */
+const ccPopupButtonHandler = (ev) => {
+    // popupメニューが開かれているかチェック
+    // 開かれているならclickリスナをメニューラッパーとdocumentに着ける
+    // とにかく
+    // メニューの外側をクリックしたらすべてのリスナをremoveする
+    console.log('CC popup button was clicked');
+    // is it opening?
+    const e = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.popupButton);
+    // やっぱりaria-expanded === trueのときになぜかfalseを返すので
+    // 反対の結果を送信する
+    if (e.getAttribute('aria-expanded') !== 'true') {
+        // CC popupメニューが表示された
+        document.removeEventListener('click', ccPopupMenuClickHandler, true);
+        document.addEventListener('click', ccPopupMenuClickHandler, true);
+    }
+};
+/*
+    Transcript トグルボタンのaria-expandedから
+    Transcript が開かれているのかを取得する
+
+    >>NOTE<<
+
+    トグルボタンのonclick時のイベントハンドラとして使わないこと
+    属性値はonclick時は挙動がことなるので
+    transcriptToggleButtonHandlerを代わりに使うこと
+*/
+const isTranscriptOpen = () => {
+    const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
+    return toggleButton.getAttribute('aria-expanded') ? true : false;
+};
+/*
+    字幕の言語が英語か否か判定する
+    Return {boolean}: 英語だったらtrue そうでないならfalse
+*/
+const isSubtitleEnglish = () => {
+    const listParent = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuListParent);
+    const checkButtons = listParent.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuCheckButtons);
+    const menuList = listParent.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuList);
+    let counter = 0;
+    let i = null;
+    const els = Array.from(checkButtons);
+    for (const btn of els) {
+        if (btn.getAttribute('aria-checked') === 'true') {
+            i = counter;
+            break;
+        }
+        counter++;
+    }
+    if (i === null) {
+        throw new Error('Error: [isSubtitleEnglish()] Something went wrong but No language is selected');
+    }
+    const currentLanguage = Array.from(menuList)[i].innerText;
+    if (currentLanguage.includes('English') || currentLanguage.includes('英語'))
+        return true;
+    else
+        return false;
+};
+/*
+    initialize()
+    _____________________________________________
+
+    Inject時に実行する処理
+*/
+const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('CONTENT SCRIPT INITIALIZING...');
+    try {
+        // Set up listeners
+        const w = document.documentElement.clientWidth;
+        if (w > VANISH_BOUNDARY) {
+            const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
+            toggleButton.addEventListener('click', transcriptToggleButtonHandler, false);
+            isWindowTooSmall = false;
+        }
+        else {
+            isWindowTooSmall = true;
+        }
+        window.addEventListener('resize', function () {
+            clearTimeout(timerQueue);
+            timerQueue = setTimeout(onWindowResizeHandler, _utils_constants__WEBPACK_IMPORTED_MODULE_1__.RESIZE_TIMER);
+        });
+        const ccButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.popupButton);
+        ccButton.addEventListener('click', ccPopupButtonHandler, true);
+        console.log('content script initialize has been done');
+    }
+    catch (err) {
+        console.error(err.message);
+    }
+});
+/*
+    main process
+    _________________________________________________
+*/
+(function () {
+    initialize();
 })();
+// -- LEGACY CODE -----------------------------------------------
+// THESE selectors MOVED TO './constansInContentScrip/ts'
+// 12/28
+//
+// const _selectors = {
+//     controlBar: {
+//         // "closed captioning"
+//         cc: {
+//             // 字幕メニューpopupボタン
+//             popupButton: "button[data-purpose='captions-dropdown-button']",
+//             // textContentで取得できる言語を取得可能
+//             //   languageList:
+//             //     "button.udlite-btn.udlite-btn-large.udlite-btn-ghost.udlite-text-sm.udlite-block-list-item.udlite-block-list-item-small.udlite-block-list-item-neutral > div.udlite-block-list-item-content",
+//             //
+//             // 言語リストを取得するには一旦languageButtonsを取得してからそれからquerySelectorする
+//             // いらないかも
+//             menuCheckButtons: 'button',
+//             menuList: '.udlite-block-list-item-content',
+//             menuListParent:
+//                 "ul[role='menu'][data-purpose='captions-dropdown-menu']",
+//             // 上記のセレクタのラッパーボタン。
+//             // 属性`aria-checked`で選択されているかどうかわかる
+//             checkButtons:
+//                 'button.udlite-btn.udlite-btn-large.udlite-btn-ghost.udlite-text-sm.udlite-block-list-item.udlite-block-list-item-small.udlite-block-list-item-neutral',
+//         },
+//         transcript: {
+//             toggleButton: "button[data-purpose='transcript-toggle']",
+//         },
+//     },
+//     sectionTitle: 'div.udlite-text-md.video-viewer--title-overlay--OoQ6e',
+// };
+// const initialize = (): void => {
+//     // Set up transcript check
+//     const isOpen: boolean = isTranscriptOpen();
+//     sendToBackgroud({ isOpened: isOpen });
+//     const e: HTMLElement = document.querySelector<HTMLElement>(
+//         SELECTORS.controlBar.transcript.toggleButton
+//     );
+//     e.addEventListener('click', transcriptToggleButtonHandler, false);
+//     // Set up language check
+//     const isEnglish: boolean = isSubtitleEnglish();
+//     sendToBackgroud({ isEnglish: isEnglish });
+//     const b: HTMLElement = document.querySelector<HTMLElement>(
+//         SELECTORS.controlBar.cc.popupButton
+//     );
+//     b.addEventListener('click', ccPopupButtonHandler, true);
+//     // Send section title to background
+//     sendTitle();
+// };
 
 })();
 

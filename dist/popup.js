@@ -29821,9 +29821,17 @@ if (false) {} else {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "_key_of_model_state__": () => (/* binding */ _key_of_model_state__),
+/* harmony export */   "urlPattern": () => (/* binding */ urlPattern),
 /* harmony export */   "extensionStatus": () => (/* binding */ extensionStatus),
 /* harmony export */   "extensionNames": () => (/* binding */ extensionNames),
 /* harmony export */   "orderNames": () => (/* binding */ orderNames),
+/* harmony export */   "RESIZE_BOUNDARY": () => (/* binding */ RESIZE_BOUNDARY),
+/* harmony export */   "SIDEBAR_WIDTH_BOUNDARY": () => (/* binding */ SIDEBAR_WIDTH_BOUNDARY),
+/* harmony export */   "RESIZE_TIMER": () => (/* binding */ RESIZE_TIMER),
+/* harmony export */   "SIGNAL": () => (/* binding */ SIGNAL),
+/* harmony export */   "positionStatus": () => (/* binding */ positionStatus),
+/* harmony export */   "viewStatusNames": () => (/* binding */ viewStatusNames),
 /* harmony export */   "port_names": () => (/* binding */ port_names)
 /* harmony export */ });
 /**************************************************
@@ -29831,6 +29839,8 @@ __webpack_require__.r(__webpack_exports__);
  * ________________________________________________
  *
  * ************************************************/
+const _key_of_model_state__ = "_key_of_model_state__@&%8=8";
+const urlPattern = /https:\/\/www.udemy.com\/course\/*/gm;
 const extensionStatus = {
     working: 'working',
     notWorking: 'notWorking',
@@ -29860,8 +29870,35 @@ const orderNames = {
     inquireUrl: "inquireUrl",
     // from popup, run process
     run: "run",
+    // reset content script
+    reset: "reset",
     // something succeeded
     success: "success"
+};
+;
+// --- constants for controller.js -------------------------------
+// // To pass to setTimeout
+// export const TEN_SEC: number = 10000;
+// transcript要素はwinodwサイズが975px以下の時にdashboardへ以上でsidebarへ移動する
+const RESIZE_BOUNDARY = 975;
+// sidebarのwidthは2通りあって、
+// 975px < w =< 1182pxだと300px, w > 1182pxで25%
+const SIDEBAR_WIDTH_BOUNDARY = 1182;
+// window onResize時の反応遅延速度
+const RESIZE_TIMER = 100;
+const SIGNAL = {
+    widthStatus: {
+        wideview: true,
+        middleview: false,
+    },
+};
+const positionStatus = {
+    sidebar: 'sidebar',
+    noSidebar: 'noSidebar',
+};
+const viewStatusNames = {
+    wideView: 'wideView',
+    middleView: 'middleView',
 };
 // ---- ABOUT PORT ----------------------------------
 const port_names = {
@@ -29953,7 +29990,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "deepCopier": () => (/* binding */ deepCopier),
 /* harmony export */   "sendMessageToTabsPromise": () => (/* binding */ sendMessageToTabsPromise),
-/* harmony export */   "sendMessagePromise": () => (/* binding */ sendMessagePromise)
+/* harmony export */   "sendMessagePromise": () => (/* binding */ sendMessagePromise),
+/* harmony export */   "tabsQuery": () => (/* binding */ tabsQuery)
 /* harmony export */ });
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -29998,6 +30036,19 @@ const sendMessagePromise = (message) => __awaiter(void 0, void 0, void 0, functi
                 reject();
         }));
     }));
+});
+const tabsQuery = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const w = yield chrome.windows.getCurrent();
+        const tabs = yield chrome.tabs.query({
+            active: true,
+            windowId: w.id,
+        });
+        return tabs[0];
+    }
+    catch (err) {
+        console.error(err.message);
+    }
 });
 
 
@@ -30081,21 +30132,23 @@ const Popup = () => {
     const [running, setRunning] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     // 正常に拡張機能が実行されたらtrue
     const [complete, setComplete] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    // popupが表示されたページがUdemyの講義ページならばtrue
-    const [matchedPage, setMatchedPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        console.log("[popup] Set onMessage listener");
+        console.log('[popup] Set onMessage listener');
         chrome.runtime.onMessage.addListener(messageHandler);
         return () => {
-            console.log("[popup] Removed onMessage listener");
+            console.log('[popup] Removed onMessage listener');
             chrome.runtime.onMessage.removeListener(messageHandler);
         };
     }, []);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        // popupが開かれるたびに開かれたタブのURLが
+        // NOTE: DON'T USE AWAIT inside of useEffect().
+        // 
+        // POPUPは開かれるたびに新しく生成されるので
+        // 初回呼出の時だけ実行すればいい
         // 指定のURLと一致するのかbackgroundと通信する
+        console.log('[popup] OPENED');
         sendInquire();
-    });
+    }, []);
     const messageHandler = () => { };
     const sendInquire = () => {
         (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
@@ -30105,6 +30158,8 @@ const Popup = () => {
         })
             .then((res) => {
             const { correctUrl } = res;
+            // DEBUG:
+            console.log(`[popup] is valid page?: ${correctUrl}`);
             setCorrectUrl(correctUrl);
         })
             .catch((err) => console.error(err.message));
@@ -30117,11 +30172,11 @@ const Popup = () => {
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_2__.orderNames.run],
         })
             .then((res) => {
-            const { complete } = res;
-            setComplete(complete);
+            const { success } = res;
+            setComplete(success);
             setRunning(false);
-            if (!complete) {
-                throw new Error("Error: something went wrong to run extension");
+            if (!success) {
+                throw new Error('Error: something went wrong while extension running');
             }
         })
             .catch((err) => {
@@ -30149,10 +30204,9 @@ const Popup = () => {
         "POPUP",
         correctUrl ? generateCorrect() : generateIncorrect(),
         generateRunning(),
-        generateComplete(),
-        react__WEBPACK_IMPORTED_MODULE_0__.createElement("button", { onClick: buttonClickHandler }, "RUN")));
+        generateComplete()));
 };
-const root = document.createElement("div");
+const root = document.createElement('div');
 document.body.appendChild(root);
 react_dom__WEBPACK_IMPORTED_MODULE_1__.render(react__WEBPACK_IMPORTED_MODULE_0__.createElement(Popup, null), root);
 

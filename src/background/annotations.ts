@@ -5,7 +5,7 @@
  * This is like header file of C.
  * *****************************************************/
 import { subtitle_piece } from "../utils/constants";
-import { State } from "../utils/background/State";
+import State from "../utils/background/State";
 
 // NOTE: 1/28 NEW CONSTANTS
 // 

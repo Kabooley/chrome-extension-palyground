@@ -1,5 +1,4 @@
 import { iMessage, iResponse } from '../utils/constants';
-import { State } from "./background/State";
 
 export const deepCopier = <T>(data: T): T => {
     return JSON.parse(JSON.stringify(data));
@@ -19,15 +18,27 @@ export const sendMessageToTabsPromise = async (
     });
 };
 
-
-export const sendMessagePromise = async (message: iMessage): Promise<iResponse> => {
-  return new Promise(async (resolve, reject) => {
-      chrome.runtime.sendMessage(message, async (response: iResponse) => {
-          const { complete, ...rest } = response;
-          if (complete) resolve(rest);
-          else reject();
-      });
-  });
+export const sendMessagePromise = async (
+    message: iMessage
+): Promise<iResponse> => {
+    return new Promise(async (resolve, reject) => {
+        chrome.runtime.sendMessage(message, async (response: iResponse) => {
+            const { complete, ...rest } = response;
+            if (complete) resolve(rest);
+            else reject();
+        });
+    });
 };
 
-
+export const tabsQuery = async (): Promise<chrome.tabs.Tab> => {
+    try {
+        const w: chrome.windows.Window = await chrome.windows.getCurrent();
+        const tabs: chrome.tabs.Tab[] = await chrome.tabs.query({
+            active: true,
+            windowId: w.id,
+        });
+        return tabs[0];
+    } catch (err) {
+        console.error(err.message);
+    }
+};

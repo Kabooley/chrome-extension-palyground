@@ -1,7 +1,7 @@
 import * as selectors from "../utils/selectors";
 import { SIGNAL } from "../utils/constants";
 import { subtitle_piece } from "../utils/constants";
-import "./sidebartranscriptView.css";
+import "./sidebarTranscriptView.css";
 
 const SidebarTranscriptView = function () {
   // insert position for Element.insertAdjaccentHTML()
