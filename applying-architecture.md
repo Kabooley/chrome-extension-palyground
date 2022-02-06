@@ -1897,6 +1897,23 @@ const onWindowResizeHandler = (): void => {
 
 #### OFF 機能 実装
 
+
+ここでいうOFF機能とは、
+拡張機能のOFFではなくて
+頻繁に訪れるUdemyのトランスクリプトの消失にともなう
+ExTranscriptの非表示である
+
+ExTranscriptの機能として、必ず本家のトランスクリプトの表示が必要なので
+それが消えたらこちらも非表示にしないといかん
+
+具体的に：
+
+- ExTranscriptの`bottomTranscriptView.clear();` or `sidebarTranscriptView.clear();`
+- `onWindowResizeHandler`のイベントリスナのremove
+
+それだけ
+
+
 ##### ユーザ操作による OFF の発生
 
 条件：
@@ -1912,52 +1929,220 @@ const onWindowResizeHandler = (): void => {
 
 
 
+controller.tsでOFF機能を実装しないことには始まらんので
 
-ブラウザのサイズが変化したことによるトランスクリプトの消失：
 
-トランスクリプトがONであるときに...
-    ウィンドウが境界値より大きい 何もしない
-    ウィンドウが境界値より小さくなった then notify 
-    ウィンドウが境界値より小さかった時から大きくなった then notify
-    トランスクリプトをOFFにしたら then notify
+##### OFF機能の実装 controller.ts
 
-トランスクリプトトグルボタンがあるかどうか...
-    windowのサイズが境界値以上ならある、それより小さいならない
+
+
+controller.tsの機能のおさらい
+
+前提：
+
+字幕が英語である
+トランスクリプトが開かれている
+
+初期化：
+
+Stateの生成
+onWindowResizeHandlerのリスナ設定
+字幕データを取得次第トランスクリプトをリレンダ
+
+
+```TypeScript
+// controller.ts
+
+const statusBase: iController = {
+  position: positionStatus.sidebar,
+  view: viewStatusNames.wideView,
+  highlight: null,
+  ExHighlight: null,
+  indexList: [],
+  isAutoscrollInitialized: false,
+};
+
+```
+
+OFF処理：
+
+- Stateはインスタンスは残しておいて、プロパティだけリセットする
+highligh, ExhHighlight, indexList, isAutoscrollInitialized
+iSubtitles
 
 
 
 ```TypeScript
-interface iStatus {
-    isTranscriptOpened: boolean;
-    isTranscriptON: boolean;
-    isEnglish: boolean;
-    isWindowTooSmall: boolean;
-    windowWidth: null;
+chrome.runtime.onMessage.addListener(
+  async (
+    message: iMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response: iResponse) => void
+  ): Promise<boolean> => {
+    try {
+      if (message.to !== extensionNames.controller) return;
+      console.log("CONTROLLER GOT MESSAGE");
+      const { order, ...rest } = message;
+      if (order && order.length) {
+        if (order.includes(orderNames.reset)) {
+          console.log("order: RESET controller.ts");
+          handlerOfReset();
+          sendResponse({complete: true, success: true});
+        }
+        if(order.includes(orderNames.turnOff)){
+          console.log("order: TURN OFF ExTranscript");
+          handlerOfTurnOff();
+          sendResponse({complete: true, success: true});
+        }
+      }
+      // 字幕データが送られてきたら
+      if (rest.subtitles) {
+        //  setStateのnotify()がこの変更に必要な関数を実行してくれる
+        sSubtitles.setState({ subtitles: rest.subtitles });
+        sendResponse({ complete: true });
+      }
+      return true;
+    } catch (err) {
+      console.error(err.message);
+    }
+  }
+);
+
+
+// 
+// --- HANDLERS --------------------------------
+// 
+
+const reductionOfwindowResizeHandler = (): void => {
+    clearTimeout(timerQueue);
+    timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
 }
-const stateBase = {
-    // トランスクリプトが実際に展開されているかどうか
-    isTranscriptOpened: false,
-    // トランスクリプトがONなのかどうか(ONでも展開されていない場合もある)
-    isTranscriptON: false,
-    isEnglish: false,
-    isWindowTooSmall: false,
-    windowWidth: null
+
+const handlerOfTurnOff = (): void => }{
+  console.log("Turning off ExTranscript");
+
+  // REMOVAL Listeners
+  window.removeEventListener("resize", reductionOfwindowResizeHandler);
+  window.removeEventListener("scroll", onWindowScrollHandler);
+
+  // CLEAR ExTranscript
+  const { position } = sStatus.getState();
+  if(positon === positionStatus.sideBar) {
+    sidebarTranscriptView.clear();
+  }
+  else {
+    bottomTranscriptView.clear();
+  }
+
+  // REMOVAL MutationObserver
+  transcriptListObserver.disconnect();
+  transcriptListObserver = null;
+
+
+  // RESET State
+  sStatus.setState({...statusBase});
+  sSubtitles.setState({...subtitleBase});
+}
+
+const handlerOfReset = (): boolean => {
+  console.log("Reset ExTranscript");
+
+  handlerOfTurnOff();
+
+  // NOTE: 以下はMAINの後半の処理と同じである
+
+    // 初期のExTranscriptの展開場所に関するステータスを取得する
+  const w: number = document.documentElement.clientWidth;
+  const s: keyof_positionStatus =
+    w > RESIZE_BOUNDARY ? positionStatus.sidebar : positionStatus.noSidebar;
+  sStatus.setState({ position: s });
+
+  if (s === positionStatus.sidebar) {
+    sStatus.setState({
+      view:
+        w > SIDEBAR_WIDTH_BOUNDARY
+          ? viewStatusNames.wideView
+          : viewStatusNames.middleView,
+    });
+  }
+
+  window.addEventListener("resize", function () {
+    clearTimeout(timerQueue);
+    timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
+  });
 };
 
-const observable: Observable = new Observable();
 
-const state: State<iStatus> = new State<iStatus>(stateBase, observable);
+// ---- MutationOserver ---------------------------------
 
-state.observable.register();
+class MutationObserver_ {
+  private _callback: (mr: MutationRecord[]) => void;
+  private _config: MutationObserverInit;
+  private _target: NodeListOf<Element>;
+  private _observer: MutationObserver;
+  constructor(
+    callback: (mr: MutationRecord[]) => void,
+    config: MutatonObserverInit,
+    target: NodeListOf<Element>
+  ){
+    this._callback = callback;
+    this._config = config;
+    this._target = target;
+    this._obserever = new MutationObserer(this._callback);
+  };
 
-// こいつがisWindowTooSmallと、windowWidthの変更を取得するとして...
-const updateTranscript = (prop, prev):void => {
-    const { isTranscriptOpened, isTranscriptON, isWindowTooSmall } = prop;
-    if(!isTranscriptON && !prev.isTranscriptON)return;
-    
+  observe(): void {
+    this._target.forEach(ts => {
+      this._observer.observe(ts, this._conifg);
+    })
+  };
+
+  disconnect(): void {
+    this._observer.disconnect();
+  };
 };
+
+const moConfig: MutatoinOBserevreInit = {    
+    attributes: true,
+    childList: false,
+    subtree: false,
+    attributeOldValue: true,
+}
+
+const moCallback = (mr: MutationRecord[]): void => {
+    console.log("observed");
+    mr.forEach((record: MutationRecord) => {
+      if(
+          record.type === "attributes" &&
+          record.attributeName === "class" &&
+          record.oldValue === ""
+      ){
+        observer.disconnect();
+        // --- DOM への変更中はdisconnectで無限ループ防止できる ----
+        updateHighlightIndexes();
+        updateExTranscriptHighlight();
+        scrollToHighlight();
+        // ------------------------------------------------------
+        observer.observer(mr.target, this._config);
+      }
+    });
+}
+
+//   NodeListOf HTMLSpanElement
+const transcriptList: NodeListOf<Element> = document.querySelectorAll(
+  selectors.transcript.transcripts
+);
+const transcriptListObserver = new MutationObserver_(moCallback, moConfig, transcriptList);
+
+// To delete instance
+transcriptListObserver = null;
 ```
 
-state.isWindowTooSmall = true
-    update()
-        if state.isTranscriptOpened === 
+MutationObserver内で無限ループが起こるとき:
+
+https://pisuke-code.com/mutation-observer-infinite-loop/
+
+インスタンスを削除する方法：
+
+https://stackoverflow.com/questions/17243463/delete-instance-of-a-class
+

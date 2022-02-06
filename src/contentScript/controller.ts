@@ -45,6 +45,7 @@ import {
 } from "../utils/constants";
 import Observable from "../utils/Observable";
 import State from "../utils/contentScript/State";
+import MutationObserver_ from "../utils/MutationObserver_";
 // import { sendMessagePromise } from "../utils/helpers";
 
 // ----- GLOBALS --------------------------
@@ -90,16 +91,17 @@ const subtitleBase: iSubtitles = {
 let timerQueue: NodeJS.Timeout = null;
 let sStatus: State<iController>;
 let sSubtitles: State<iSubtitles>;
+let transcriptListObserver: MutationObserver_ = null;
 
 //
 // --- CHROME LISTENERS -------------------
 //
 
 /**
- *
+ *  Chrome API: On Message Handler
  *
  * */
-chrome.runtime.onMessage.addListener(
+ chrome.runtime.onMessage.addListener(
   async (
     message: iMessage,
     sender: chrome.runtime.MessageSender,
@@ -111,16 +113,14 @@ chrome.runtime.onMessage.addListener(
       const { order, ...rest } = message;
       if (order && order.length) {
         if (order.includes(orderNames.reset)) {
-          console.log("RESET controller.ts");
-          //   TODO: Implement RESET Functionality
-          //
-          // sSubtitles.subtitlesを空の配列にする
-          // sStatus.highlightをnullにする
-          // sStatus.ExHighlightをnullにする
-          //
-          // あとはbackgroundから字幕データを取得して
-          // ExTranscriptを再レンダリングして
-          // 自動スクロール機能を再起動する
+          console.log("order: RESET controller.ts");
+          handlerOfReset();
+          sendResponse({complete: true, success: true});
+        }
+        if(order.includes(orderNames.turnOff)){
+          console.log("order: TURN OFF ExTranscript");
+          handlerOfTurnOff();
+          sendResponse({complete: true, success: true});
         }
       }
       // 字幕データが送られてきたら
@@ -158,6 +158,64 @@ const renderBottomTranscript = (): void => {
   // noSidebarの時は不要
   window.removeEventListener("scroll", onWindowScrollHandler);
 };
+
+// 
+// --- Handlers ----------------------------------------------
+// 
+
+const reductionOfwindowResizeHandler = (): void => {
+  clearTimeout(timerQueue);
+  timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
+}
+
+const handlerOfTurnOff = (): void => {
+console.log("Turning off ExTranscript");
+
+// REMOVAL Listeners
+window.removeEventListener("resize", reductionOfwindowResizeHandler);
+window.removeEventListener("scroll", onWindowScrollHandler);
+
+// CLEAR ExTranscript
+const { position } = sStatus.getState();
+if(position === positionStatus.sidebar) {
+  sidebarTranscriptView.clear();
+}
+else {
+  bottomTranscriptView.clear();
+}
+
+// REMOVAL MutationObserver
+transcriptListObserver.disconnect();
+transcriptListObserver = null;
+
+
+// RESET State
+sStatus.setState({...statusBase});
+sSubtitles.setState({...subtitleBase});
+}
+
+const handlerOfReset = (): void => {
+  console.log("Reset ExTranscript");
+
+  handlerOfTurnOff();
+
+  // NOTE: 以下はMAINの後半の処理と同じである
+  const w: number = document.documentElement.clientWidth;
+  const s: keyof_positionStatus =
+    w > RESIZE_BOUNDARY ? positionStatus.sidebar : positionStatus.noSidebar;
+  sStatus.setState({ position: s });
+
+  if (s === positionStatus.sidebar) {
+    sStatus.setState({
+      view:
+        w > SIDEBAR_WIDTH_BOUNDARY
+          ? viewStatusNames.wideView
+          : viewStatusNames.middleView,
+    });
+  }
+
+  window.addEventListener("resize", reductionOfwindowResizeHandler);};
+
 
 /**
  * Update ExTranscript View hight while it is sidebar.
@@ -331,68 +389,106 @@ const updateExTranscriptHighlight = (): void => {
   }
 };
 
-/*
-    detectScroll()
-    ______________________________________
-
-    本家のハイライトされている字幕が、
-    自動スクロール機能で移り変わるたびに反応するオブザーバを生成する
-
-    12/7:
-    欲しいタイミングで発火していないみたい
-    _callbackの内容をMutationRecordを精査することで条件分岐させること
-
-    まず、Udemyは同じ字幕を2，3回繰り返し生成してしまうみたいで
-    つまりまったく同じ要素が同時に複数存在する状況が発生されてしまっている
-
-    これに伴って
-    MutationObserverのMutationRecordも複数ある要素のすべてを記録するので
-    1度だけ行いたい処理を2回以上行わなくてはならない危険性がある
-
-    これを避けるためにisItDoneで処理が既に完了しているのかどうかを確認するようにしている
-
-*/
-const detectScroll = (): void => {
+/***
+ *  set detect scroll
+ * 
+ * Udemyの自動スクロール機能と同じ機能をセットアップする関数
+ * 
+ * NOTE: Udemyの字幕はまったく同じ字幕要素が2個も3個も生成されている
+ * 
+ * つまりまったく同じ要素が同時に複数存在する状況が発生してしまっている
+ * 多分バグだけど、同じ要素が何個も生成されてしまうとリスナが何度も
+ * 反応してしまう可能性がある
+ * 
+ * これに伴って
+ * MutationObserverのMutationRecordも複数ある要素のすべてを記録するので
+ * 1度だけ行いたい処理を2回以上行わなくてはならない危険性がある
+ * 
+ *  これを避けるためにisItDoneで処理が既に完了しているのかどうかを
+ *  確認するようにしている
+ * ***/ 
+const setDetectScroll = (): void => {
   const _callback = (mr: MutationRecord[]): void => {
     console.log("observed");
-    var isItDone: boolean = false;
-    mr.forEach((record: MutationRecord) => {
-      if (
+  //   var isItDone: boolean = false;
+  //   mr.forEach((record: MutationRecord) => {
+  //     if (
+  //       record.type === "attributes" &&
+  //       record.attributeName === "class" &&
+  //       record.oldValue === "" &&
+  //       !isItDone
+  //     ) {
+  //       // oldValueには""の時と、"ranscript--highlight-cue--1bEgq"の両方の時がある
+  //       // "ranscript--highlight-cue--1bEgq"をoldValueで受け取るときは
+  //       // ハイライトのclassをその要素からremoveしたときと考えて
+  //       // その時は何もしない
+  //       // 処理は1度だけになるように
+  //       console.log("-- observer executed --");
+  //       isItDone = true;
+  //       updateHighlightIndexes();
+  //       updateExTranscriptHighlight();
+  //       scrollToHighlight();
+  //     }
+  //   });
+  // };
+
+  // const observer: MutationObserver = new MutationObserver(_callback);
+
+  // const config: MutationObserverInit = {
+  //   attributes: true,
+  //   childList: false,
+  //   subtree: false,
+  //   attributeOldValue: true,
+  // };
+
+  // //   NodeListOf HTMLSpanElement
+  // const transcriptList: NodeListOf<Element> = document.querySelectorAll(
+  //   selectors.transcript.transcripts
+  // );
+  // transcriptList.forEach((ts) => {
+  //   observer.observe(ts, config);
+  // });
+
+  
+const moConfig: MutationObserverInit = {    
+  attributes: true,
+  childList: false,
+  subtree: false,
+  attributeOldValue: true,
+}
+
+const moCallback = function(this: MutationObserver_, mr: MutationRecord[]): void{
+  console.log("observed");
+  let isItDone: boolean = false;
+  mr.forEach((record: MutationRecord) => {
+    if(
         record.type === "attributes" &&
         record.attributeName === "class" &&
         record.oldValue === "" &&
-        !isItDone
-      ) {
-        // oldValueには""の時と、"ranscript--highlight-cue--1bEgq"の両方の時がある
-        // "ranscript--highlight-cue--1bEgq"をoldValueで受け取るときは
-        // ハイライトのclassをその要素からremoveしたときと考えて
-        // その時は何もしない
-        // 処理は1度だけになるように
-        console.log("-- observer executed --");
-        isItDone = true;
-        updateHighlightIndexes();
-        updateExTranscriptHighlight();
-        scrollToHighlight();
-      }
-    });
-  };
+        isItDone
+    ){
+      isItDone = true;
+      this._observer.disconnect();
+      // DOM への変更中はdisconnectで無限ループ防止できる ----
+      updateHighlightIndexes();
+      updateExTranscriptHighlight();
+      scrollToHighlight();
+      // ------------------------------------------------------
+      this._observer.observe(record.target, this._config);
+    }
+  });
+}
 
-  const observer: MutationObserver = new MutationObserver(_callback);
-
-  const config: MutationObserverInit = {
-    attributes: true,
-    childList: false,
-    subtree: false,
-    attributeOldValue: true,
-  };
-
+  // 一旦リセットしてから
+  if(transcriptListObserver) {
+    transcriptListObserver.disconnect();
+    transcriptListObserver = null;
+  }
   //   NodeListOf HTMLSpanElement
   const transcriptList: NodeListOf<Element> = document.querySelectorAll(
     selectors.transcript.transcripts
   );
-  transcriptList.forEach((ts) => {
-    observer.observe(ts, config);
-  });
+  transcriptListObserver = new MutationObserver_(moCallback, moConfig, transcriptList);
 };
 
 /**
@@ -435,8 +531,13 @@ const scrollToHighlight = (): void => {
 // --- UPDATE METHODS -----------------------------------
 //
 
-// 字幕アップデート
-// 常に受け取った字幕に再レンダリングする
+/**
+ *  Update subtitles rendering.
+ * 
+ * 常に受け取った字幕データ通りに再レンダリングさせる
+ * 同時に、
+ * 
+ * */ 
 const updateSubtitle = (prop, prev): void => {
   if (prop.subtitles === undefined) return;
 
@@ -444,10 +545,6 @@ const updateSubtitle = (prop, prev): void => {
   const { position, view, isAutoscrollInitialized } = sStatus.getState();
   if (position === "sidebar") {
     renderSidebarTranscript();
-    // TODO:
-    // sidebarのrenderingの後は
-    // 高さと幅の更新を必ずしないといかん...のか?
-    // 未確認なので念のため更新することにする
     sidebarTranscriptView.updateContentHeight();
     view === "middleView"
       ? sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.middleview)
@@ -457,7 +554,8 @@ const updateSubtitle = (prop, prev): void => {
     renderBottomTranscript();
   }
   if (!isAutoscrollInitialized) {
-    detectScroll();
+    // NOTE: 自動スクロール機能はここで初期化される
+    setDetectScroll();
     sStatus.setState({ isAutoscrollInitialized: true });
   }
 };
@@ -523,12 +621,8 @@ const updateExHighlight = (prop, prev): void => {
     });
   }
 
-  window.addEventListener("resize", function () {
-    clearTimeout(timerQueue);
-    timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
-  });
-
-  // TODO: 自動スクロール機能の発火条件の発見と実装
+  window.removeEventListener("resize", reductionOfwindowResizeHandler);
+  window.addEventListener("resize", reductionOfwindowResizeHandler);
 })();
 
 //
@@ -611,11 +705,11 @@ const updateExHighlight = (prop, prev): void => {
 //   movieContainer.removeEventListener("click", movieReplayClickHandler);
 //   //   set up auto scroll handling
 //   //   initializeDetecting();
-//   detectScroll();
+//   setDetectScroll();
 // };
 
 // /*
-//     detectScroll()
+//     setDetectScroll()
 //     ______________________________________
 
 //     本家のハイライトされている字幕が、
@@ -635,7 +729,7 @@ const updateExHighlight = (prop, prev): void => {
 //     これを避けるためにisItDoneで処理が既に完了しているのかどうかを確認するようにしている
 
 // */
-// const detectScroll = (): void => {
+// const setDetectScroll = (): void => {
 //   const _callback = (mr: MutationRecord[]): void => {
 //     console.log("observed");
 //     var isItDone: boolean = false;
@@ -704,5 +798,5 @@ const updateExHighlight = (prop, prev): void => {
 //   movieContainer.removeEventListener("click", movieReplayClickHandler);
 //   //   set up auto scroll handling
 //   //   initializeDetecting();
-//   detectScroll();
+//   setDetectScroll();
 // };
