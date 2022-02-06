@@ -1584,37 +1584,6 @@ class Observable {
 }
 ```
 
-#### RESET 機能実装 controller.ts
-
-動画が切り替わった時だけ reset するので、
-関係ない部分は放っておけばいい
-
-ExTranscript を展開するにあたっての機能：リセット不要
-
-自動スクロール機能：リセット必要かも
-
-要改善：
-
--   inject 時に字幕データを取得することが前提となっている仕様
-
-    これは background の handler の処理と食い違うので要修正
-    字幕データは content script 側から要求するのではなくて、
-    background script 側から与えるものである
-
-おさらい controller.ts
-
-機能：
-
-1. window で`onResize`が起こるたびに window の幅を計算して ExTranscript を新しい位置へ再生成している
-
-`RESIZE_BOUNDARY`という、ExTranscript を sidebar にするか bottom にするのかの境界線（x 軸）がある
-
-`x > RESIZE_BOUNDARY ? sidebar : bottom`
-
-さらに、sidebar の状態でも、2 種類の表示方法がある
-
-`x > SIDEBAR_WIDTH_BOUNDARY ? wideview : middleview`
-
 ##### 字幕データを受け取ってから字幕展開する仕様へ変更
 
 今までは script の inject 時に controller 側から字幕データを要求していたけれど
@@ -2145,4 +2114,15 @@ https://pisuke-code.com/mutation-observer-infinite-loop/
 インスタンスを削除する方法：
 
 https://stackoverflow.com/questions/17243463/delete-instance-of-a-class
+
+
+#### RESET機能実装： contentScript.ts
+
+contentScript.tsでは、
+トランスクリプトが表示・非表示・OFF・ONのどの状態なのかを検知して
+background scriptへ伝える機能を実装する
+
+background scriptは信号受信してstateと比較してExTranscriptを表示するかどうかを判断してcontroller.jsへ伝える
+
+controller.jsはそれに従うだけ
 

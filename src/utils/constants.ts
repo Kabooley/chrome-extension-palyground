@@ -1,10 +1,10 @@
 /**************************************************
  * constants
  * ________________________________________________
- * 
+ *
  * ************************************************/
 
-export const _key_of_model_state__ = "_key_of_model_state__@&%8=8";
+export const _key_of_model_state__ = '_key_of_model_state__@&%8=8';
 
 export const urlPattern: RegExp = /https:\/\/www.udemy.com\/course\/*/gm;
 
@@ -18,7 +18,7 @@ export const extensionNames = {
     popup: 'popup',
     contentScript: 'contentScript',
     controller: 'controller',
-    captureSubtitle: "captureSubtitle",
+    captureSubtitle: 'captureSubtitle',
     background: 'background',
 } as const;
 
@@ -35,24 +35,24 @@ export const orderNames = {
     sendSubtitles: 'sendSubtitles',
     // order to disconnect port
     disconnect: 'disconnect',
-    
-    // from popup inquire the url is correct
-    inquireUrl: "inquireUrl",
-    // from popup, run process
-    run: "run",
-    // reset content script
-    reset: "reset",
-    // something succeeded
-    success: "success"
-} as const;
 
+    // from popup inquire the url is correct
+    inquireUrl: 'inquireUrl',
+    // from popup, run process
+    run: 'run',
+    // reset content script
+    reset: 'reset',
+    // Turn Off ExTranscript
+    turnOff: 'turnOff',
+    // something succeeded
+    success: 'success',
+} as const;
 
 // Subtitle object interface
 export interface subtitle_piece {
     index: number;
     subtitle: string;
 }
-
 
 type et = typeof extensionNames;
 type on = typeof orderNames;
@@ -80,7 +80,6 @@ export interface iMessage {
     title?: string;
     //   Is message passing done?
     complete?: boolean;
-
 
     //   ADDED
     //
@@ -115,12 +114,12 @@ export interface iResponse {
     // 何かしらの成功を示す
     success?: boolean;
     // 失敗の理由を示す
-    failureReason?: string,
+    failureReason?: string;
     // RUN orderに対して、展開がすべて完了したらtrue
     successDeployment?: boolean;
     // Udemy講義ページでトランスクリプトが開かれているか
     transcript?: boolean;
-};
+}
 
 // --- constants for controller.js -------------------------------
 
@@ -159,9 +158,6 @@ type typeof_viewStatus = typeof viewStatusNames;
 export type keyof_positionStatus = keyof typeof_positionStatus;
 export type keyof_viewStatus = keyof typeof_viewStatus;
 
-
-
-
 // ---- ABOUT PORT ----------------------------------
 
 export const port_names = {
@@ -178,13 +174,12 @@ export const port_names = {
 
 // console.log(oo);
 
-
 // const messageHandler = (m: iMessage): void => {
 //   const { from, to, order } = m;
 //   // もしもorderプロパティが含まれていて、中身があれば
 //   if (order && order.length) {
 //     console.log("there is order");
-//     // 
+//     //
 //     // この時点だとorderが何者かわからないみたいだからincludes()メソッドなんて使えないよ
 //     // というエラーが出る
 //     // でも使えた
@@ -197,7 +192,6 @@ export const port_names = {
 //     }
 //   }
 // };
-
 
 // messageHandler({
 //   from: "background",
@@ -217,7 +211,6 @@ export const port_names = {
 //   from: "background",
 //   to: "content script"
 // });
-
 
 /*
 ## 変数がいくつかの特定の値を持つように強制する方法

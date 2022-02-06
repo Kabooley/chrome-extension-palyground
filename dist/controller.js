@@ -879,6 +879,44 @@ SidebarTranscriptView.prototype.renderMessage = function () {
 
 /***/ }),
 
+/***/ "./src/utils/MutationObserver_.ts":
+/*!****************************************!*\
+  !*** ./src/utils/MutationObserver_.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/**************************************************
+ * MutationObserver wrapper class
+ *
+ * NOTE: targetはNodeListOf<Element>だけで全く再利用性がない
+ *
+ * いまのところsrc/contentScript/controller.tsでしか使われていない
+ * *************************************************/
+class MutationObserver_ {
+    constructor(callback, config, target) {
+        this._callback = callback;
+        this._config = config;
+        this._target = target;
+        this._observer = new MutationObserver(this._callback);
+    }
+    observe() {
+        this._target.forEach((ts) => {
+            this._observer.observe(ts, this._config);
+        });
+    }
+    disconnect() {
+        this._observer.disconnect();
+    }
+}
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (MutationObserver_);
+
+
+/***/ }),
+
 /***/ "./src/utils/Observable.ts":
 /*!*********************************!*\
   !*** ./src/utils/Observable.ts ***!
@@ -938,7 +976,7 @@ __webpack_require__.r(__webpack_exports__);
  * ________________________________________________
  *
  * ************************************************/
-const _key_of_model_state__ = "_key_of_model_state__@&%8=8";
+const _key_of_model_state__ = '_key_of_model_state__@&%8=8';
 const urlPattern = /https:\/\/www.udemy.com\/course\/*/gm;
 const extensionStatus = {
     working: 'working',
@@ -949,7 +987,7 @@ const extensionNames = {
     popup: 'popup',
     contentScript: 'contentScript',
     controller: 'controller',
-    captureSubtitle: "captureSubtitle",
+    captureSubtitle: 'captureSubtitle',
     background: 'background',
 };
 //
@@ -966,15 +1004,16 @@ const orderNames = {
     // order to disconnect port
     disconnect: 'disconnect',
     // from popup inquire the url is correct
-    inquireUrl: "inquireUrl",
+    inquireUrl: 'inquireUrl',
     // from popup, run process
-    run: "run",
+    run: 'run',
     // reset content script
-    reset: "reset",
+    reset: 'reset',
+    // Turn Off ExTranscript
+    turnOff: 'turnOff',
     // something succeeded
-    success: "success"
+    success: 'success',
 };
-;
 // --- constants for controller.js -------------------------------
 // // To pass to setTimeout
 // export const TEN_SEC: number = 10000;
@@ -1015,7 +1054,7 @@ const port_names = {
 //   // もしもorderプロパティが含まれていて、中身があれば
 //   if (order && order.length) {
 //     console.log("there is order");
-//     // 
+//     //
 //     // この時点だとorderが何者かわからないみたいだからincludes()メソッドなんて使えないよ
 //     // というエラーが出る
 //     // でも使えた
@@ -1297,6 +1336,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_constants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/constants */ "./src/utils/constants.ts");
 /* harmony import */ var _utils_Observable__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/Observable */ "./src/utils/Observable.ts");
 /* harmony import */ var _utils_contentScript_State__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/contentScript/State */ "./src/utils/contentScript/State.ts");
+/* harmony import */ var _utils_MutationObserver___WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils/MutationObserver_ */ "./src/utils/MutationObserver_.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -1350,6 +1390,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 
 
 
+
 const statusBase = {
     // position, viewの初期値は意味をなさず、
     // すぐに変更されることが前提である
@@ -1366,31 +1407,30 @@ const subtitleBase = {
 let timerQueue = null;
 let sStatus;
 let sSubtitles;
+let transcriptListObserver = null;
 //
 // --- CHROME LISTENERS -------------------
 //
 /**
- *
+ *  Chrome API: On Message Handler
  *
  * */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (message.to !== _utils_constants__WEBPACK_IMPORTED_MODULE_3__.extensionNames.controller)
             return;
-        console.log("CONTROLLER GOT MESSAGE");
+        console.log('CONTROLLER GOT MESSAGE');
         const { order } = message, rest = __rest(message, ["order"]);
         if (order && order.length) {
             if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.orderNames.reset)) {
-                console.log("RESET controller.ts");
-                //   TODO: Implement RESET Functionality
-                //
-                // sSubtitles.subtitlesを空の配列にする
-                // sStatus.highlightをnullにする
-                // sStatus.ExHighlightをnullにする
-                //
-                // あとはbackgroundから字幕データを取得して
-                // ExTranscriptを再レンダリングして
-                // 自動スクロール機能を再起動する
+                console.log('order: RESET controller.ts');
+                handlerOfReset();
+                sendResponse({ complete: true, success: true });
+            }
+            if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.orderNames.turnOff)) {
+                console.log('order: TURN OFF ExTranscript');
+                handlerOfTurnOff();
+                sendResponse({ complete: true, success: true });
             }
         }
         // 字幕データが送られてきたら
@@ -1415,7 +1455,7 @@ const renderSidebarTranscript = () => {
     _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].render(subtitles);
     _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateContentHeight();
     // sidebarの時だけに必要
-    window.addEventListener("scroll", onWindowScrollHandler);
+    window.addEventListener('scroll', onWindowScrollHandler);
 };
 const renderBottomTranscript = () => {
     const { subtitles } = sSubtitles.getState();
@@ -1423,7 +1463,50 @@ const renderBottomTranscript = () => {
     _bottomTranscriptView__WEBPACK_IMPORTED_MODULE_1__["default"].clear();
     _bottomTranscriptView__WEBPACK_IMPORTED_MODULE_1__["default"].render(subtitles);
     // noSidebarの時は不要
-    window.removeEventListener("scroll", onWindowScrollHandler);
+    window.removeEventListener('scroll', onWindowScrollHandler);
+};
+//
+// --- Handlers ----------------------------------------------
+//
+const reductionOfwindowResizeHandler = () => {
+    clearTimeout(timerQueue);
+    timerQueue = setTimeout(onWindowResizeHandler, _utils_constants__WEBPACK_IMPORTED_MODULE_3__.RESIZE_TIMER);
+};
+const handlerOfTurnOff = () => {
+    console.log('Turning off ExTranscript');
+    // REMOVAL Listeners
+    window.removeEventListener('resize', reductionOfwindowResizeHandler);
+    window.removeEventListener('scroll', onWindowScrollHandler);
+    // CLEAR ExTranscript
+    const { position } = sStatus.getState();
+    if (position === _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.sidebar) {
+        _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].clear();
+    }
+    else {
+        _bottomTranscriptView__WEBPACK_IMPORTED_MODULE_1__["default"].clear();
+    }
+    // REMOVAL MutationObserver
+    transcriptListObserver.disconnect();
+    transcriptListObserver = null;
+    // RESET State
+    sStatus.setState(Object.assign({}, statusBase));
+    sSubtitles.setState(Object.assign({}, subtitleBase));
+};
+const handlerOfReset = () => {
+    console.log('Reset ExTranscript');
+    handlerOfTurnOff();
+    // NOTE: 以下はMAINの後半の処理と同じである
+    const w = document.documentElement.clientWidth;
+    const s = w > _utils_constants__WEBPACK_IMPORTED_MODULE_3__.RESIZE_BOUNDARY ? _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.sidebar : _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.noSidebar;
+    sStatus.setState({ position: s });
+    if (s === _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.sidebar) {
+        sStatus.setState({
+            view: w > _utils_constants__WEBPACK_IMPORTED_MODULE_3__.SIDEBAR_WIDTH_BOUNDARY
+                ? _utils_constants__WEBPACK_IMPORTED_MODULE_3__.viewStatusNames.wideView
+                : _utils_constants__WEBPACK_IMPORTED_MODULE_3__.viewStatusNames.middleView,
+        });
+    }
+    window.addEventListener('resize', reductionOfwindowResizeHandler);
 };
 /**
  * Update ExTranscript View hight while it is sidebar.
@@ -1446,7 +1529,7 @@ updateContentHeight(): position === sidebarが真のときは必ず実行
 
 */
 const onWindowResizeHandler = () => {
-    console.log("[onWindowResizeHandler]");
+    console.log('[onWindowResizeHandler]');
     const w = document.documentElement.clientWidth;
     const { position, view } = sStatus.getState();
     // ブラウザの幅がRESIZE_BOUNDARYを上回るとき
@@ -1555,82 +1638,116 @@ const updateExTranscriptHighlight = () => {
     const current = document.querySelector(`${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.dashboardTranscriptCueContainer}${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.highlight}`);
     if (!current) {
         //   初期化時
-        console.log("---- INITIALIZE -----");
+        console.log('---- INITIALIZE -----');
         next.classList.add(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.highlight.slice(1));
         console.log(next);
     }
     else {
         //   更新時
-        const currentIndex = parseInt(current.getAttribute("data-id"));
+        const currentIndex = parseInt(current.getAttribute('data-id'));
         // もしも変わらないなら何もしない
         if (currentIndex === ExHighlight) {
-            console.log("--- NO UPDATE ---");
+            console.log('--- NO UPDATE ---');
             return;
         }
         // 更新ならば、前回のハイライト要素を解除して次の要素をハイライトさせる
         else {
-            console.log("--- UPDATE ---");
+            console.log('--- UPDATE ---');
             current.classList.remove(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.highlight.slice(1));
             next.classList.add(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.highlight.slice(1));
             console.log(next);
         }
     }
 };
-/*
-    detectScroll()
-    ______________________________________
-
-    本家のハイライトされている字幕が、
-    自動スクロール機能で移り変わるたびに反応するオブザーバを生成する
-
-    12/7:
-    欲しいタイミングで発火していないみたい
-    _callbackの内容をMutationRecordを精査することで条件分岐させること
-
-    まず、Udemyは同じ字幕を2，3回繰り返し生成してしまうみたいで
-    つまりまったく同じ要素が同時に複数存在する状況が発生されてしまっている
-
-    これに伴って
-    MutationObserverのMutationRecordも複数ある要素のすべてを記録するので
-    1度だけ行いたい処理を2回以上行わなくてはならない危険性がある
-
-    これを避けるためにisItDoneで処理が既に完了しているのかどうかを確認するようにしている
-
-*/
-const detectScroll = () => {
-    const _callback = (mr) => {
-        console.log("observed");
-        var isItDone = false;
-        mr.forEach((record) => {
-            if (record.type === "attributes" &&
-                record.attributeName === "class" &&
-                record.oldValue === "" &&
-                !isItDone) {
-                // oldValueには""の時と、"ranscript--highlight-cue--1bEgq"の両方の時がある
-                // "ranscript--highlight-cue--1bEgq"をoldValueで受け取るときは
-                // ハイライトのclassをその要素からremoveしたときと考えて
-                // その時は何もしない
-                // 処理は1度だけになるように
-                console.log("-- observer executed --");
-                isItDone = true;
-                updateHighlightIndexes();
-                updateExTranscriptHighlight();
-                scrollToHighlight();
-            }
-        });
-    };
-    const observer = new MutationObserver(_callback);
-    const config = {
+/***
+ *  set detect scroll
+ *
+ * Udemyの自動スクロール機能と同じ機能をセットアップする関数
+ *
+ * NOTE: Udemyの字幕はまったく同じ字幕要素が2個も3個も生成されている
+ *
+ * つまりまったく同じ要素が同時に複数存在する状況が発生してしまっている
+ * 多分バグだけど、同じ要素が何個も生成されてしまうとリスナが何度も
+ * 反応してしまう可能性がある
+ *
+ * これに伴って
+ * MutationObserverのMutationRecordも複数ある要素のすべてを記録するので
+ * 1度だけ行いたい処理を2回以上行わなくてはならない危険性がある
+ *
+ *  これを避けるためにisItDoneで処理が既に完了しているのかどうかを
+ *  確認するようにしている
+ * ***/
+const setDetectScroll = () => {
+    console.log('setup Autro Scroll System');
+    //   var isItDone: boolean = false;
+    //   mr.forEach((record: MutationRecord) => {
+    //     if (
+    //       record.type === "attributes" &&
+    //       record.attributeName === "class" &&
+    //       record.oldValue === "" &&
+    //       !isItDone
+    //     ) {
+    //       // oldValueには""の時と、"ranscript--highlight-cue--1bEgq"の両方の時がある
+    //       // "ranscript--highlight-cue--1bEgq"をoldValueで受け取るときは
+    //       // ハイライトのclassをその要素からremoveしたときと考えて
+    //       // その時は何もしない
+    //       // 処理は1度だけになるように
+    //       console.log("-- observer executed --");
+    //       isItDone = true;
+    //       updateHighlightIndexes();
+    //       updateExTranscriptHighlight();
+    //       scrollToHighlight();
+    //     }
+    //   });
+    // };
+    // const observer: MutationObserver = new MutationObserver(_callback);
+    // const config: MutationObserverInit = {
+    //   attributes: true,
+    //   childList: false,
+    //   subtree: false,
+    //   attributeOldValue: true,
+    // };
+    // //   NodeListOf HTMLSpanElement
+    // const transcriptList: NodeListOf<Element> = document.querySelectorAll(
+    //   selectors.transcript.transcripts
+    // );
+    // transcriptList.forEach((ts) => {
+    //   observer.observe(ts, config);
+    // });
+    const moConfig = {
         attributes: true,
         childList: false,
         subtree: false,
         attributeOldValue: true,
     };
+    const moCallback = function (mr) {
+        console.log('observed');
+        let isItDone = false;
+        mr.forEach((record) => {
+            if (record.type === 'attributes' &&
+                record.attributeName === 'class' &&
+                record.oldValue === '' &&
+                isItDone) {
+                isItDone = true;
+                this._observer.disconnect();
+                // DOM への変更中はdisconnectで無限ループ防止できる ----
+                updateHighlightIndexes();
+                updateExTranscriptHighlight();
+                scrollToHighlight();
+                // ------------------------------------------------------
+                this._observer.observe(record.target, this._config);
+            }
+        });
+    };
+    // 一旦リセットしてから
+    if (transcriptListObserver) {
+        transcriptListObserver.disconnect();
+        transcriptListObserver = null;
+    }
     //   NodeListOf HTMLSpanElement
     const transcriptList = document.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.transcript.transcripts);
-    transcriptList.forEach((ts) => {
-        observer.observe(ts, config);
-    });
+    transcriptListObserver = new _utils_MutationObserver___WEBPACK_IMPORTED_MODULE_6__["default"](moCallback, moConfig, transcriptList);
+    transcriptListObserver.observe();
 };
 /**
  *  Scroll to Highlight
@@ -1664,29 +1781,31 @@ const scrollToHighlight = () => {
 //
 // --- UPDATE METHODS -----------------------------------
 //
-// 字幕アップデート
-// 常に受け取った字幕に再レンダリングする
+/**
+ *  Update subtitles rendering.
+ *
+ * 常に受け取った字幕データ通りに再レンダリングさせる
+ * 同時に、
+ *
+ * */
 const updateSubtitle = (prop, prev) => {
     if (prop.subtitles === undefined)
         return;
     // 字幕データのアップデート
     const { position, view, isAutoscrollInitialized } = sStatus.getState();
-    if (position === "sidebar") {
+    if (position === 'sidebar') {
         renderSidebarTranscript();
-        // TODO:
-        // sidebarのrenderingの後は
-        // 高さと幅の更新を必ずしないといかん...のか?
-        // 未確認なので念のため更新することにする
         _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateContentHeight();
-        view === "middleView"
+        view === 'middleView'
             ? _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateWidth(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.SIGNAL.widthStatus.middleview)
             : _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateWidth(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.SIGNAL.widthStatus.wideview);
     }
-    if (position === "noSidebar") {
+    if (position === 'noSidebar') {
         renderBottomTranscript();
     }
     if (!isAutoscrollInitialized) {
-        detectScroll();
+        // NOTE: 自動スクロール機能はここで初期化される
+        setDetectScroll();
         sStatus.setState({ isAutoscrollInitialized: true });
     }
 };
@@ -1694,18 +1813,18 @@ const updatePosition = (prop, prev) => {
     const { position } = prop;
     if (position === undefined)
         return;
-    if (position === "sidebar")
+    if (position === 'sidebar')
         renderSidebarTranscript();
-    else if (position === "noSidebar")
+    else if (position === 'noSidebar')
         renderBottomTranscript();
 };
 const updateSidebarView = (prop, prev) => {
     const { view } = prop;
     if (view === undefined)
         return;
-    if (view === "middleView")
+    if (view === 'middleView')
         _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateWidth(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.SIGNAL.widthStatus.middleview);
-    else if (view === "wideView")
+    else if (view === 'wideView')
         _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateWidth(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.SIGNAL.widthStatus.wideview);
 };
 const updateHighlight = (prop, prev) => {
@@ -1723,7 +1842,7 @@ const updateExHighlight = (prop, prev) => {
  *
  * */
 (function () {
-    console.log("[controller] Initializing...");
+    console.log('[controller] Initializing...');
     const oStatus = new _utils_Observable__WEBPACK_IMPORTED_MODULE_4__["default"]();
     const oSubtitle = new _utils_Observable__WEBPACK_IMPORTED_MODULE_4__["default"]();
     sStatus = new _utils_contentScript_State__WEBPACK_IMPORTED_MODULE_5__["default"](statusBase, oStatus);
@@ -1744,11 +1863,8 @@ const updateExHighlight = (prop, prev) => {
                 : _utils_constants__WEBPACK_IMPORTED_MODULE_3__.viewStatusNames.middleView,
         });
     }
-    window.addEventListener("resize", function () {
-        clearTimeout(timerQueue);
-        timerQueue = setTimeout(onWindowResizeHandler, _utils_constants__WEBPACK_IMPORTED_MODULE_3__.RESIZE_TIMER);
-    });
-    // TODO: 自動スクロール機能の発火条件の発見と実装
+    window.removeEventListener('resize', reductionOfwindowResizeHandler);
+    window.addEventListener('resize', reductionOfwindowResizeHandler);
 })();
 //
 // ---- LEGACY ----------------------------------------
@@ -1820,10 +1936,10 @@ const updateExHighlight = (prop, prev) => {
 //   movieContainer.removeEventListener("click", movieReplayClickHandler);
 //   //   set up auto scroll handling
 //   //   initializeDetecting();
-//   detectScroll();
+//   setDetectScroll();
 // };
 // /*
-//     detectScroll()
+//     setDetectScroll()
 //     ______________________________________
 //     本家のハイライトされている字幕が、
 //     自動スクロール機能で移り変わるたびに反応するオブザーバを生成する
@@ -1837,7 +1953,7 @@ const updateExHighlight = (prop, prev) => {
 //     1度だけ行いたい処理を2回以上行わなくてはならない危険性がある
 //     これを避けるためにisItDoneで処理が既に完了しているのかどうかを確認するようにしている
 // */
-// const detectScroll = (): void => {
+// const setDetectScroll = (): void => {
 //   const _callback = (mr: MutationRecord[]): void => {
 //     console.log("observed");
 //     var isItDone: boolean = false;
@@ -1876,7 +1992,7 @@ const updateExHighlight = (prop, prev) => {
 //     observer.observe(ts, config);
 //   });
 // };
-// /*
+//
 //     movieContainerClickHandler
 //     _____________________________________
 //     Udemyの講義ページで動画が再生開始したかどうかを判断する
@@ -1888,7 +2004,7 @@ const updateExHighlight = (prop, prev) => {
 //     clickイベントが終わってからじゃにとbuttonは消去されないので
 //     clickイベント中だと確認できない
 //     MutationObserverつかうしかない？
-// */
+//
 // const movieReplayClickHandler = (ev: PointerEvent): void => {
 //   console.log("[controller] Movie clicked");
 //   const movieContainer: HTMLElement = document.querySelector<HTMLElement>(
@@ -1897,8 +2013,7 @@ const updateExHighlight = (prop, prev) => {
 //   movieContainer.removeEventListener("click", movieReplayClickHandler);
 //   //   set up auto scroll handling
 //   //   initializeDetecting();
-//   detectScroll();
-// };
+//   setDetectScroll();
 
 })();
 

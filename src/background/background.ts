@@ -22,7 +22,7 @@
  *
  * TODO:
  *
- * - MessageSenderにはwebページのurlもtabidも含まれていない
+ * 
  * */
 
 import {
@@ -242,6 +242,9 @@ const handlerOfContentScriptMessage = async (
   console.log("[background] Message from contentScript.js");
   try {
     const { order, ...rest } = message;
+    if(order && order.length){
+      
+    }
   } catch (err) {
     console.error(err.message);
   }

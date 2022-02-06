@@ -370,7 +370,7 @@ __webpack_require__.r(__webpack_exports__);
  * ________________________________________________
  *
  * ************************************************/
-const _key_of_model_state__ = "_key_of_model_state__@&%8=8";
+const _key_of_model_state__ = '_key_of_model_state__@&%8=8';
 const urlPattern = /https:\/\/www.udemy.com\/course\/*/gm;
 const extensionStatus = {
     working: 'working',
@@ -381,7 +381,7 @@ const extensionNames = {
     popup: 'popup',
     contentScript: 'contentScript',
     controller: 'controller',
-    captureSubtitle: "captureSubtitle",
+    captureSubtitle: 'captureSubtitle',
     background: 'background',
 };
 //
@@ -398,15 +398,16 @@ const orderNames = {
     // order to disconnect port
     disconnect: 'disconnect',
     // from popup inquire the url is correct
-    inquireUrl: "inquireUrl",
+    inquireUrl: 'inquireUrl',
     // from popup, run process
-    run: "run",
+    run: 'run',
     // reset content script
-    reset: "reset",
+    reset: 'reset',
+    // Turn Off ExTranscript
+    turnOff: 'turnOff',
     // something succeeded
-    success: "success"
+    success: 'success',
 };
-;
 // --- constants for controller.js -------------------------------
 // // To pass to setTimeout
 // export const TEN_SEC: number = 10000;
@@ -447,7 +448,7 @@ const port_names = {
 //   // もしもorderプロパティが含まれていて、中身があれば
 //   if (order && order.length) {
 //     console.log("there is order");
-//     // 
+//     //
 //     // この時点だとorderが何者かわからないみたいだからincludes()メソッドなんて使えないよ
 //     // というエラーが出る
 //     // でも使えた
@@ -679,7 +680,7 @@ __webpack_require__.r(__webpack_exports__);
  *
  * TODO:
  *
- * - MessageSenderにはwebページのurlもtabidも含まれていない
+ *
  * */
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -872,6 +873,8 @@ const handlerOfContentScriptMessage = (message, sender, sendResponse) => __await
     console.log("[background] Message from contentScript.js");
     try {
         const { order } = message, rest = __rest(message, ["order"]);
+        if (order && order.length) {
+        }
     }
     catch (err) {
         console.error(err.message);
