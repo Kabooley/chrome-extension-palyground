@@ -44,7 +44,7 @@ import { sendMessagePromise } from "../utils/helpers";
 //
 
 // Transcriptが消えるブラウザウィンドウX軸の境界値
-const TOGGLE_VANISH_BOUNDARY: number = 584;
+const VANISH_BOUNDARY: number = 584;
 // Transcriptがブラウザサイズによって消えているのかどうか
 let isWindowTooSmall: boolean;
 // windowのonResizeイベント発火遅延用
@@ -158,17 +158,12 @@ const sendToBackgroud = async (order: {
  * ブラウザウィンドウがX軸方向に境界線をまたいだときだけ機能する
  *
  * */
-/*
-TODO: トランスクリプト表示・非表示機能の実装
-
-
-*/ 
 const onWindowResizeHandler = (ev): void => {
   const w: number = document.documentElement.clientWidth;
   console.log(w);
   // When window shrinks less than the boundary
   // Then send status.
-  if (w < TOGGLE_VANISH_BOUNDARY && !isWindowTooSmall) {
+  if (w < VANISH_BOUNDARY && !isWindowTooSmall) {
     console.log("window is too small");
     isWindowTooSmall = true;
     // windowサイズが小さくなりすぎると、トグルボタンのDOMは消えるから
@@ -183,7 +178,7 @@ const onWindowResizeHandler = (ev): void => {
   }
   // When window bend over vanish boundary
   // Then reset toggle button to add listener.
-  if (w >= TOGGLE_VANISH_BOUNDARY && isWindowTooSmall) {
+  if (w >= VANISH_BOUNDARY && isWindowTooSmall) {
     console.log("window is not small");
     isWindowTooSmall = false;
     const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
@@ -341,7 +336,7 @@ const initialize = async (): Promise<void> => {
     // Set up listeners
 
     const w: number = document.documentElement.clientWidth;
-    if (w > TOGGLE_VANISH_BOUNDARY) {
+    if (w > VANISH_BOUNDARY) {
       const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
         selectors.controlBar.transcript.toggleButton
       );
