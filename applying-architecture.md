@@ -22,18 +22,18 @@ MVC と DDD の設計思想を取り入れたい
 
 @popup
 
-- popup を開く
-- popup 上の RUN ボタンを押す
+-   popup を開く
+-   popup 上の RUN ボタンを押す
 
 @Udemy-page
 
-- ブラウザのサイズを変更する
-- 字幕を変更する
-- トランスクリプトを ON/OFF にする
-- URL が変わる(動画が切り替わる)
-- tab を閉じる（ブラウザを閉じる）
+-   ブラウザのサイズを変更する
+-   字幕を変更する
+-   トランスクリプトを ON/OFF にする
+-   URL が変わる(動画が切り替わる)
+-   tab を閉じる（ブラウザを閉じる）
 
-- ExTranscript を閉じる
+-   ExTranscript を閉じる
 
 #### 一般的な処理の流れ
 
@@ -76,9 +76,9 @@ microsoft の DDD の説明によれば
 
 > オブジェクト指向におけるクラスは、
 >
-> - インスタンス変数
-> - インスタンス変数 を正常に制御するメソッド
->   から構成されるのが基本です
+> -   インスタンス変数
+> -   インスタンス変数 を正常に制御するメソッド
+>     から構成されるのが基本です
 
 つまり単一責任とはある変数を変更できるクラスは一つだけで
 そのクラスが負う責任は変数の正常動作にたいして責任を負うのである
@@ -275,9 +275,9 @@ OrderManager インスタンスの execute()にはこのコンストラクタ関
 
 メリット
 
-- クラスはメソッドを持つ必要がなくなる
-- 実際に実行する関数は呼び出し側のクラスのプロパティと共通の名前をもつことでプロパティを変更できる
-- 呼び出し側の都合でクラスに好きなメソッドを実行させることができる
+-   クラスはメソッドを持つ必要がなくなる
+-   実際に実行する関数は呼び出し側のクラスのプロパティと共通の名前をもつことでプロパティを変更できる
+-   呼び出し側の都合でクラスに好きなメソッドを実行させることができる
 
 これを応用して Queue クラスを作ってみる
 
@@ -556,8 +556,8 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 中目標として MVC モデルの導入、DDD 設計思想に近づけたい
 そのために必要なこととして
 
-- order にたいして処理に必要な関数を Queue につめて Queue を実行するシステムにする
-- state の変更内容に応じて notify するシステムにする
+-   order にたいして処理に必要な関数を Queue につめて Queue を実行するシステムにする
+-   state の変更内容に応じて notify するシステムにする
 
 ##### order と Queue の実装に関して
 
@@ -567,17 +567,17 @@ https://qiita.com/emaame/items/745a35509fdfc7250026
 
 前提：必要な state の生成は chrome.runtime.onInstalled で済んでいる
 
-- メッセージ受信機能がメッセージハンドラを呼び出す
-- メッセージハンドラはメッセージ内容を読んで、必要な処理（関数）を Queue へつめる
-- Queue を queue 実行関数へ渡す
-- Queue の関数が一つずつ実行される
-- 実行するにつれて必要な state の変更も発生する
-- すべての処理が無事に済んだら success, うまくいかなかったら failure を返す
+-   メッセージ受信機能がメッセージハンドラを呼び出す
+-   メッセージハンドラはメッセージ内容を読んで、必要な処理（関数）を Queue へつめる
+-   Queue を queue 実行関数へ渡す
+-   Queue の関数が一つずつ実行される
+-   実行するにつれて必要な state の変更も発生する
+-   すべての処理が無事に済んだら success, うまくいかなかったら failure を返す
 
 実装しようとしたときにぶち当たった障害
 
-- Queue につめる関数を一般化したいけれど、戻り値の扱いが異なるから一般化できない
-  すくなくとも今の自分の腕では...
+-   Queue につめる関数を一般化したいけれど、戻り値の扱いが異なるから一般化できない
+    すくなくとも今の自分の腕では...
 
 ##### state observer の実装に関して
 
@@ -815,15 +815,15 @@ notify は setstate 内で呼出せばいいだけなので
 
 ユーザ操作：
 
-- [popup](#popupが開かれる)
-- [popup](#RUNが押される)
-- [ブラウザ] ウィンドウのサイズを変更する
-- [ブラウザ] 字幕の言語を変更する
-- [ブラウザ] (公式の)トランスクリプトを ON または OFF にする
-  一度拡張機能を実行済ならこれに合わせて閉じる、再度開かれたら開く
-- [ブラウザ](<#URLが変わる(動画が切り替わる)>)
-- [ブラウザ] タブを閉じる
-- [ExTranscript] ExTranscript を閉じる
+-   [popup](#popupが開かれる)
+-   [popup](#RUNが押される)
+-   [ブラウザ] ウィンドウのサイズを変更する
+-   [ブラウザ] 字幕の言語を変更する
+-   [ブラウザ] (公式の)トランスクリプトを ON または OFF にする
+    一度拡張機能を実行済ならこれに合わせて閉じる、再度開かれたら開く
+-   [ブラウザ](<#URLが変わる(動画が切り替わる)>)
+-   [ブラウザ] タブを閉じる
+-   [ExTranscript] ExTranscript を閉じる
 
 [設計に関する考察](#設計に関する考察)
 
@@ -944,36 +944,36 @@ const popupMessageHandler = async (m: messageTemplate): Promise<void> => {
 
 処理順序:
 
-- [poup] マウント時または毎度の useEffect()で background へ`order:[orderNames.isUrlCorrect]`を送信する
+-   [poup] マウント時または毎度の useEffect()で background へ`order:[orderNames.isUrlCorrect]`を送信する
 
-- [background] メッセージハンドラが受信してメッセージに応じた処理関数へ移動する
-- [background] メッセージに含まれる sender から URL を取得する
-- [background] url を matchURL と比較して比較結果を sendResponse()で返す
-  `{complete: true, url: true}`
-- [poup] sendResponse の結果に応じて state を変更し、popup の表示内容を変える
+-   [background] メッセージハンドラが受信してメッセージに応じた処理関数へ移動する
+-   [background] メッセージに含まれる sender から URL を取得する
+-   [background] url を matchURL と比較して比較結果を sendResponse()で返す
+    `{complete: true, url: true}`
+-   [poup] sendResponse の結果に応じて state を変更し、popup の表示内容を変える
 
 popup の state について:
 
-- `matchedPage`: popup を開いたときの tab の URL が正しいかについての状態を管理する state
+-   `matchedPage`: popup を開いたときの tab の URL が正しいかについての状態を管理する state
 
 #### RUN が押される
 
 前提：
 
-- RUN ボタンは`matchedPage`が true の時に有効になるとする
-- sendResponse()で返事が返されることを前提とする
-- sendResponse()はエラーが返されることも想定する
+-   RUN ボタンは`matchedPage`が true の時に有効になるとする
+-   sendResponse()で返事が返されることを前提とする
+-   sendResponse()はエラーが返されることも想定する
 
 エラーの可能性箇条書き：
 
-- 字幕が英語でない、トランスクリプトが開かれていない
-  alert で字幕を英語にするように、またはトランスクリプトを開くように促す
+-   字幕が英語でない、トランスクリプトが開かれていない
+    alert で字幕を英語にするように、またはトランスクリプトを開くように促す
 
-- 処理途中で字幕の言語を変えた、トランスクリプトを閉じた
-  alert で失敗を表示し、英語とトランスクリプトを戻して再度実行してもらうように促す
+-   処理途中で字幕の言語を変えた、トランスクリプトを閉じた
+    alert で失敗を表示し、英語とトランスクリプトを戻して再度実行してもらうように促す
 
-- それ以外のエラー
-  エラーだからどうしようもないよ
+-   それ以外のエラー
+    エラーだからどうしようもないよ
 
 つまり大別して、成功、失敗（アラート）、エラー
 成功：`complete: true`
@@ -1144,13 +1144,13 @@ controller.js が正常に ExTranscript を展開できたか確認
 
 orderName.run を受け取った後の処理に見られる傾向：
 
-- content script の inject
+-   content script の inject
 
-- content script からのメッセージで次の処理に必要な情報を取得する
-  または
-- background script から inject した content script へ必要な情報を催促して取得する
+-   content script からのメッセージで次の処理に必要な情報を取得する
+    または
+-   background script から inject した content script へ必要な情報を催促して取得する
 
-- 取得した情報を検査して state へ保存して次へ進むか、処理を中断してエラーを返す
+-   取得した情報を検査して state へ保存して次へ進むか、処理を中断してエラーを返す
 
 #### URL が変わる(動画が切り替わる)
 
@@ -1160,38 +1160,38 @@ orderName.run を受け取った後の処理に見られる傾向：
 
 継続条件：
 
-- 拡張機能が未展開であるけど、Udemy 講義ページである
-  なにもしない
+-   拡張機能が未展開であるけど、Udemy 講義ページである
+    なにもしない
 
-- 拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
-  拡張機能をリセットして引き続き展開する
+-   拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
+    拡張機能をリセットして引き続き展開する
 
-- 拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
-  拡張機能は OFF にする
+-   拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
+    拡張機能は OFF にする
 
-- タブが切り替わった
-  何もしない
+-   タブが切り替わった
+    何もしない
 
-- 拡張機能が展開されていたタブが閉じられた
-  拡張機能を OFF にする
+-   拡張機能が展開されていたタブが閉じられた
+    拡張機能を OFF にする
 
 次の時はどうするか:
 
-- すでに拡張機能が実行されているときにページのユーザ操作によるリロードがあった
-  変わらず展開したい
-  google 翻訳アプリも変わらず展開しているし
-  OFF になるのは、
-  tab が閉じられたとき、ユーザの操作によって拡張機能上の OFF ボタンが押されたとき
-  拡張機能マネージャでが OFF にされたとき、
-  そのタブで別の Udemy 講義ページ以外に移動したとき
+-   すでに拡張機能が実行されているときにページのユーザ操作によるリロードがあった
+    変わらず展開したい
+    google 翻訳アプリも変わらず展開しているし
+    OFF になるのは、
+    tab が閉じられたとき、ユーザの操作によって拡張機能上の OFF ボタンが押されたとき
+    拡張機能マネージャでが OFF にされたとき、
+    そのタブで別の Udemy 講義ページ以外に移動したとき
 
 Udemy ページの挙動と chrome.tabs.onUpdated の挙動:
 
-- リンクをたどって Udemy 講義ページへ移動したとき
-  "loading"は二度以上起こる
-  しかし、URL は同じ(#以下が変わるだけ)
+-   リンクをたどって Udemy 講義ページへ移動したとき
+    "loading"は二度以上起こる
+    しかし、URL は同じ(#以下が変わるだけ)
 
-  ...よく考えたらこれ関係ないな...
+    ...よく考えたらこれ関係ないな...
 
 ...以上の挙動と事情がすべて反映されるように条件分岐を設ける
 
@@ -1254,19 +1254,19 @@ chrome.tabs.onUpdated.addListener(
 
 要確認：
 
-- state はどのようにリセットすべきか
-- content script は inject されたままなのか
-- content script は inject されたままだとして、ちゃんとリロードされたページの DOM を取得できるのか？
+-   state はどのようにリセットすべきか
+-   content script は inject されたままなのか
+-   content script は inject されたままだとして、ちゃんとリロードされたページの DOM を取得できるのか？
 
 動画が切り替わったら
 
-- 各 content script のイベントリスナを remove して再度セットする必要
-- 各 content script のイベントリスナリセットを通知、完了報告管理
-- `state<iSubtitles>.subtitles: null`に
-- `state<iTabId>`はそのまま
-- `state<iContentUrl>`は URL が変わったのでその反映だけ
-- `state<iProgress>`は...
-- ExTranscript は中身をいったん空にする(空にして表示する loading circle でも表示するかい？)
+-   各 content script のイベントリスナを remove して再度セットする必要
+-   各 content script のイベントリスナリセットを通知、完了報告管理
+-   `state<iSubtitles>.subtitles: null`に
+-   `state<iTabId>`はそのまま
+-   `state<iContentUrl>`は URL が変わったのでその反映だけ
+-   `state<iProgress>`は...
+-   ExTranscript は中身をいったん空にする(空にして表示する loading circle でも表示するかい？)
 
 進行状況 state：
 
@@ -1315,38 +1315,38 @@ const progressBase: iProgress = {
 
 リセットタスク：
 
-- 各 content script のイベントリスナを remove して再度セットする必要
-- 各 content script のイベントリスナリセットを通知、完了報告管理
-- `state<iSubtitles>.subtitles: null`に
-- `state<iTabId>`はそのまま
-- `state<iContentUrl>`は URL が変わったのでその反映だけ
-- `state<iProgress>`は...
-- ExTranscript は中身をいったん空にする(空にして表示する loading circle でも表示するかい？)
+-   各 content script のイベントリスナを remove して再度セットする必要
+-   各 content script のイベントリスナリセットを通知、完了報告管理
+-   `state<iSubtitles>.subtitles: null`に
+-   `state<iTabId>`はそのまま
+-   `state<iContentUrl>`は URL が変わったのでその反映だけ
+-   `state<iProgress>`は...
+-   ExTranscript は中身をいったん空にする(空にして表示する loading circle でも表示するかい？)
 
-- [background] contentScript.js へリセット通知
-- [background] captureSubtitle.js へリセット通知
-- [background] controller.js へリセット通知
-- [background] 各 content script から`{success: boolean;}`の返事取得
-- [background] 全ての content script sucess が true だったら state を更新
-- [background] 字幕取得処理を実施
-- [background]
+-   [background] contentScript.js へリセット通知
+-   [background] captureSubtitle.js へリセット通知
+-   [background] controller.js へリセット通知
+-   [background] 各 content script から`{success: boolean;}`の返事取得
+-   [background] 全ての content script sucess が true だったら state を更新
+-   [background] 字幕取得処理を実施
+-   [background]
 
-- [contentScript] toggle ボタンの要素は変化しないのでリセット不要
-- [contentScript] ccPopupButton 要素も変化しないのでリセット不要
-  結果、contentScript はリセット不要でした...
+-   [contentScript] toggle ボタンの要素は変化しないのでリセット不要
+-   [contentScript] ccPopupButton 要素も変化しないのでリセット不要
+    結果、contentScript はリセット不要でした...
 
-- [captureSubtitle] state のリセット
-- [captureSubtitle] 要素へのリスナはないのでリスナのリセット不要
-- [captureSubtitle] 毎度関数の実行時にすべて DOM を取得しなおすのでリセット不要
-- [captureSubtitle] 実行関数をサイド呼出せばいいだけっぽい
-- [captureSubtitle] 処理完了したら background へ字幕データを送信する
+-   [captureSubtitle] state のリセット
+-   [captureSubtitle] 要素へのリスナはないのでリスナのリセット不要
+-   [captureSubtitle] 毎度関数の実行時にすべて DOM を取得しなおすのでリセット不要
+-   [captureSubtitle] 実行関数をサイド呼出せばいいだけっぽい
+-   [captureSubtitle] 処理完了したら background へ字幕データを送信する
 
-- [controller] state は...
-  \_state: iControllerState 不要
-  \_subtitles リセット
-  \_highlight リセット
-  \_ExHighlight リセット
-  \_indexList リセット
+-   [controller] state は...
+    \_state: iControllerState 不要
+    \_subtitles リセット
+    \_highlight リセット
+    \_ExHighlight リセット
+    \_indexList リセット
 
 ```TypeScript
 // background.ts
@@ -1441,9 +1441,9 @@ export interface iResponse {
 
 要確認：
 
-- state はどのようにリセットすべきか
-- content script はそのページから除去できるのか
-- 除去できないとしたらどうするか
+-   state はどのようにリセットすべきか
+-   content script はそのページから除去できるのか
+-   除去できないとしたらどうするか
 
 ## 1/28:各処理機能の実装をしてみる
 
@@ -1551,14 +1551,14 @@ const model_ = (function() {
 
 **update**やること：
 
-- background.ts の update に伴った各 content script の update
-- エラーハンドリング：どういう場合にエラースローでどういうときに続行なのか定義する
-- Model の見直し：エラーハンドリングと伴って
-- 各`TODO`の消化
-- Observer の導入: state の変化で反応させられる View に導入する
-- 拡張機能の OFF 機能の実装
-- （可能ならば）transcript が ON じゃなくても、英語字幕でなくても機能を ON にできるようにする
-- 見た目をイカした感じに
+-   background.ts の update に伴った各 content script の update
+-   エラーハンドリング：どういう場合にエラースローでどういうときに続行なのか定義する
+-   Model の見直し：エラーハンドリングと伴って
+-   各`TODO`の消化
+-   Observer の導入: state の変化で反応させられる View に導入する
+-   拡張機能の OFF 機能の実装
+-   （可能ならば）transcript が ON じゃなくても、英語字幕でなくても機能を ON にできるようにする
+-   見た目をイカした感じに
 
 #### Observer の導入
 
@@ -1566,12 +1566,12 @@ Model の変化で View を変化させるような場面は存在した...
 
 例：
 
-- popup の`capturing`表示、`complete`表示に関して
+-   popup の`capturing`表示、`complete`表示に関して
 
 state の`isSubtitleCaptured`, `isSubtitleCapturing`の値の変化を
 notify して popup を変化させてもいいね
 
-- controller.js が表示する subtitles データの変化を notify されるようにする
+-   controller.js が表示する subtitles データの変化を notify されるようにする
 
 `state.subtitles`が変化したら notfy されて取得する仕組みにする
 
@@ -1591,9 +1591,9 @@ class Observable {
 
 なので、次の通りにする
 
-- 字幕データがなくても ExTranscript を展開できるようにする
-- 字幕データが届き次第、ExTranscript へ展開する仕様にする
-- 自動スクロールも、字幕データが届き次第リセットされる仕様にする
+-   字幕データがなくても ExTranscript を展開できるようにする
+-   字幕データが届き次第、ExTranscript へ展開する仕様にする
+-   自動スクロールも、字幕データが届き次第リセットされる仕様にする
 
 ```TypeScript
 
@@ -1876,8 +1876,8 @@ ExTranscript の機能として、必ず本家のトランスクリプトの表�
 
 具体的に：
 
-- ExTranscript の`bottomTranscriptView.clear();` or `sidebarTranscriptView.clear();`
-- `onWindowResizeHandler`のイベントリスナの remove
+-   ExTranscript の`bottomTranscriptView.clear();` or `sidebarTranscriptView.clear();`
+-   `onWindowResizeHandler`のイベントリスナの remove
 
 それだけ
 
@@ -1885,14 +1885,14 @@ ExTranscript の機能として、必ず本家のトランスクリプトの表�
 
 条件：
 
-- [webpage] 字幕を英語以外にした
-- [webpage] ブラウザのサイズを小さくしすぎた
-- [webpage] トランスクリプト上の × ボタンを押した
-  上記までの操作は、トランスクリプトを ON にすることで ExTranscript は復活する
+-   [webpage] 字幕を英語以外にした
+-   [webpage] ブラウザのサイズを小さくしすぎた
+-   [webpage] トランスクリプト上の × ボタンを押した
+    上記までの操作は、トランスクリプトを ON にすることで ExTranscript は復活する
 
-- [ExTranscript] OFF ボタンを押した
-- [popup] OFF ボタンを押した
-  上記の操作の場合、ExTranscript は消え、再度 POPUP 上の実行ボタンを押さないと再展開しない
+-   [ExTranscript] OFF ボタンを押した
+-   [popup] OFF ボタンを押した
+    上記の操作の場合、ExTranscript は消え、再度 POPUP 上の実行ボタンを押さないと再展開しない
 
 信号の定義:
 
@@ -1942,9 +1942,9 @@ const statusBase: iController = {
 
 OFF 処理：
 
-- State はインスタンスは残しておいて、プロパティだけリセットする
-  highligh, ExhHighlight, indexList, isAutoscrollInitialized
-  iSubtitles
+-   State はインスタンスは残しておいて、プロパティだけリセットする
+    highligh, ExhHighlight, indexList, isAutoscrollInitialized
+    iSubtitles
 
 ```TypeScript
 chrome.runtime.onMessage.addListener(
@@ -2134,29 +2134,16 @@ controller.js はそれに従うだけ
 
 トランスクリプトはあらゆる場面で消える！
 
-- ブラウザのサイズがある一定以上小さくなると消える（トグルボタンも消える）
-- トランスクリプト上の × ボタンを押すと消える
-- トグルボタンで OFF にすれば消える
-- 「展開表示」で強制的に消える
+-   ブラウザのサイズがある一定以上小さくなると消える（トグルボタンも消える）
+-   トランスクリプト上の × ボタンを押すと消える
+-   トグルボタンで OFF にすれば消える
+-   「展開表示」で強制的に消える
 
-toggle ボタンと展開表示ボタン
+そして、
+必ずコントロールバーのトランスクリプト・トグルボタンの表示・非表示と
+連動している
 
-0 < 583px : toggle ボタン非表示 && トランスクリプト非表示
-sidebar がある間は展開表示は表示され、noSidebar になったら非表示になる
-
-展開表示ボタンセレクタ：
-`button[data-purpose="theatre-mode-toggle-button"]`
-
-展開表示中なのかどうかを確認する方法：
-
-TheaterMode トグルボタンに変化はない
-ただし必ずサイドバー要素が消える
-
-つまりもしもこのボタンがクリックされたときに...
-
-    表示モードはsidebarである && sidebar要素がない
-     ? 展開表示された(トランスクリプトは消える)
-     : 展開表示から戻った(トランスクリプトは消えたまま)
+ならば...
 
 ##### コントロールバーを監視する機能を付ければいいのでは？
 
@@ -2164,29 +2151,47 @@ TheaterMode トグルボタンに変化はない
 これの検知を今のところブラウザサイズを実際に図ってから判断している
 
 これでもいいんだけど
-コントロールバーに監視機能を付ければ早いかも？
+コントロールバーに監視機能を付けてトグルボタンが現れるかどうか検知できれば
+トランスクリプトの表示非表示が監視できるのではないか?
 
 ```TypeScript
 
 const controlBarSelector = 'div.control-bar--control-bar--MweER[data-purpose="video-controls"]';
 const controlbar = document.querySelector<HTMLElement>(controlBarSelector);
 
+// TODO: 検討中：click or mouseup 
 controlbar.addEventListener("click", handlerOfControlbar);
 
 // Clickイベント
 // 検知したいのはトランスクリプト、CC、展開表示
 // これならばトグルボタンが消えたりサイド現れてもいちいちリスナを付ける手間がなくなる
-const handlerOfControlbar = (ev: MouseEvent): void => {
+//
+// Clickイベントハンドラは何が押されたかはわかるけれど、
+// トランスクリプトが表示されたのかどうかはわからない
+const handlerOfControlbar = function (ev: MouseEvent): void {
     const path: EventTarget[] = ev.composedPath();
-    if(path.includes(/* toggle-transcript-button */)){
-        // ...
-    }
-    if(path.includes(/* cc-button */)){
-        // ....
-    }
-    if(path.includes(/* toggle-theatre-button */)){
-        // ....
-    }
+    // TODO: <確認>この遅延装置はclickイベントが完了した後に発火できているか？
+    setTimeout(function() {
+      // もしもトグルボタンが押されたら
+      if(path.includes(/* toggle-transcript-button */) || path.includes(/* toggle-theatre-button */)){
+          // トランスクリプトを表示したまたは消えた可能性がある
+          // トランスクリプトがあるかどうかだけを調べる
+          
+          const toggleTranscript: HTMLElement = document.querySelector<HTMLElement>(/* toggle-transcript-selector*/);
+          if(!toggeleTranscript) {
+            // トランスクリプト消えた
+              sendToBackgroud({ isOpened: false });
+          }
+          else {
+            // トランスクリプト消えてない
+              sendToBackgroud({ isOpened: true });
+          }
+      }
+      if(path.includes(/* cc-button */)){
+          // 字幕が変更された可能性がある
+          ccPopupMenuClickHandler(ev);
+      }
+    }, 100)
 };
 
 // もしかしたらいらないかも...
@@ -2200,6 +2205,25 @@ const controlbarCallback = (mr: MutationRecord[]): void => {
             console.log(record.addedNodes);
             // 削除された要素
             console.log(record.removedNodes);
+
+            if(/* record.addedNodes の子要素にトランスクリプト・トグルボタンが含まれているならば */) {
+              // トランスクリプトが再表示された可能性がある
+              if(/* もしもトランスクリプトDOMが取得で来たら*/){
+                sendToBackgroud({ isOpened: true });
+              }
+            }
+            if(/*record.removedNodesの子要素にトランスクリプト・トグルボタンが含まれているならば*/){
+              // トランスクリプトが非表示になった可能性がある
+              // いずれにしろ送信する
+                sendToBackgroud({ isOpened: false });
+            }
+            // if(record.addedNodes === ccPopupMenu){
+            //   // いまのところ出番がない...
+            // }
+            // if(record.addedNodes === toggleTheatre){
+            //   // いまのところ出番がない...
+            // }
+
         }
     })
 }
@@ -2231,553 +2255,575 @@ CC：
 ```html
 <!-- コントロールバー内部 -->
 <div class="control-bar--control-bar--MweER" data-purpose="video-controls">
-  <!-- 再生ボタン -->
-  <div class="popper--popper--2r2To">
-    <button
-      type="button"
-      data-purpose="play-button"
-      class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-      id="popper-trigger--414"
-      tabindex="0"
-    >
-      <svg
-        aria-label="再生"
-        role="img"
-        focusable="false"
-        class="udlite-icon udlite-icon-medium"
-      >
-        <use xlink:href="#icon-play-arrow"></use>
-      </svg>
-    </button>
-  </div>
-  <!-- rewind skip  -->
-  <div class="popper--popper--2r2To">
-    <button
-      type="button"
-      data-purpose="rewind-skip-button"
-      class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-      id="popper-trigger--416"
-      tabindex="0"
-    >
-      <svg
-        aria-label="5秒戻す"
-        role="img"
-        focusable="false"
-        class="udlite-icon udlite-icon-medium"
-      >
-        <use xlink:href="#icon-rewind"></use>
-      </svg>
-    </button>
-  </div>
-  <!-- 再生速度 -->
-  <div class="playback-rate--playback-rate--1XOKO popper--popper--2r2To">
-    <!-- omit -->
-  </div>
-  <!-- skip -->
-  <div class="popper--popper--2r2To">
-    <button
-      type="button"
-      data-purpose="forward-skip-button"
-      class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-      id="popper-trigger--422"
-      tabindex="0"
-    >
-      <svg
-        aria-label="5秒進める"
-        role="img"
-        focusable="false"
-        class="udlite-icon udlite-icon-medium"
-      >
-        <use xlink:href="#icon-reload"></use>
-      </svg>
-    </button>
-  </div>
+    <!-- 再生ボタン -->
+    <div class="popper--popper--2r2To">
+        <button
+            type="button"
+            data-purpose="play-button"
+            class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+            id="popper-trigger--414"
+            tabindex="0"
+        >
+            <svg
+                aria-label="再生"
+                role="img"
+                focusable="false"
+                class="udlite-icon udlite-icon-medium"
+            >
+                <use xlink:href="#icon-play-arrow"></use>
+            </svg>
+        </button>
+    </div>
+    <!-- rewind skip  -->
+    <div class="popper--popper--2r2To">
+        <button
+            type="button"
+            data-purpose="rewind-skip-button"
+            class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+            id="popper-trigger--416"
+            tabindex="0"
+        >
+            <svg
+                aria-label="5秒戻す"
+                role="img"
+                focusable="false"
+                class="udlite-icon udlite-icon-medium"
+            >
+                <use xlink:href="#icon-rewind"></use>
+            </svg>
+        </button>
+    </div>
+    <!-- 再生速度 -->
+    <div class="playback-rate--playback-rate--1XOKO popper--popper--2r2To">
+        <!-- omit -->
+    </div>
+    <!-- skip -->
+    <div class="popper--popper--2r2To">
+        <button
+            type="button"
+            data-purpose="forward-skip-button"
+            class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+            id="popper-trigger--422"
+            tabindex="0"
+        >
+            <svg
+                aria-label="5秒進める"
+                role="img"
+                focusable="false"
+                class="udlite-icon udlite-icon-medium"
+            >
+                <use xlink:href="#icon-reload"></use>
+            </svg>
+        </button>
+    </div>
 
-  <div class="udlite-heading-sm progress-display--progress-display--B20-A">
-    <div data-purpose="progress-display">
-      <span data-purpose="current-time">2:15</span><span> / </span
-      ><span data-purpose="duration">3:13</span>
-    </div>
-    <div
-      aria-hidden="true"
-      class="progress-display--progress-display-spacer--oww7U"
-    >
-      <span>4:44</span><span> / </span><span>4:44</span>
-    </div>
-  </div>
-  <!-- ブックマーク -->
-  <div class="popper--popper--2r2To">
-    <button
-      type="button"
-      data-purpose="add-bookmark"
-      class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-      id="popper-trigger--424"
-      tabindex="0"
-    >
-      <svg
-        aria-label="メモを追加"
-        role="img"
-        focusable="false"
-        class="udlite-icon udlite-icon-medium"
-      >
-        <use xlink:href="#icon-note-add"></use>
-      </svg>
-    </button>
-  </div>
-  <div class="control-bar--spacer--32VvX"></div>
-  <div>
-    <!-- 音量 -->
-    <div
-      data-purpose="volume-control-bar"
-      role="slider"
-      aria-valuemin="0"
-      aria-valuemax="100"
-      aria-valuenow="22"
-      aria-label="音量"
-      tabindex="0"
-      class="volume-control--slider-focus-wrapper--1DEg2 volume-control--invisible-unless-focused--2jCET"
-    >
-      <div id="slider--426" class="volume-control--slider--3BRkN">
+    <div class="udlite-heading-sm progress-display--progress-display--B20-A">
+        <div data-purpose="progress-display">
+            <span data-purpose="current-time">2:15</span><span> / </span
+            ><span data-purpose="duration">3:13</span>
+        </div>
         <div
-          class="volume-control--slider-inner--2f-Tu"
-          style="transform: scaleY(0.22);"
-        ></div>
-      </div>
+            aria-hidden="true"
+            class="progress-display--progress-display-spacer--oww7U"
+        >
+            <span>4:44</span><span> / </span><span>4:44</span>
+        </div>
     </div>
-    <button
-      type="button"
-      data-purpose="volume-control-button"
-      class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-    >
-      <svg
-        aria-label="ミュート"
-        role="img"
-        focusable="false"
-        class="udlite-icon udlite-icon-medium"
-      >
-        <use xlink:href="#icon-volume-on"></use>
-      </svg>
-    </button>
-  </div>
-  <!-- トグル　トランスクリプト -->
-  <div class="popper--popper--2r2To">
-    <button
-      type="button"
-      aria-expanded="false"
-      data-purpose="transcript-toggle"
-      class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-      id="popper-trigger--1256"
-      tabindex="0"
-    >
-      <svg
-        aria-label="サイドバー領域のトランスクリプション"
-        role="img"
-        focusable="false"
-        class="udlite-icon udlite-icon-medium"
-      >
-        <use xlink:href="#icon-transcript"></use>
-      </svg>
-    </button>
-  </div>
-  <!-- CC MENU -->
-  <div class="popper--popper--2r2To">
+    <!-- ブックマーク -->
     <div class="popper--popper--2r2To">
-      <button
-        type="button"
-        aria-haspopup="menu"
-        data-purpose="captions-dropdown-button"
-        id="control-bar-dropdown-trigger--429"
-        tabindex="0"
-        aria-expanded="false"
-        class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-      >
-        <svg
-          aria-label="字幕"
-          role="img"
-          focusable="false"
-          class="udlite-icon udlite-icon-medium"
+        <button
+            type="button"
+            data-purpose="add-bookmark"
+            class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+            id="popper-trigger--424"
+            tabindex="0"
         >
-          <use xlink:href="#icon-captions"></use>
-        </svg>
-      </button>
+            <svg
+                aria-label="メモを追加"
+                role="img"
+                focusable="false"
+                class="udlite-icon udlite-icon-medium"
+            >
+                <use xlink:href="#icon-note-add"></use>
+            </svg>
+        </button>
     </div>
-    <div
-      id="popper-content--431"
-      aria-labelledby="control-bar-dropdown-trigger--429"
-      class="popper--popper-content--2tG0H"
-      style="bottom: 100%; right: 0px; margin-bottom: 3.2rem;"
-    >
-      <div class="popper--animation-wrapper--1uUMV">
+    <div class="control-bar--spacer--32VvX"></div>
+    <div>
+        <!-- 音量 -->
         <div
-          id="control-bar-dropdown-menu--430"
-          class="control-bar-dropdown--menu--2bFbL control-bar-dropdown--menu-dark--3cSQg"
-          style="max-height: 45.29rem;"
+            data-purpose="volume-control-bar"
+            role="slider"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="22"
+            aria-label="音量"
+            tabindex="0"
+            class="volume-control--slider-focus-wrapper--1DEg2 volume-control--invisible-unless-focused--2jCET"
         >
-          <ul
-            role="menu"
-            aria-labelledby="control-bar-dropdown-trigger--429"
-            data-purpose="captions-dropdown-menu"
-            class="unstyled-list udlite-block-list"
-          >
-            <li role="none">
-              <ul class="unstyled-list" role="group" aria-label="字幕">
-                <button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">オフ</div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="true"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">英語</div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">
-                    インドネシア語 [自動]
-                  </div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">
-                    イタリア語 [自動]
-                  </div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">
-                    スペイン語 [自動]
-                  </div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">
-                    ドイツ語 [自動]
-                  </div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">
-                    フランス語 [自動]
-                  </div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">
-                    ポルトガル語 [自動]
-                  </div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">
-                    ポーランド語 [自動]
-                  </div>
-                </button>
-              </ul>
-            </li>
-            <li role="separator"></li>
-            <li role="none">
-              <button
+            <div id="slider--426" class="volume-control--slider--3BRkN">
+                <div
+                    class="volume-control--slider-inner--2f-Tu"
+                    style="transform: scaleY(0.22);"
+                ></div>
+            </div>
+        </div>
+        <button
+            type="button"
+            data-purpose="volume-control-button"
+            class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+        >
+            <svg
+                aria-label="ミュート"
+                role="img"
+                focusable="false"
+                class="udlite-icon udlite-icon-medium"
+            >
+                <use xlink:href="#icon-volume-on"></use>
+            </svg>
+        </button>
+    </div>
+    <!-- トグル　トランスクリプト -->
+    <div class="popper--popper--2r2To">
+        <button
+            type="button"
+            aria-expanded="false"
+            data-purpose="transcript-toggle"
+            class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+            id="popper-trigger--1256"
+            tabindex="0"
+        >
+            <svg
+                aria-label="サイドバー領域のトランスクリプション"
+                role="img"
+                focusable="false"
+                class="udlite-icon udlite-icon-medium"
+            >
+                <use xlink:href="#icon-transcript"></use>
+            </svg>
+        </button>
+    </div>
+    <!-- CC MENU -->
+    <div class="popper--popper--2r2To">
+        <div class="popper--popper--2r2To">
+            <button
                 type="button"
-                role="menuitem"
-                tabindex="-1"
-                data-purpose="go-to-settings"
                 aria-haspopup="menu"
-                class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-              >
-                <div class="udlite-block-list-item-content">
-                  字幕設定<svg
-                    aria-hidden="true"
+                data-purpose="captions-dropdown-button"
+                id="control-bar-dropdown-trigger--429"
+                tabindex="0"
+                aria-expanded="false"
+                class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+            >
+                <svg
+                    aria-label="字幕"
+                    role="img"
                     focusable="false"
-                    class="udlite-icon udlite-icon-small video-control-bar-dropdown--next-icon--3crbc"
-                  >
-                    <use xlink:href="#icon-next"></use>
-                  </svg>
-                </div>
-              </button>
-            </li>
-          </ul>
+                    class="udlite-icon udlite-icon-medium"
+                >
+                    <use xlink:href="#icon-captions"></use>
+                </svg>
+            </button>
         </div>
-      </div>
-    </div>
-  </div>
-  <!-- 設定 -->
-  <div class="popper--popper--2r2To">
-    <div class="popper--popper--2r2To">
-      <button
-        type="button"
-        aria-haspopup="menu"
-        data-purpose="settings-button"
-        id="control-bar-dropdown-trigger--433"
-        tabindex="0"
-        aria-expanded="false"
-        class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-      >
-        <svg
-          aria-label="設定"
-          role="img"
-          focusable="false"
-          class="udlite-icon udlite-icon-medium"
-        >
-          <use xlink:href="#icon-settings"></use>
-        </svg>
-      </button>
-    </div>
-    <div
-      id="popper-content--435"
-      aria-labelledby="control-bar-dropdown-trigger--433"
-      class="popper--popper-content--2tG0H"
-      style="bottom: 100%; right: 0px; margin-bottom: 3.2rem;"
-    >
-      <div class="popper--animation-wrapper--1uUMV">
         <div
-          id="control-bar-dropdown-menu--434"
-          class="control-bar-dropdown--menu--2bFbL control-bar-dropdown--menu-dark--3cSQg"
-          style="max-height: 43.5881rem;"
+            id="popper-content--431"
+            aria-labelledby="control-bar-dropdown-trigger--429"
+            class="popper--popper-content--2tG0H"
+            style="bottom: 100%; right: 0px; margin-bottom: 3.2rem;"
         >
-          <ul
-            role="menu"
-            aria-labelledby="control-bar-dropdown-trigger--433"
-            data-purpose="settings-menu"
-            class="unstyled-list udlite-block-list"
-          >
-            <li role="none">
-              <ul
-                class="unstyled-list"
-                role="group"
-                aria-label="解像度"
-                data-purpose="resolution-menu"
-              >
-                <button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+            <div class="popper--animation-wrapper--1uUMV">
+                <div
+                    id="control-bar-dropdown-menu--430"
+                    class="control-bar-dropdown--menu--2bFbL control-bar-dropdown--menu-dark--3cSQg"
+                    style="max-height: 45.29rem;"
                 >
-                  <div class="udlite-block-list-item-content">
-                    1080p
-                  </div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">720p</div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">576p</div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">432p</div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="false"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">360p</div></button
-                ><button
-                  type="button"
-                  role="menuitemradio"
-                  tabindex="-1"
-                  aria-checked="true"
-                  class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-                >
-                  <div class="udlite-block-list-item-content">Auto</div>
-                </button>
-              </ul>
-            </li>
-            <li role="separator"></li>
-            <li role="none">
-              <button
-                type="button"
-                role="menuitemcheckbox"
-                tabindex="-1"
-                aria-checked="true"
-                class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-              >
-                <div class="udlite-block-list-item-content">
-                  自動再生<span
-                    class="control-bar-dropdown--checkbox-slider--1LPlb"
-                  ></span>
-                </div>
-              </button>
-            </li>
-            <li role="none">
-              <div
-                role="menuitem"
-                tabindex="-1"
-                disabled=""
-                data-purpose="download-lecture"
-                class="video-viewer--download-lecture--2XLXn udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral udlite-text-sm"
-              >
-                <div class="udlite-block-list-item-content">
-                  <div
-                    class="video-viewer--popover-icon-container--1jxJt popper--popper--2r2To"
-                  >
-                    <button
-                      type="button"
-                      class="udlite-btn udlite-btn-large udlite-btn-link udlite-heading-md video-viewer--popover-icon-container--1jxJt"
-                      id="popper-trigger--437"
-                      tabindex="0"
-                      aria-describedby="popper-content--438"
+                    <ul
+                        role="menu"
+                        aria-labelledby="control-bar-dropdown-trigger--429"
+                        data-purpose="captions-dropdown-menu"
+                        class="unstyled-list udlite-block-list"
                     >
-                      <svg
-                        aria-label="情報を入手"
-                        role="img"
-                        focusable="false"
-                        class="udlite-icon udlite-icon-small"
-                      >
-                        <use xlink:href="#icon-info"></use>
-                      </svg>
-                    </button>
-                  </div>
-                  レクチャーをダウンロード
+                        <li role="none">
+                            <ul
+                                class="unstyled-list"
+                                role="group"
+                                aria-label="字幕"
+                            >
+                                <button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        オフ
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="true"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        英語
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        インドネシア語 [自動]
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        イタリア語 [自動]
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        スペイン語 [自動]
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        ドイツ語 [自動]
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        フランス語 [自動]
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        ポルトガル語 [自動]
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        ポーランド語 [自動]
+                                    </div>
+                                </button>
+                            </ul>
+                        </li>
+                        <li role="separator"></li>
+                        <li role="none">
+                            <button
+                                type="button"
+                                role="menuitem"
+                                tabindex="-1"
+                                data-purpose="go-to-settings"
+                                aria-haspopup="menu"
+                                class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                            >
+                                <div class="udlite-block-list-item-content">
+                                    字幕設定<svg
+                                        aria-hidden="true"
+                                        focusable="false"
+                                        class="udlite-icon udlite-icon-small video-control-bar-dropdown--next-icon--3crbc"
+                                    >
+                                        <use xlink:href="#icon-next"></use>
+                                    </svg>
+                                </div>
+                            </button>
+                        </li>
+                    </ul>
                 </div>
-              </div>
-            </li>
-            <li role="none">
-              <button
-                type="button"
-                role="menuitem"
-                tabindex="-1"
-                data-purpose="show-keyboard-shortcuts"
-                class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-              >
-                <div class="udlite-block-list-item-content">
-                  キーボードショートカット
-                </div>
-              </button>
-            </li>
-            <li role="none">
-              <button
-                type="button"
-                role="menuitem"
-                tabindex="-1"
-                data-purpose="show-video-info"
-                class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-              >
-                <div class="udlite-block-list-item-content">
-                  コンテンツの情報
-                </div>
-              </button>
-            </li>
-            <li role="none">
-              <button
-                type="button"
-                role="menuitem"
-                tabindex="-1"
-                data-purpose="report-technical-issue"
-                class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-              >
-                <div class="udlite-block-list-item-content">
-                  技術的な問題を報告する
-                </div>
-              </button>
-            </li>
-            <li role="none">
-              <button
-                type="button"
-                role="menuitem"
-                tabindex="-1"
-                data-purpose="report-abuse"
-                class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
-              >
-                <div class="udlite-block-list-item-content">違反を報告する</div>
-              </button>
-            </li>
-            <li role="none"></li>
-            <li role="none"></li>
-          </ul>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
-  <!-- 全画面表示 -->
-  <div class="popper--popper--2r2To">
-    <button
-      type="button"
-      class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-      id="popper-trigger--445"
-      tabindex="0"
-    >
-      <svg
-        aria-label="全画面表示"
-        role="img"
-        focusable="false"
-        class="udlite-icon udlite-icon-medium"
-      >
-        <use xlink:href="#icon-expand-diagonal"></use>
-      </svg>
-    </button>
-  </div>
-  <!-- toggle theatre -->
-  <div class="popper--popper--2r2To">
-    <button
-      type="button"
-      data-purpose="theatre-mode-toggle-button"
-      class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-      id="popper-trigger--1270"
-      tabindex="0"
-    >
-      <svg
-        aria-label="既定のビュー"
-        role="img"
-        focusable="false"
-        class="udlite-icon udlite-icon-medium"
-      >
-        <use xlink:href="#icon-collapse-horizontal"></use>
-      </svg>
-    </button>
-  </div>
+    <!-- 設定 -->
+    <div class="popper--popper--2r2To">
+        <div class="popper--popper--2r2To">
+            <button
+                type="button"
+                aria-haspopup="menu"
+                data-purpose="settings-button"
+                id="control-bar-dropdown-trigger--433"
+                tabindex="0"
+                aria-expanded="false"
+                class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+            >
+                <svg
+                    aria-label="設定"
+                    role="img"
+                    focusable="false"
+                    class="udlite-icon udlite-icon-medium"
+                >
+                    <use xlink:href="#icon-settings"></use>
+                </svg>
+            </button>
+        </div>
+        <div
+            id="popper-content--435"
+            aria-labelledby="control-bar-dropdown-trigger--433"
+            class="popper--popper-content--2tG0H"
+            style="bottom: 100%; right: 0px; margin-bottom: 3.2rem;"
+        >
+            <div class="popper--animation-wrapper--1uUMV">
+                <div
+                    id="control-bar-dropdown-menu--434"
+                    class="control-bar-dropdown--menu--2bFbL control-bar-dropdown--menu-dark--3cSQg"
+                    style="max-height: 43.5881rem;"
+                >
+                    <ul
+                        role="menu"
+                        aria-labelledby="control-bar-dropdown-trigger--433"
+                        data-purpose="settings-menu"
+                        class="unstyled-list udlite-block-list"
+                    >
+                        <li role="none">
+                            <ul
+                                class="unstyled-list"
+                                role="group"
+                                aria-label="解像度"
+                                data-purpose="resolution-menu"
+                            >
+                                <button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        1080p
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        720p
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        576p
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        432p
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="false"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        360p
+                                    </div></button
+                                ><button
+                                    type="button"
+                                    role="menuitemradio"
+                                    tabindex="-1"
+                                    aria-checked="true"
+                                    class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                                >
+                                    <div class="udlite-block-list-item-content">
+                                        Auto
+                                    </div>
+                                </button>
+                            </ul>
+                        </li>
+                        <li role="separator"></li>
+                        <li role="none">
+                            <button
+                                type="button"
+                                role="menuitemcheckbox"
+                                tabindex="-1"
+                                aria-checked="true"
+                                class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                            >
+                                <div class="udlite-block-list-item-content">
+                                    自動再生<span
+                                        class="control-bar-dropdown--checkbox-slider--1LPlb"
+                                    ></span>
+                                </div>
+                            </button>
+                        </li>
+                        <li role="none">
+                            <div
+                                role="menuitem"
+                                tabindex="-1"
+                                disabled=""
+                                data-purpose="download-lecture"
+                                class="video-viewer--download-lecture--2XLXn udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral udlite-text-sm"
+                            >
+                                <div class="udlite-block-list-item-content">
+                                    <div
+                                        class="video-viewer--popover-icon-container--1jxJt popper--popper--2r2To"
+                                    >
+                                        <button
+                                            type="button"
+                                            class="udlite-btn udlite-btn-large udlite-btn-link udlite-heading-md video-viewer--popover-icon-container--1jxJt"
+                                            id="popper-trigger--437"
+                                            tabindex="0"
+                                            aria-describedby="popper-content--438"
+                                        >
+                                            <svg
+                                                aria-label="情報を入手"
+                                                role="img"
+                                                focusable="false"
+                                                class="udlite-icon udlite-icon-small"
+                                            >
+                                                <use
+                                                    xlink:href="#icon-info"
+                                                ></use>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    レクチャーをダウンロード
+                                </div>
+                            </div>
+                        </li>
+                        <li role="none">
+                            <button
+                                type="button"
+                                role="menuitem"
+                                tabindex="-1"
+                                data-purpose="show-keyboard-shortcuts"
+                                class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                            >
+                                <div class="udlite-block-list-item-content">
+                                    キーボードショートカット
+                                </div>
+                            </button>
+                        </li>
+                        <li role="none">
+                            <button
+                                type="button"
+                                role="menuitem"
+                                tabindex="-1"
+                                data-purpose="show-video-info"
+                                class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                            >
+                                <div class="udlite-block-list-item-content">
+                                    コンテンツの情報
+                                </div>
+                            </button>
+                        </li>
+                        <li role="none">
+                            <button
+                                type="button"
+                                role="menuitem"
+                                tabindex="-1"
+                                data-purpose="report-technical-issue"
+                                class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                            >
+                                <div class="udlite-block-list-item-content">
+                                    技術的な問題を報告する
+                                </div>
+                            </button>
+                        </li>
+                        <li role="none">
+                            <button
+                                type="button"
+                                role="menuitem"
+                                tabindex="-1"
+                                data-purpose="report-abuse"
+                                class="udlite-btn udlite-btn-large udlite-btn-ghost udlite-text-sm udlite-block-list-item udlite-block-list-item-small udlite-block-list-item-neutral"
+                            >
+                                <div class="udlite-block-list-item-content">
+                                    違反を報告する
+                                </div>
+                            </button>
+                        </li>
+                        <li role="none"></li>
+                        <li role="none"></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 全画面表示 -->
+    <div class="popper--popper--2r2To">
+        <button
+            type="button"
+            class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+            id="popper-trigger--445"
+            tabindex="0"
+        >
+            <svg
+                aria-label="全画面表示"
+                role="img"
+                focusable="false"
+                class="udlite-icon udlite-icon-medium"
+            >
+                <use xlink:href="#icon-expand-diagonal"></use>
+            </svg>
+        </button>
+    </div>
+    <!-- toggle theatre -->
+    <div class="popper--popper--2r2To">
+        <button
+            type="button"
+            data-purpose="theatre-mode-toggle-button"
+            class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+            id="popper-trigger--1270"
+            tabindex="0"
+        >
+            <svg
+                aria-label="既定のビュー"
+                role="img"
+                focusable="false"
+                class="udlite-icon udlite-icon-medium"
+            >
+                <use xlink:href="#icon-collapse-horizontal"></use>
+            </svg>
+        </button>
+    </div>
 </div>
 ```
