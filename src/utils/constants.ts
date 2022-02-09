@@ -60,66 +60,45 @@ type on = typeof orderNames;
 export type extensionsTypes = keyof et;
 export type orderTypes = keyof on;
 
-//
-// Updated
-//
-export interface iMessage {
-    // from, to propertyは必須とする
-    from: extensionsTypes;
-    to: extensionsTypes;
-    subtitles?: subtitle_piece[];
-    activated?: boolean;
-    //
-    // 複数のorderをorderプロパティに対して送信できるようにした
-    // Objectの場合...
-    //
-    order?: orderTypes[];
-    //   true: English, false: Not English
-    language?: boolean;
-    //   section title
-    title?: string;
-    //   Is message passing done?
-    complete?: boolean;
-
-    //   ADDED
-    //
-    loading?: boolean;
-    loaded?: boolean;
-    correctUrl?: boolean;
-
-    //   DELETED
-    //
-    //   completed?: boolean;
-    //   disconnect?: boolean;
-    //   message?: any;
-}
-
-// sendResponse()に渡す引数の型
-// from, toが必須でないだけ
+// interface of sendResponse parameter
 export interface iResponse {
     // from: extensionsTypes;
     from?: extensionsTypes;
     to?: extensionsTypes;
-    message?: any;
-    //   取得した字幕など
+    // 取得した字幕データ
     subtitles?: subtitle_piece[];
     order?: orderTypes[];
     activated?: boolean;
-    // completed?: boolean;
     language?: boolean;
     title?: string;
-    // disconnect?: boolean;
+    // sendResponseを送信するときに必須
     complete?: boolean;
+    // Udemy講義ページのURLかどうかの判定
     correctUrl?: boolean;
     // 何かしらの成功を示す
     success?: boolean;
     // 失敗の理由を示す
     failureReason?: string;
+    // ExTranscriptが展開されたかどうか
+    isExTranscriptDeployed?: boolean;
+    // Udemy講義ページでトランスクリプトが表示されているかどうか
+    isTranscriptDisplaying?: boolean;
+
+    // --- DUPLICATED ----
+    // disconnect?: boolean;
+    // completed?: boolean;
     // RUN orderに対して、展開がすべて完了したらtrue
-    successDeployment?: boolean;
-    // Udemy講義ページでトランスクリプトが開かれているか
-    transcript?: boolean;
+    // successDeployment?: boolean;
+    // message?: any;
 }
+
+// interface of message parameter
+export interface iMessage extends iResponse {
+    // from, toは必須とする
+    from: extensionsTypes;
+    to: extensionsTypes;
+}
+
 
 // --- constants for controller.js -------------------------------
 

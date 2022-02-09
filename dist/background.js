@@ -13,7 +13,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "progressBase": () => (/* binding */ progressBase),
 /* harmony export */   "modelBase": () => (/* binding */ modelBase)
 /* harmony export */ });
-;
 // base object for State<iProgress>
 const progressBase = {
     isContentScriptInjected: false,
@@ -21,11 +20,8 @@ const progressBase = {
     isControllerInjected: false,
     isSubtitleCapturing: false,
     isSubtitleCaptured: false,
-    isTranscriptRestructured: false
+    isExTranscriptStructured: false,
 };
-;
-;
-;
 // modelBaseは新規プロパティの追加も削除もない
 const modelBase = {
     isContentScriptInjected: false,
@@ -33,10 +29,15 @@ const modelBase = {
     isControllerInjected: false,
     isSubtitleCapturing: false,
     isSubtitleCaptured: false,
-    isTranscriptRestructured: false,
-    isTranscriptON: false,
+    // NOTE: ExTranscriptがONかどうか
+    // RUNした後かどうか、でもある
+    // 表示、非表示は関係ない
+    isExTranscriptStructured: false,
+    // NOTE: 本家トランスクリプトが表示されているかどうか
+    // ONかどうかではなく、表示されているかどうか
+    // これが非表示なら、ExTranscriptも非表示にする
+    isTranscriptDisplaying: false,
     isEnglish: false,
-    isWindowTooSmall: false,
     tabId: null,
     url: null,
     subtitles: null,
@@ -760,9 +761,9 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
     console.log(changeInfo);
     // "https://www.udemy.com/course/*"以外のURLなら無視する
     const _state = state.getInstance();
-    const { url, tabId, isTranscriptRestructured } = yield _state.getState();
+    const { url, tabId, isExTranscriptStructured } = yield _state.getState();
     // 拡張機能が未展開、changeInfo.statusがloadingでないなら無視する
-    if (changeInfo.status !== "loading" || !isTranscriptRestructured)
+    if (changeInfo.status !== "loading" || !isExTranscriptStructured)
         return;
     // 拡張機能が展開済だとして、tabIdが展開済のtabId以外に切り替わったなら無視する
     // return;
@@ -770,7 +771,7 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
         return;
     // 展開中のtabId && chnageInfo.urlがUdemy講義ページ以外のURLならば
     // 拡張機能OFFの処理へ
-    if (isTranscriptRestructured && tabIdUpdatedOccured === tabId) {
+    if (isExTranscriptStructured && tabIdUpdatedOccured === tabId) {
         // おなじURLでのリロードか？
         if (changeInfo.url === undefined) {
             // 拡張機能は何もしない
@@ -873,7 +874,28 @@ const handlerOfContentScriptMessage = (message, sender, sendResponse) => __await
     console.log("[background] Message from contentScript.js");
     try {
         const { order } = message, rest = __rest(message, ["order"]);
-        if (order && order.length) {
+        const _state = state.getInstance();
+        if (order && order.length) { }
+        if (!rest.isTranscriptDisplaying || !rest.language) {
+            // Udemy講義ページでトランスクリプトが非表示になったまたはOFFになった
+            // または字幕が英語以外になったので
+            // ExTranscriptを非表示にする
+            const { isExTranscriptStructured, isTranscriptDisplaying, tabId } = yield _state.getState();
+            // もしもトランスクリプトが表示中であったならば
+            if (isExTranscriptStructured && isTranscriptDisplaying) {
+                yield handlerOfHide(tabId);
+            }
+            // Stateを更新する
+            let s = {};
+            if (rest.isTranscriptDisplaying !== undefined) {
+                s["isTranscriptDisplaying"] = rest.isTranscriptDisplaying;
+            }
+            if (rest.language !== undefined) {
+                s["isEnglish"] = rest.language;
+            }
+            ;
+            yield _state.setState(s);
+            sendResponse({ complete: true });
         }
     }
     catch (err) {
@@ -967,7 +989,7 @@ const handlerOfRun = () => __awaiter(void 0, void 0, void 0, function* () {
         });
         yield _state.setState({ isContentScriptInjected: true });
         // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...実装する技術がない...
-        const { language, transcript } = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
+        const { language, isTranscriptDisplaying } = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendStatus],
@@ -975,11 +997,11 @@ const handlerOfRun = () => __awaiter(void 0, void 0, void 0, function* () {
         // 結果がどうあれ現状の状態を保存する
         yield _state.setState({
             isEnglish: language,
-            isTranscriptON: transcript,
+            isTranscriptDisplaying: isTranscriptDisplaying,
         });
         // 字幕が英語じゃない、またはトランスクリプトがONでないならば
         // キャンセル
-        if (!language || !transcript) {
+        if (!language || !isTranscriptDisplaying) {
             // TODO: 失敗またはキャンセルの方法未定義...
             // ひとまずfalseを返している
             return false;
@@ -1026,7 +1048,7 @@ const handlerOfRun = () => __awaiter(void 0, void 0, void 0, function* () {
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.controller,
             subtitles: s.subtitles,
         });
-        yield _state.setState({ isTranscriptRestructured: true });
+        yield _state.setState({ isExTranscriptStructured: true });
         // ...ここまででエラーがなければ成功
         return true;
     }
@@ -1037,6 +1059,10 @@ const handlerOfRun = () => __awaiter(void 0, void 0, void 0, function* () {
 /**
  * handler of RESET
  * ________________________________________________
+ *
+ * ExTranscriptを再生成する
+ * 本家トランスくリプトが表示されているかどうか、
+ * 字幕が英語かどうかはこの関数内でチェックしない
  *
  * 処理内容：
  *
@@ -1060,7 +1086,7 @@ const handlerOfReset = (tabId, newUrl) => __awaiter(void 0, void 0, void 0, func
         // urlをtabs.onUpdatedが起こったときのURLにする
         yield _state.setState({
             url: newUrl,
-            isTranscriptRestructured: false,
+            isExTranscriptStructured: false,
             isSubtitleCaptured: false,
             isSubtitleCapturing: true,
             // TODO: 既存配列変数を再度空にするのはこの方法で大丈夫なのか?
@@ -1097,7 +1123,7 @@ const handlerOfReset = (tabId, newUrl) => __awaiter(void 0, void 0, void 0, func
             throw new Error("Error: Failed to restructure ExTranscript");
         }
         yield _state.setState({
-            isTranscriptRestructured: true,
+            isExTranscriptStructured: true,
         });
         // ここまで何も問題なければRESET成功
         console.log("[background] RESET Complete!");
@@ -1108,17 +1134,39 @@ const handlerOfReset = (tabId, newUrl) => __awaiter(void 0, void 0, void 0, func
     }
 });
 /**
- * handler of Turn Off function of this extension
+ * handler of hide ExTranscript
  * ________________________________________
+ *
+ * 実際には隠すのではなくて、ExTranscriptを消す
+ *
+ * 発動条件：
+ *
+ * - 本家トランスクリプトが非表示になった
+ * - 英語字幕以外の字幕を選択されてしまった
  *
  *
  * */
-// const handlerOfTrunOff = async (): Promise<boolean> => {
-//   try {
-//   } catch (err) {
-//     console.error(err.message);
-//   }
-// };
+const handlerOfHide = (tabId) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        console.log("[background] Hide ExTranscript...");
+        const _state = state.getInstance();
+        // stateの更新：
+        yield _state.setState({
+            isExTranscriptStructured: false,
+            isSubtitleCaptured: false,
+            // TODO: 既存配列変数を再度空にするのはこの方法で大丈夫なのか?
+            subtitles: [],
+        });
+        // reset 処理: 各content scritpのリセットを実施する
+        const isResetSuccess = yield resetEachContentScript(tabId);
+        if (!isResetSuccess) {
+            throw new Error("Failed to reset");
+        }
+    }
+    catch (err) {
+        console.error(err.message);
+    }
+});
 /**
  *
  *

@@ -23,6 +23,10 @@ export const transcript = {
     movieContainer: 'div.app--curriculum-item--2GBGE',
     // Movie Replay button
     replayButton: "button[data-purpose='video-play-button-initial']",
+
+    // Controlbar
+    controlbar: "div.control-bar--control-bar--MweER[data-purpose='video-controls']",
+    // 
 } as const;
 
 // --- Selectors related to control bar. -------------------------
@@ -50,6 +54,9 @@ export const controlBar = {
     transcript: {
         toggleButton: "button[data-purpose='transcript-toggle']",
     },
+    theatre: {
+        theatreToggle: "button[data-purpose='theatre-mode-toggle-button']"
+    }
 } as const;
 
 

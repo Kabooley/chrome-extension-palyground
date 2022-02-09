@@ -102,10 +102,10 @@ chrome.tabs.onUpdated.addListener(
     console.log(changeInfo);
     // "https://www.udemy.com/course/*"以外のURLなら無視する
     const _state: State<iModel> = state.getInstance();
-    const { url, tabId, isTranscriptRestructured } = await _state.getState();
+    const { url, tabId, isExTranscriptStructured } = await _state.getState();
 
     // 拡張機能が未展開、changeInfo.statusがloadingでないなら無視する
-    if (changeInfo.status !== "loading" || !isTranscriptRestructured) return;
+    if (changeInfo.status !== "loading" || !isExTranscriptStructured) return;
 
     // 拡張機能が展開済だとして、tabIdが展開済のtabId以外に切り替わったなら無視する
     // return;
@@ -113,7 +113,7 @@ chrome.tabs.onUpdated.addListener(
 
     // 展開中のtabId && chnageInfo.urlがUdemy講義ページ以外のURLならば
     // 拡張機能OFFの処理へ
-    if (isTranscriptRestructured && tabIdUpdatedOccured === tabId) {
+    if (isExTranscriptStructured && tabIdUpdatedOccured === tabId) {
       // おなじURLでのリロードか？
       if (changeInfo.url === undefined) {
         // 拡張機能は何もしない
@@ -242,8 +242,27 @@ const handlerOfContentScriptMessage = async (
   console.log("[background] Message from contentScript.js");
   try {
     const { order, ...rest } = message;
-    if(order && order.length){
-      
+    const _state: State<iModel> = state.getInstance();
+    if(order && order.length){}
+    if(!rest.isTranscriptDisplaying || !rest.language) {
+      // Udemy講義ページでトランスクリプトが非表示になったまたはOFFになった
+      // または字幕が英語以外になったので
+      // ExTranscriptを非表示にする
+      const { isExTranscriptStructured, isTranscriptDisplaying, tabId } = await _state.getState();
+      // もしもトランスクリプトが表示中であったならば
+      if(isExTranscriptStructured && isTranscriptDisplaying) {
+        await handlerOfHide(tabId);
+      }
+      // Stateを更新する
+      let s = {};
+      if(rest.isTranscriptDisplaying !== undefined) {
+        s["isTranscriptDisplaying"] = rest.isTranscriptDisplaying
+      }
+      if(rest.language !== undefined) {
+        s["isEnglish"] = rest.language;
+      };
+      await _state.setState(s);
+      sendResponse({complete: true});
     }
   } catch (err) {
     console.error(err.message);
@@ -346,7 +365,7 @@ const handlerOfRun = async (): Promise<boolean> => {
     await _state.setState({ isContentScriptInjected: true });
 
     // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...実装する技術がない...
-    const { language, transcript } = await sendMessageToTabsPromise(tabId, {
+    const { language, isTranscriptDisplaying } = await sendMessageToTabsPromise(tabId, {
       from: extensionNames.background,
       to: extensionNames.contentScript,
       order: [orderNames.sendStatus],
@@ -354,11 +373,11 @@ const handlerOfRun = async (): Promise<boolean> => {
     // 結果がどうあれ現状の状態を保存する
     await _state.setState({
       isEnglish: language,
-      isTranscriptON: transcript,
+      isTranscriptDisplaying: isTranscriptDisplaying,
     });
     // 字幕が英語じゃない、またはトランスクリプトがONでないならば
     // キャンセル
-    if (!language || !transcript) {
+    if (!language || !isTranscriptDisplaying) {
       // TODO: 失敗またはキャンセルの方法未定義...
       // ひとまずfalseを返している
       return false;
@@ -412,7 +431,7 @@ const handlerOfRun = async (): Promise<boolean> => {
       subtitles: s.subtitles,
     });
 
-    await _state.setState({ isTranscriptRestructured: true });
+    await _state.setState({ isExTranscriptStructured: true });
     // ...ここまででエラーがなければ成功
     return true;
   } catch (err) {
@@ -423,6 +442,10 @@ const handlerOfRun = async (): Promise<boolean> => {
 /**
  * handler of RESET
  * ________________________________________________
+ * 
+ * ExTranscriptを再生成する
+ * 本家トランスくリプトが表示されているかどうか、
+ * 字幕が英語かどうかはこの関数内でチェックしない
  *
  * 処理内容：
  *
@@ -449,7 +472,7 @@ const handlerOfReset = async (
     // urlをtabs.onUpdatedが起こったときのURLにする
     await _state.setState({
       url: newUrl,
-      isTranscriptRestructured: false,
+      isExTranscriptStructured: false,
       isSubtitleCaptured: false,
       isSubtitleCapturing: true,
       // TODO: 既存配列変数を再度空にするのはこの方法で大丈夫なのか?
@@ -493,7 +516,7 @@ const handlerOfReset = async (
     }
 
     await _state.setState({
-      isTranscriptRestructured: true,
+      isExTranscriptStructured: true,
     });
 
     // ここまで何も問題なければRESET成功
@@ -505,17 +528,38 @@ const handlerOfReset = async (
 };
 
 /**
- * handler of Turn Off function of this extension
+ * handler of hide ExTranscript
  * ________________________________________
  *
- *
+ * 実際には隠すのではなくて、ExTranscriptを消す
+ * 
+ * 発動条件：
+ * 
+ * - 本家トランスクリプトが非表示になった
+ * - 英語字幕以外の字幕を選択されてしまった
+ * 
+ * 
  * */
-// const handlerOfTrunOff = async (): Promise<boolean> => {
-//   try {
-//   } catch (err) {
-//     console.error(err.message);
-//   }
-// };
+const handlerOfHide = async (tabId: number): Promise<void> => {
+  try {
+    console.log("[background] Hide ExTranscript...");
+    const _state: State<iModel> = state.getInstance();
+    // stateの更新：
+    await _state.setState({
+      isExTranscriptStructured: false,
+      isSubtitleCaptured: false,
+      // TODO: 既存配列変数を再度空にするのはこの方法で大丈夫なのか?
+      subtitles: [],
+    });
+    // reset 処理: 各content scritpのリセットを実施する
+    const isResetSuccess: boolean = await resetEachContentScript(tabId);
+    if (!isResetSuccess) {
+      throw new Error("Failed to reset");
+    }
+  } catch (err) {
+    console.error(err.message);
+  }
+};
 
 /**
  *

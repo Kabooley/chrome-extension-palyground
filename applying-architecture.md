@@ -2143,7 +2143,104 @@ controller.js はそれに従うだけ
 必ずコントロールバーのトランスクリプト・トグルボタンの表示・非表示と
 連動している
 
-ならば...
+OFF にすべき部分と稼働を残す部分を切り離さないといかん
+
+background.ts
+State インスタンスは残す
+State プロパティはいくつか初期化する
+subtitle データは消す(非表示から再表示の間に別字幕になる可能性があるから)
+
+```TypeScript
+// State<iModel> 初期値
+export const modelBase: iModel = {
+    isContentScriptInjected: false,
+    isCaptureSubtitleInjected: false,
+    isControllerInjected: false,
+    isSubtitleCapturing: false,
+    isSubtitleCaptured: false,
+    // NOTE: ExTranscriptがONかどうか
+    // RUNした後かどうか、でもある
+    // 表示、非表示は関係ない
+    isExTranscriptStructured: false,
+    // NOTE: 本家トランスクリプトが表示されているかどうか
+    // ONかどうかではなく、表示されているかどうか
+    // これが非表示なら、ExTranscriptも非表示にする
+    isTranscriptDisplaying: false,
+    isEnglish: false,
+    tabId: null,
+    url: null,
+    subtitles: null,
+} as const;
+
+
+// State<iModel> RUNした直後
+export const modelBase: iModel = {
+    isContentScriptInjected: true,
+    isCaptureSubtitleInjected: true,
+    isControllerInjected: true,
+    isSubtitleCapturing: false,
+    isSubtitleCaptured: true,
+    isExTranscriptStructured: true,
+    isTranscriptDisplaying: true,
+    isEnglish: true,
+    tabId: 1,
+    url: "https://...",
+    subtitles: [
+      /* subtitles data */
+    ],
+} as const;
+
+
+// State<iModel>
+// RUN以降、トランスクリプトが非表示になり、
+// ExTranscriptを一時非表示にしたとき
+export const modelBase: iModel = {
+  // 当然だけど、content scriptは一度injectしたらはがせない
+  // なのでinjectedはすべてtrue
+    isContentScriptInjected: true,
+    isCaptureSubtitleInjected: true,
+    isControllerInjected: true,
+    isSubtitleCapturing: false,
+    // 字幕データをリセットするのでfalse
+    isSubtitleCaptured: false,
+    // ExTranscriptはONのままである
+    isExTranscriptStructured: true,
+    // ExTranscriptは非表示なので
+    isTranscriptDisplaying: false,
+    isEnglish: true,
+    tabId: 1,
+    url: "https://...",
+    // 字幕データは再表示時に再取得するので
+    // 空にする
+    subtitles: [],
+} as const;
+
+// State<iModel>
+// RUN以降、トランスクリプトは表示中だけど
+// 字幕を英語以外にされたとき
+export const modelBase: iModel = {
+  // 当然だけど、content scriptは一度injectしたらはがせない
+  // なのでinjectedはすべてtrue
+    isContentScriptInjected: true,
+    isCaptureSubtitleInjected: true,
+    isControllerInjected: true,
+    isSubtitleCapturing: false,
+    // 字幕データをリセットするのでfalse
+    isSubtitleCaptured: false,
+    // ExTranscriptはONのままであるが...
+    isExTranscriptStructured: true,
+    // 拡張機能は英語以外に対応しないのでやはり
+    // ExTranscriptは非表示にする
+    isTranscriptDisplaying: false,
+    // 英語じゃないので
+    isEnglish: false,
+    tabId: 1,
+    url: "https://...",
+    // 字幕データは再表示時に再取得するので
+    // 空にする
+    subtitles: [],
+} as const;
+```
 
 ##### コントロールバーを監視する機能を付ければいいのでは？
 
@@ -2159,7 +2256,7 @@ controller.js はそれに従うだけ
 const controlBarSelector = 'div.control-bar--control-bar--MweER[data-purpose="video-controls"]';
 const controlbar = document.querySelector<HTMLElement>(controlBarSelector);
 
-// TODO: 検討中：click or mouseup 
+// TODO: 検討中：click or mouseup
 controlbar.addEventListener("click", handlerOfControlbar);
 
 // Clickイベント
@@ -2176,7 +2273,7 @@ const handlerOfControlbar = function (ev: MouseEvent): void {
       if(path.includes(/* toggle-transcript-button */) || path.includes(/* toggle-theatre-button */)){
           // トランスクリプトを表示したまたは消えた可能性がある
           // トランスクリプトがあるかどうかだけを調べる
-          
+
           const toggleTranscript: HTMLElement = document.querySelector<HTMLElement>(/* toggle-transcript-selector*/);
           if(!toggeleTranscript) {
             // トランスクリプト消えた
