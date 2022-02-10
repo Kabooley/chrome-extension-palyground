@@ -528,7 +528,7 @@ const sendToBackground = (order) => __awaiter(void 0, void 0, void 0, function* 
         to: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.background,
     };
     if (isOpened !== undefined) {
-        message['transcriptExpanded'] = isOpened;
+        message['isTranscriptDisplaying'] = isOpened;
     }
     if (isEnglish !== undefined) {
         message['language'] = isEnglish;
@@ -704,8 +704,9 @@ const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
                     console.log(record.addedNodes);
                     record.addedNodes.forEach((node) => {
                         const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute('data-purpose');
-                        if (dataPurpose && dataPurpose === "transcript-toggle") {
-                            console.log("[contentScript] Added Transcript Toggle Button");
+                        if (dataPurpose &&
+                            dataPurpose === 'transcript-toggle') {
+                            console.log('[contentScript] Added Transcript Toggle Button');
                             sendToBackground({ isOpened: isTranscriptOpen() });
                         }
                     });
@@ -714,8 +715,9 @@ const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
                     record.removedNodes.forEach((node) => {
                         // これで取得できた！！！
                         const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute('data-purpose');
-                        if (dataPurpose && dataPurpose === "transcript-toggle") {
-                            console.log("[contentScript] Removed Transcript Toggle Button");
+                        if (dataPurpose &&
+                            dataPurpose === 'transcript-toggle') {
+                            console.log('[contentScript] Removed Transcript Toggle Button');
                             sendToBackground({ isOpened: false });
                         }
                     });
@@ -731,7 +733,7 @@ const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 // Entry point
-// 
+//
 (function () {
     initialize();
 })();

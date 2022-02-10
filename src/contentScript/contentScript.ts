@@ -117,11 +117,10 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-
 /***
  *  Sends status of injected page to background
  * @param order {object}
- * */ 
+ * */
 const sendToBackground = async (order: {
     isOpened?: boolean;
     isEnglish?: boolean;
@@ -134,7 +133,7 @@ const sendToBackground = async (order: {
     };
 
     if (isOpened !== undefined) {
-        message['transcriptExpanded'] = isOpened;
+        message['isTranscriptDisplaying'] = isOpened;
     }
     if (isEnglish !== undefined) {
         message['language'] = isEnglish;
@@ -160,8 +159,8 @@ const sendToBackground = async (order: {
 
 /****
  *  Handler of Click Event on Controlbar
- * 
- * setTimeout() callback will be fired after click event has been done immediately. 
+ *
+ * setTimeout() callback will be fired after click event has been done immediately.
  *
  * */
 const handlerOfControlbar = function (ev: PointerEvent): void {
@@ -206,7 +205,6 @@ const handlerOfControlbar = function (ev: PointerEvent): void {
     console.log('[contentScript] controlbar clicke event done');
 };
 
-
 /**
  * Callback of ClickEvent on CC Popup MENU
  *
@@ -232,7 +230,6 @@ const ccPopupMenuClickHandler = (ev: PointerEvent): void => {
         document.removeEventListener('click', ccPopupMenuClickHandler, true);
     }
 };
-
 
 /**
  * Check Transcript is opened or not.
@@ -290,13 +287,12 @@ const isSubtitleEnglish = (): boolean => {
     else return false;
 };
 
-
 /****
  *  Immediately initializes after injected
- * 
+ *
  *  set up controlbar click event listener.
  *  set up MutationObserver of controlbar.
- * */ 
+ * */
 const initialize = async (): Promise<void> => {
     console.log('CONTENT SCRIPT INITIALIZING...');
     try {
@@ -318,7 +314,6 @@ const initialize = async (): Promise<void> => {
             subtree: false,
         };
 
-
         /*
             NOTE: JavaScript Tips: NodeからElementを取得して、datasetを取得する方法
 
@@ -338,7 +333,7 @@ const initialize = async (): Promise<void> => {
                                 'data-purpose'
                             )
                         );
-        */ 
+        */
         const moCallback = (mr: MutationRecord[]): void => {
             let guard: boolean = false;
             mr.forEach((record) => {
@@ -354,9 +349,14 @@ const initialize = async (): Promise<void> => {
                             node.childNodes[0].parentElement.firstElementChild.getAttribute(
                                 'data-purpose'
                             );
-                        if(dataPurpose && dataPurpose === "transcript-toggle"){
-                            console.log("[contentScript] Added Transcript Toggle Button");
-                            sendToBackground({isOpened: isTranscriptOpen()});
+                        if (
+                            dataPurpose &&
+                            dataPurpose === 'transcript-toggle'
+                        ) {
+                            console.log(
+                                '[contentScript] Added Transcript Toggle Button'
+                            );
+                            sendToBackground({ isOpened: isTranscriptOpen() });
                         }
                     });
 
@@ -368,10 +368,15 @@ const initialize = async (): Promise<void> => {
                             node.childNodes[0].parentElement.firstElementChild.getAttribute(
                                 'data-purpose'
                             );
-                            if(dataPurpose && dataPurpose === "transcript-toggle"){
-                                console.log("[contentScript] Removed Transcript Toggle Button");
-                                sendToBackground({isOpened: false});
-                            }
+                        if (
+                            dataPurpose &&
+                            dataPurpose === 'transcript-toggle'
+                        ) {
+                            console.log(
+                                '[contentScript] Removed Transcript Toggle Button'
+                            );
+                            sendToBackground({ isOpened: false });
+                        }
                     });
                 }
             });
@@ -386,7 +391,7 @@ const initialize = async (): Promise<void> => {
 };
 
 // Entry point
-// 
+//
 (function () {
     initialize();
 })();
@@ -561,7 +566,6 @@ const initialize = async (): Promise<void> => {
 //     latest.getAttribute('aria-expanded') === 'true'
 //         ? sendToBackground({ isOpened: false })
 //         : sendToBackground({ isOpened: true });
-
 
 // Transcriptが消えるブラウザウィンドウX軸の境界値
 // const TOGGLE_VANISH_BOUNDARY: number = 584;

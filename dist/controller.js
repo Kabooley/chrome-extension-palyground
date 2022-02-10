@@ -1400,8 +1400,8 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 const statusBase = {
     // position, viewの初期値は意味をなさず、
     // すぐに変更されることが前提である
-    position: _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.sidebar,
-    view: _utils_constants__WEBPACK_IMPORTED_MODULE_3__.viewStatusNames.wideView,
+    position: null,
+    view: null,
     highlight: null,
     ExHighlight: null,
     indexList: [],

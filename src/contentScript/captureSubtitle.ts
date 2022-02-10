@@ -8,9 +8,10 @@
  *  1. 要請が来るたび、字幕を取得し、整形しなおす
  *  2. 整形字幕データを送信する
  *
- * リセット処理は必要ない：
+ * リセット処理：
+ *  必要ない
  *  order.resetに対応するときにおいて、
- *  DOM amnipulationは関数内部で実行時のみに行われるので
+ *  DOM Manipulationは関数内部で実行時のみに行われるので
  *  イベントリスナなど付け替える必要がないため
  *
  *
@@ -146,7 +147,6 @@ const subtitlePiecesToChunks = function (
  *
  *
  * */
-
 const mainProcess = (): subtitle_piece[] => {
     const subtitlePieces = capturingSubtitle();
     const chunks: subtitle_piece[] = subtitlePiecesToChunks(subtitlePieces);

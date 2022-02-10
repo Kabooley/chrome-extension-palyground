@@ -76,8 +76,8 @@ interface iSubtitles {
 const statusBase: iController = {
     // position, viewの初期値は意味をなさず、
     // すぐに変更されることが前提である
-    position: positionStatus.sidebar,
-    view: viewStatusNames.wideView,
+    position: null,
+    view: null,
     highlight: null,
     ExHighlight: null,
     indexList: [],
