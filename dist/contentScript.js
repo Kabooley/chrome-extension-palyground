@@ -418,13 +418,17 @@ ___________________________________________________________
     2. Udemy講義ページの字幕の言語が英語になっているか検知する
     3. 1, 2を調査して必要に応じてbackground scriptへ送信する
 
-Inject:
+Injectタイミング:
     動的content scriptとして、
     Udemyの講義ページURLへマッチするwebページにおいて、
     POPUP上の実行ボタンが押されたらinjectされる
 
 通信に関して：
     single message passing機能でbackground.jsと通信する
+
+
+handlerOfControlbar()でコントロールバー上のクリックイベントを監視する
+moControlbarでコントロールバー上でトランスクリプト・トグルボタンが現れたか消えたかを監視する
 
 TODO:
 - ブラウザサイズが小さすぎると、トランスクリプトが表示されないことへの対応
@@ -453,12 +457,6 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 //
 // --- GLOBALS ---------------------------------------------------
 //
-// Transcriptが消えるブラウザウィンドウX軸の境界値
-// const TOGGLE_VANISH_BOUNDARY: number = 584;
-// Transcriptがブラウザサイズによって消えているのかどうか
-// let isWindowTooSmall: boolean;
-// windowのonResizeイベント発火遅延用
-// let timerQueue: NodeJS.Timeout = null;
 let moControlbar;
 //
 // --- chrome API Listeners -------------------------------------
@@ -481,8 +479,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaite
         from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
         to: from,
     };
-    if (to !== _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript ||
-        from !== _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.background)
+    if (to !== _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript)
         return;
     try {
         // ORDERS:
@@ -491,9 +488,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaite
             if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.sendStatus)) {
                 console.log('Order: send status');
                 const isEnglish = isSubtitleEnglish();
-                // const isOpen: boolean = isWindowTooSmall
-                //     ? false
-                //     : isTranscriptOpen();
                 // トランスクリプトボタンがコントロールバー上にある
                 // かつ
                 // トランスクリプトが表示されてる
@@ -522,12 +516,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaite
         console.error(err.message);
     }
 }));
-/*
-    sendToBackground()
-    _________________________________________
-    background.tsへメッセージを送信する
-
-*/
+/***
+ *  Sends status of injected page to background
+ * @param order {object}
+ * */
 const sendToBackground = (order) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('SENDING MESSAGE TO BACKGROUND');
     const { isOpened, isEnglish } = order;
@@ -561,6 +553,8 @@ const sendToBackground = (order) => __awaiter(void 0, void 0, void 0, function* 
 /****
  *  Handler of Click Event on Controlbar
  *
+ * setTimeout() callback will be fired after click event has been done immediately.
+ *
  * */
 const handlerOfControlbar = function (ev) {
     console.log('[contentScript] controlbar clicked');
@@ -569,21 +563,22 @@ const handlerOfControlbar = function (ev) {
     const transcriptToggle = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
     const theaterToggle = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.theatre.theatreToggle);
     const ccPopupButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.popupButton);
-    // TODO: <確認>この遅延装置はclickイベントが完了した後に発火できているか？
-    // clickイベント完了後に実行したい事柄
+    // clickイベント完了後に実行したい事柄をsetTimeoutで実行する
+    // 動作確認済
     setTimeout(function () {
+        console.log('fire after click event has been done');
         // トグルボタンが押されたら
         if (path.includes(transcriptToggle) || path.includes(theaterToggle)) {
             // トランスクリプト・トグルボタンがあるかどうかを確認し、
             // あれば開かれているか調査、
             // なければトランスクリプト非表示として判定する
-            let isOpen;
+            let result;
             const t = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
             if (!t)
-                isOpen = false;
+                result = false;
             else
-                isOpen = isTranscriptOpen();
-            sendToBackground({ isOpened: isOpen });
+                result = isTranscriptOpen();
+            sendToBackground({ isOpened: result });
         }
         // CC POUPボタンが押されたら
         if (path.includes(ccPopupButton)) {
@@ -591,7 +586,263 @@ const handlerOfControlbar = function (ev) {
             ccPopupMenuClickHandler(ev);
         }
     }, 200);
+    console.log('[contentScript] controlbar clicke event done');
 };
+/**
+ * Callback of ClickEvent on CC Popup MENU
+ *
+ * If user click outside of menu,
+ * check subtitle has been changed.
+ * If so, notify to background and remove listener from document.
+ * Click inside do nothing.
+ * */
+const ccPopupMenuClickHandler = (ev) => {
+    const menu = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuListParent);
+    const path = ev.composedPath();
+    if (path.includes(menu)) {
+        // menuの内側でclickが発生した
+        // 何もしない
+        console.log('clicked inside');
+    }
+    else {
+        // menuの外側でclickが発生した
+        const r = isSubtitleEnglish();
+        sendToBackground({ isEnglish: r });
+        document.removeEventListener('click', ccPopupMenuClickHandler, true);
+    }
+};
+/**
+ * Check Transcript is opened or not.
+ *
+ * @returns {boolean}: true for open, false for not open.
+ *
+ * Get DOM everytime this function invoked.
+ * */
+const isTranscriptOpen = () => {
+    const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
+    return toggleButton.getAttribute('aria-expanded') === 'true' ? true : false;
+};
+/**
+ * Check Subtitle language is English or not.
+ *
+ * @returns {boolean}: true if it's English, false if not.
+ *
+ * Get DOM everytime this function invoked.
+ */
+const isSubtitleEnglish = () => {
+    const listParent = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuListParent);
+    const checkButtons = listParent.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuCheckButtons);
+    const menuList = listParent.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuList);
+    let counter = 0;
+    let i = null;
+    const els = Array.from(checkButtons);
+    for (const btn of els) {
+        if (btn.getAttribute('aria-checked') === 'true') {
+            i = counter;
+            break;
+        }
+        counter++;
+    }
+    if (i === null) {
+        throw new Error('Error: [isSubtitleEnglish()] Something went wrong but No language is selected');
+    }
+    const currentLanguage = Array.from(menuList)[i].innerText;
+    if (currentLanguage.includes('English') || currentLanguage.includes('英語'))
+        return true;
+    else
+        return false;
+};
+/****
+ *  Immediately initializes after injected
+ *
+ *  set up controlbar click event listener.
+ *  set up MutationObserver of controlbar.
+ * */
+const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('CONTENT SCRIPT INITIALIZING...');
+    try {
+        // --- Set up listeners ---
+        // click event on cotrolbar
+        const controlbar = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.controlbar);
+        controlbar.addEventListener('click', handlerOfControlbar);
+        // --- Set up MutationObserver for controlbar ---
+        // コントロールバーの子要素だけ追加されたのか削除されたのか知りたいので
+        // childListだけtrueにする
+        const config = {
+            attributes: false,
+            childList: true,
+            subtree: false,
+        };
+        /*
+            NOTE: JavaScript Tips: NodeからElementを取得して、datasetを取得する方法
+
+                    record.removedNodes.forEach((node) => {
+                        console.log(node);
+                        console.log(node.childNodes[0]);
+                        console.log(node.childNodes[0].parentElement);
+                        console.log(
+                            node.childNodes[0].parentElement.firstElementChild
+                        );
+                        console.log(
+                            node.childNodes[0].parentElement.firstElementChild
+                                .attributes
+                        );
+                        console.log(
+                            node.childNodes[0].parentElement.firstElementChild.getAttribute(
+                                'data-purpose'
+                            )
+                        );
+        */
+        const moCallback = (mr) => {
+            let guard = false;
+            mr.forEach((record) => {
+                if (record.type === 'childList' && !guard) {
+                    // NOTE: MutationRecord[0]だけしらべればいいので1週目だけでループを止める
+                    // じゃぁforEach()を使うなという話ではあるけど...
+                    guard = true;
+                    console.log('Added nodes');
+                    console.log(record.addedNodes);
+                    record.addedNodes.forEach((node) => {
+                        const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute('data-purpose');
+                        if (dataPurpose && dataPurpose === "transcript-toggle") {
+                            console.log("[contentScript] Added Transcript Toggle Button");
+                            sendToBackground({ isOpened: isTranscriptOpen() });
+                        }
+                    });
+                    console.log('Removed nodes');
+                    console.log(record.removedNodes);
+                    record.removedNodes.forEach((node) => {
+                        // これで取得できた！！！
+                        const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute('data-purpose');
+                        if (dataPurpose && dataPurpose === "transcript-toggle") {
+                            console.log("[contentScript] Removed Transcript Toggle Button");
+                            sendToBackground({ isOpened: false });
+                        }
+                    });
+                }
+            });
+        };
+        moControlbar = new MutationObserver(moCallback);
+        moControlbar.observe(controlbar, config);
+        console.log('content script initialize has been done');
+    }
+    catch (err) {
+        console.error(err.message);
+    }
+});
+// Entry point
+// 
+(function () {
+    initialize();
+})();
+// --- LEGACY CODE ------------------------------------------------
+// const initialize = async (): Promise<void> => {
+//   console.log("CONTENT SCRIPT INITIALIZING...");
+//   try {
+//     // Set up listeners
+//     const w: number = document.documentElement.clientWidth;
+//     if (w > TOGGLE_VANISH_BOUNDARY) {
+//       const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
+//         selectors.controlBar.transcript.toggleButton
+//       );
+//       toggleButton.addEventListener(
+//         "click",
+//         transcriptToggleButtonHandler,
+//         false
+//       );
+//       isWindowTooSmall = false;
+//     } else {
+//       isWindowTooSmall = true;
+//     }
+//     window.addEventListener("resize", function () {
+//       clearTimeout(timerQueue);
+//       timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
+//     });
+//     const ccButton: HTMLElement = document.querySelector<HTMLElement>(
+//       selectors.controlBar.cc.popupButton
+//     );
+//     ccButton.addEventListener("click", ccPopupButtonHandler, true);
+//     console.log("content script initialize has been done");
+//   } catch (err) {
+//     console.error(err.message);
+//   }
+// };
+// -- LEGACY CODE -----------------------------------------------
+// THESE selectors MOVED TO './constansInContentScrip/ts'
+// 12/28
+//
+// const _selectors = {
+//     controlBar: {
+//         // "closed captioning"
+//         cc: {
+//             // 字幕メニューpopupボタン
+//             popupButton: "button[data-purpose='captions-dropdown-button']",
+//             // textContentで取得できる言語を取得可能
+//             //   languageList:
+//             //     "button.udlite-btn.udlite-btn-large.udlite-btn-ghost.udlite-text-sm.udlite-block-list-item.udlite-block-list-item-small.udlite-block-list-item-neutral > div.udlite-block-list-item-content",
+//             //
+//             // 言語リストを取得するには一旦languageButtonsを取得してからそれからquerySelectorする
+//             // いらないかも
+//             menuCheckButtons: 'button',
+//             menuList: '.udlite-block-list-item-content',
+//             menuListParent:
+//                 "ul[role='menu'][data-purpose='captions-dropdown-menu']",
+//             // 上記のセレクタのラッパーボタン。
+//             // 属性`aria-checked`で選択されているかどうかわかる
+//             checkButtons:
+//                 'button.udlite-btn.udlite-btn-large.udlite-btn-ghost.udlite-text-sm.udlite-block-list-item.udlite-block-list-item-small.udlite-block-list-item-neutral',
+//         },
+//         transcript: {
+//             toggleButton: "button[data-purpose='transcript-toggle']",
+//         },
+//     },
+//     sectionTitle: 'div.udlite-text-md.video-viewer--title-overlay--OoQ6e',
+// };
+// const initialize = (): void => {
+//     // Set up transcript check
+//     const isOpen: boolean = isTranscriptOpen();
+//     sendToBackground({ isOpened: isOpen });
+//     const e: HTMLElement = document.querySelector<HTMLElement>(
+//         SELECTORS.controlBar.transcript.toggleButton
+//     );
+//     e.addEventListener('click', transcriptToggleButtonHandler, false);
+//     // Set up language check
+//     const isEnglish: boolean = isSubtitleEnglish();
+//     sendToBackground({ isEnglish: isEnglish });
+//     const b: HTMLElement = document.querySelector<HTMLElement>(
+//         SELECTORS.controlBar.cc.popupButton
+//     );
+//     b.addEventListener('click', ccPopupButtonHandler, true);
+//     // Send section title to background
+//     sendTitle();
+// };
+/**
+ * Callback of ClickEvent on CC Popup BUTTON
+ *
+ * Check if ClosedCaption Popup menu is opened.
+ * If it's opened, then add onClick event listener to document
+ * to detect subtitle change.
+ *
+ * NOTE: 変化タイミングの誤差のため"aria-expanded"がfalseの時にイベントリスナを取り付ける
+ * */
+// const ccPopupButtonHandler = (ev: MouseEvent): void => {
+//     // popupメニューが開かれているかチェック
+//     // 開かれているならclickリスナをメニューラッパーとdocumentに着ける
+//     // とにかく
+//     // メニューの外側をクリックしたらすべてのリスナをremoveする
+//     console.log('CC popup button was clicked');
+//     // is it opening?
+//     const e: HTMLElement = document.querySelector<HTMLElement>(
+//         selectors.controlBar.cc.popupButton
+//     );
+//     // aria-expanded === trueのときになぜかfalseを返すので
+//     // 反対の結果を送信する
+//     if (e.getAttribute('aria-expanded') !== 'true') {
+//         // CC popupメニューが表示された
+//         document.removeEventListener('click', ccPopupMenuClickHandler, true);
+//         document.addEventListener('click', ccPopupMenuClickHandler, true);
+//     }
+// };
 /**
  * ブラウザウィンドウがX軸方向に境界線をまたいだときだけ機能する
  *
@@ -643,244 +894,12 @@ const handlerOfControlbar = function (ev) {
 //     latest.getAttribute('aria-expanded') === 'true'
 //         ? sendToBackground({ isOpened: false })
 //         : sendToBackground({ isOpened: true });
-// };
-/**
- * Callback of ClickEvent on CC Popup MENU
- *
- * If user click outside of menu,
- * check subtitle has been changed.
- * If so, notify to background and remove listener from document.
- * Click inside do nothing.
- * */
-const ccPopupMenuClickHandler = (ev) => {
-    const menu = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuListParent);
-    const path = ev.composedPath();
-    if (path.includes(menu)) {
-        // menuの内側でclickが発生した
-        // 何もしない
-        console.log('clicked inside');
-    }
-    else {
-        // menuの外側でclickが発生した
-        const r = isSubtitleEnglish();
-        sendToBackground({ isEnglish: r });
-        document.removeEventListener('click', ccPopupMenuClickHandler, true);
-    }
-};
-/**
- * Callback of ClickEvent on CC Popup BUTTON
- *
- * Check if ClosedCaption Popup menu is opened.
- * If it's opened, then add onClick event listener to document
- * to detect subtitle change.
- *
- * NOTE: 変化タイミングの誤差のため"aria-expanded"がfalseの時にイベントリスナを取り付ける
- * */
-// const ccPopupButtonHandler = (ev: MouseEvent): void => {
-//     // popupメニューが開かれているかチェック
-//     // 開かれているならclickリスナをメニューラッパーとdocumentに着ける
-//     // とにかく
-//     // メニューの外側をクリックしたらすべてのリスナをremoveする
-//     console.log('CC popup button was clicked');
-//     // is it opening?
-//     const e: HTMLElement = document.querySelector<HTMLElement>(
-//         selectors.controlBar.cc.popupButton
-//     );
-//     // aria-expanded === trueのときになぜかfalseを返すので
-//     // 反対の結果を送信する
-//     if (e.getAttribute('aria-expanded') !== 'true') {
-//         // CC popupメニューが表示された
-//         document.removeEventListener('click', ccPopupMenuClickHandler, true);
-//         document.addEventListener('click', ccPopupMenuClickHandler, true);
-//     }
-// };
-/**
- * Check Transcript is open or not.
- *
- * @returns {boolean}: true for open, false for not open.
- *
- * Get DOM everytime this function invoked.
- * */
-const isTranscriptOpen = () => {
-    const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
-    return toggleButton.getAttribute('aria-expanded') === 'true' ? true : false;
-};
-/**
- * Check Subtitle language is English or not.
- *
- * @returns {boolean}: true if it's English, false if not.
- *
- * Get DOM everytime this function invoked.
- */
-const isSubtitleEnglish = () => {
-    const listParent = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuListParent);
-    const checkButtons = listParent.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuCheckButtons);
-    const menuList = listParent.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuList);
-    let counter = 0;
-    let i = null;
-    const els = Array.from(checkButtons);
-    for (const btn of els) {
-        if (btn.getAttribute('aria-checked') === 'true') {
-            i = counter;
-            break;
-        }
-        counter++;
-    }
-    if (i === null) {
-        throw new Error('Error: [isSubtitleEnglish()] Something went wrong but No language is selected');
-    }
-    const currentLanguage = Array.from(menuList)[i].innerText;
-    if (currentLanguage.includes('English') || currentLanguage.includes('英語'))
-        return true;
-    else
-        return false;
-};
-/*
-    initialize()
-    _____________________________________________
-
-    Inject時に実行する処理
-*/
-const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('CONTENT SCRIPT INITIALIZING...');
-    try {
-        // Set up listeners
-        // click event on cotrolbar
-        const controlbar = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.controlbar);
-        controlbar.addEventListener('click', handlerOfControlbar);
-        // MutationObserver for controlbar
-        // コントロールバーの子要素だけ追加されたのか削除されたのか知りたいので
-        // childListだけtrueにする
-        const config = {
-            attributes: false,
-            childList: true,
-            subtree: false,
-        };
-        const moCallback = (mr) => {
-            let guard = false;
-            mr.forEach((record) => {
-                if (record.type === 'childList' && !guard) {
-                    // 子要素の何が追加されたのか、削除されたのか調査する
-                    guard = true;
-                    console.log('Added nodes');
-                    console.log(record.addedNodes);
-                    console.log('Removed nodes');
-                    console.log(record.removedNodes);
-                    // if(/* record.addedNodes の子要素にトランスクリプト・トグルボタンが含まれているならば */) {
-                    //   // トランスクリプトが再表示された可能性がある
-                    //   if(/* もしもトランスクリプトDOMが取得で来たら*/){
-                    //     sendToBackground({ isOpened: true });
-                    //   }
-                    // }
-                    // if(/*record.removedNodesの子要素にトランスクリプト・トグルボタンが含まれているならば*/){
-                    //   // トランスクリプトが非表示になった可能性がある
-                    //   // いずれにしろ送信する
-                    //     sendToBackground({ isOpened: false });
-                    // }
-                    // if(record.addedNodes === ccPopupMenu){
-                    //   // いまのところ出番がない...
-                    // }
-                    // if(record.addedNodes === toggleTheatre){
-                    //   // いまのところ出番がない...
-                    // }
-                }
-            });
-        };
-        moControlbar = new MutationObserver(moCallback);
-        moControlbar.observe(controlbar, config);
-        console.log('content script initialize has been done');
-    }
-    catch (err) {
-        console.error(err.message);
-    }
-});
-// const initialize = async (): Promise<void> => {
-//   console.log("CONTENT SCRIPT INITIALIZING...");
-//   try {
-//     // Set up listeners
-//     const w: number = document.documentElement.clientWidth;
-//     if (w > TOGGLE_VANISH_BOUNDARY) {
-//       const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
-//         selectors.controlBar.transcript.toggleButton
-//       );
-//       toggleButton.addEventListener(
-//         "click",
-//         transcriptToggleButtonHandler,
-//         false
-//       );
-//       isWindowTooSmall = false;
-//     } else {
-//       isWindowTooSmall = true;
-//     }
-//     window.addEventListener("resize", function () {
-//       clearTimeout(timerQueue);
-//       timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
-//     });
-//     const ccButton: HTMLElement = document.querySelector<HTMLElement>(
-//       selectors.controlBar.cc.popupButton
-//     );
-//     ccButton.addEventListener("click", ccPopupButtonHandler, true);
-//     console.log("content script initialize has been done");
-//   } catch (err) {
-//     console.error(err.message);
-//   }
-// };
-/*
-    main process
-    _________________________________________________
-*/
-(function () {
-    initialize();
-})();
-// -- LEGACY CODE -----------------------------------------------
-// THESE selectors MOVED TO './constansInContentScrip/ts'
-// 12/28
-//
-// const _selectors = {
-//     controlBar: {
-//         // "closed captioning"
-//         cc: {
-//             // 字幕メニューpopupボタン
-//             popupButton: "button[data-purpose='captions-dropdown-button']",
-//             // textContentで取得できる言語を取得可能
-//             //   languageList:
-//             //     "button.udlite-btn.udlite-btn-large.udlite-btn-ghost.udlite-text-sm.udlite-block-list-item.udlite-block-list-item-small.udlite-block-list-item-neutral > div.udlite-block-list-item-content",
-//             //
-//             // 言語リストを取得するには一旦languageButtonsを取得してからそれからquerySelectorする
-//             // いらないかも
-//             menuCheckButtons: 'button',
-//             menuList: '.udlite-block-list-item-content',
-//             menuListParent:
-//                 "ul[role='menu'][data-purpose='captions-dropdown-menu']",
-//             // 上記のセレクタのラッパーボタン。
-//             // 属性`aria-checked`で選択されているかどうかわかる
-//             checkButtons:
-//                 'button.udlite-btn.udlite-btn-large.udlite-btn-ghost.udlite-text-sm.udlite-block-list-item.udlite-block-list-item-small.udlite-block-list-item-neutral',
-//         },
-//         transcript: {
-//             toggleButton: "button[data-purpose='transcript-toggle']",
-//         },
-//     },
-//     sectionTitle: 'div.udlite-text-md.video-viewer--title-overlay--OoQ6e',
-// };
-// const initialize = (): void => {
-//     // Set up transcript check
-//     const isOpen: boolean = isTranscriptOpen();
-//     sendToBackground({ isOpened: isOpen });
-//     const e: HTMLElement = document.querySelector<HTMLElement>(
-//         SELECTORS.controlBar.transcript.toggleButton
-//     );
-//     e.addEventListener('click', transcriptToggleButtonHandler, false);
-//     // Set up language check
-//     const isEnglish: boolean = isSubtitleEnglish();
-//     sendToBackground({ isEnglish: isEnglish });
-//     const b: HTMLElement = document.querySelector<HTMLElement>(
-//         SELECTORS.controlBar.cc.popupButton
-//     );
-//     b.addEventListener('click', ccPopupButtonHandler, true);
-//     // Send section title to background
-//     sendTitle();
-// };
+// Transcriptが消えるブラウザウィンドウX軸の境界値
+// const TOGGLE_VANISH_BOUNDARY: number = 584;
+// Transcriptがブラウザサイズによって消えているのかどうか
+// let isWindowTooSmall: boolean;
+// windowのonResizeイベント発火遅延用
+// let timerQueue: NodeJS.Timeout = null;
 
 })();
 

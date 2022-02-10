@@ -8,13 +8,17 @@ ___________________________________________________________
     2. Udemy講義ページの字幕の言語が英語になっているか検知する
     3. 1, 2を調査して必要に応じてbackground scriptへ送信する
 
-Inject:
+Injectタイミング:
     動的content scriptとして、
     Udemyの講義ページURLへマッチするwebページにおいて、
     POPUP上の実行ボタンが押されたらinjectされる
 
 通信に関して：
     single message passing機能でbackground.jsと通信する
+
+
+handlerOfControlbar()でコントロールバー上のクリックイベントを監視する
+moControlbarでコントロールバー上でトランスクリプト・トグルボタンが現れたか消えたかを監視する
 
 TODO:
 - ブラウザサイズが小さすぎると、トランスクリプトが表示されないことへの対応
@@ -35,21 +39,12 @@ import {
     iResponse,
     extensionNames,
     orderNames,
-    RESIZE_TIMER,
 } from '../utils/constants';
 import { sendMessagePromise } from '../utils/helpers';
-import MutationObserver_ from '../utils/MutationObserver_';
 
 //
 // --- GLOBALS ---------------------------------------------------
 //
-
-// Transcriptが消えるブラウザウィンドウX軸の境界値
-// const TOGGLE_VANISH_BOUNDARY: number = 584;
-// Transcriptがブラウザサイズによって消えているのかどうか
-// let isWindowTooSmall: boolean;
-// windowのonResizeイベント発火遅延用
-// let timerQueue: NodeJS.Timeout = null;
 
 let moControlbar: MutationObserver;
 
@@ -80,11 +75,7 @@ chrome.runtime.onMessage.addListener(
             from: extensionNames.contentScript,
             to: from,
         };
-        if (
-            to !== extensionNames.contentScript ||
-            from !== extensionNames.background
-        )
-            return;
+        if (to !== extensionNames.contentScript) return;
 
         try {
             // ORDERS:
@@ -93,9 +84,6 @@ chrome.runtime.onMessage.addListener(
                 if (order.includes(orderNames.sendStatus)) {
                     console.log('Order: send status');
                     const isEnglish: boolean = isSubtitleEnglish();
-                    // const isOpen: boolean = isWindowTooSmall
-                    //     ? false
-                    //     : isTranscriptOpen();
 
                     // トランスクリプトボタンがコントロールバー上にある
                     // かつ
@@ -129,12 +117,11 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-/*
-    sendToBackground()
-    _________________________________________
-    background.tsへメッセージを送信する
 
-*/
+/***
+ *  Sends status of injected page to background
+ * @param order {object}
+ * */ 
 const sendToBackground = async (order: {
     isOpened?: boolean;
     isEnglish?: boolean;
@@ -173,6 +160,8 @@ const sendToBackground = async (order: {
 
 /****
  *  Handler of Click Event on Controlbar
+ * 
+ * setTimeout() callback will be fired after click event has been done immediately. 
  *
  * */
 const handlerOfControlbar = function (ev: PointerEvent): void {
@@ -190,22 +179,22 @@ const handlerOfControlbar = function (ev: PointerEvent): void {
         selectors.controlBar.cc.popupButton
     );
 
-    // TODO: <確認>この遅延装置はclickイベントが完了した後に発火できているか？
-
-    // clickイベント完了後に実行したい事柄
+    // clickイベント完了後に実行したい事柄をsetTimeoutで実行する
+    // 動作確認済
     setTimeout(function () {
+        console.log('fire after click event has been done');
         // トグルボタンが押されたら
         if (path.includes(transcriptToggle) || path.includes(theaterToggle)) {
             // トランスクリプト・トグルボタンがあるかどうかを確認し、
             // あれば開かれているか調査、
             // なければトランスクリプト非表示として判定する
-            let isOpen: boolean;
+            let result: boolean;
             const t: HTMLElement = document.querySelector<HTMLElement>(
                 selectors.controlBar.transcript.toggleButton
             );
-            if (!t) isOpen = false;
-            else isOpen = isTranscriptOpen();
-            sendToBackground({ isOpened: isOpen });
+            if (!t) result = false;
+            else result = isTranscriptOpen();
+            sendToBackground({ isOpened: result });
         }
 
         // CC POUPボタンが押されたら
@@ -214,62 +203,9 @@ const handlerOfControlbar = function (ev: PointerEvent): void {
             ccPopupMenuClickHandler(ev);
         }
     }, 200);
+    console.log('[contentScript] controlbar clicke event done');
 };
 
-/**
- * ブラウザウィンドウがX軸方向に境界線をまたいだときだけ機能する
- *
- * */
-// const onWindowResizeHandler = (ev): void => {
-//     const w: number = document.documentElement.clientWidth;
-//     console.log(w);
-//     // When window shrinks less than the boundary
-//     // Then send status.
-//     if (w < TOGGLE_VANISH_BOUNDARY && !isWindowTooSmall) {
-//         console.log('window is too small');
-//         isWindowTooSmall = true;
-//         // windowサイズが小さくなりすぎると、トグルボタンのDOMは消えるから
-//         // イベントリスナはremoveする必要がないけど、
-//         // 念のため
-//         const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
-//             selectors.controlBar.transcript.toggleButton
-//         );
-//         if (!toggleButton) {
-//             sendToBackground({ isOpened: false });
-//         }
-//     }
-//     // When window bend over vanish boundary
-//     // Then reset toggle button to add listener.
-//     if (w >= TOGGLE_VANISH_BOUNDARY && isWindowTooSmall) {
-//         console.log('window is not small');
-//         isWindowTooSmall = false;
-//         const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
-//             selectors.controlBar.transcript.toggleButton
-//         );
-//         toggleButton.addEventListener(
-//             'click',
-//             transcriptToggleButtonHandler,
-//             false
-//         );
-//     }
-// };
-
-/**
- * Callback of ClickEvent on toggle button of Transcript.
- *
- * NOTE: When click event fired, "aria-expanded" is not change its value yet.
- * So if this get true, then take that as "aria-expanded" about to be false.
- * */
-// const transcriptToggleButtonHandler = (ev?: MouseEvent): void => {
-//     const latest: HTMLElement = document.querySelector<HTMLElement>(
-//         selectors.controlBar.transcript.toggleButton
-//     );
-
-//     // "aria-expanded"変更直前の値なので反対を返す
-//     latest.getAttribute('aria-expanded') === 'true'
-//         ? sendToBackground({ isOpened: false })
-//         : sendToBackground({ isOpened: true });
-// };
 
 /**
  * Callback of ClickEvent on CC Popup MENU
@@ -297,37 +233,9 @@ const ccPopupMenuClickHandler = (ev: PointerEvent): void => {
     }
 };
 
-/**
- * Callback of ClickEvent on CC Popup BUTTON
- *
- * Check if ClosedCaption Popup menu is opened.
- * If it's opened, then add onClick event listener to document
- * to detect subtitle change.
- *
- * NOTE: 変化タイミングの誤差のため"aria-expanded"がfalseの時にイベントリスナを取り付ける
- * */
-// const ccPopupButtonHandler = (ev: MouseEvent): void => {
-//     // popupメニューが開かれているかチェック
-//     // 開かれているならclickリスナをメニューラッパーとdocumentに着ける
-//     // とにかく
-//     // メニューの外側をクリックしたらすべてのリスナをremoveする
-//     console.log('CC popup button was clicked');
-//     // is it opening?
-//     const e: HTMLElement = document.querySelector<HTMLElement>(
-//         selectors.controlBar.cc.popupButton
-//     );
-
-//     // aria-expanded === trueのときになぜかfalseを返すので
-//     // 反対の結果を送信する
-//     if (e.getAttribute('aria-expanded') !== 'true') {
-//         // CC popupメニューが表示された
-//         document.removeEventListener('click', ccPopupMenuClickHandler, true);
-//         document.addEventListener('click', ccPopupMenuClickHandler, true);
-//     }
-// };
 
 /**
- * Check Transcript is open or not.
+ * Check Transcript is opened or not.
  *
  * @returns {boolean}: true for open, false for not open.
  *
@@ -382,16 +290,17 @@ const isSubtitleEnglish = (): boolean => {
     else return false;
 };
 
-/*
-    initialize()
-    _____________________________________________
 
-    Inject時に実行する処理
-*/
+/****
+ *  Immediately initializes after injected
+ * 
+ *  set up controlbar click event listener.
+ *  set up MutationObserver of controlbar.
+ * */ 
 const initialize = async (): Promise<void> => {
     console.log('CONTENT SCRIPT INITIALIZING...');
     try {
-        // Set up listeners
+        // --- Set up listeners ---
 
         // click event on cotrolbar
         const controlbar: HTMLElement = document.querySelector<HTMLElement>(
@@ -399,7 +308,7 @@ const initialize = async (): Promise<void> => {
         );
         controlbar.addEventListener('click', handlerOfControlbar);
 
-        // MutationObserver for controlbar
+        // --- Set up MutationObserver for controlbar ---
 
         // コントロールバーの子要素だけ追加されたのか削除されたのか知りたいので
         // childListだけtrueにする
@@ -409,34 +318,61 @@ const initialize = async (): Promise<void> => {
             subtree: false,
         };
 
+
+        /*
+            NOTE: JavaScript Tips: NodeからElementを取得して、datasetを取得する方法
+
+                    record.removedNodes.forEach((node) => {
+                        console.log(node);
+                        console.log(node.childNodes[0]);
+                        console.log(node.childNodes[0].parentElement);
+                        console.log(
+                            node.childNodes[0].parentElement.firstElementChild
+                        );
+                        console.log(
+                            node.childNodes[0].parentElement.firstElementChild
+                                .attributes
+                        );
+                        console.log(
+                            node.childNodes[0].parentElement.firstElementChild.getAttribute(
+                                'data-purpose'
+                            )
+                        );
+        */ 
         const moCallback = (mr: MutationRecord[]): void => {
             let guard: boolean = false;
             mr.forEach((record) => {
                 if (record.type === 'childList' && !guard) {
-                    // 子要素の何が追加されたのか、削除されたのか調査する
+                    // NOTE: MutationRecord[0]だけしらべればいいので1週目だけでループを止める
+                    // じゃぁforEach()を使うなという話ではあるけど...
                     guard = true;
+
                     console.log('Added nodes');
                     console.log(record.addedNodes);
+                    record.addedNodes.forEach((node) => {
+                        const dataPurpose: string =
+                            node.childNodes[0].parentElement.firstElementChild.getAttribute(
+                                'data-purpose'
+                            );
+                        if(dataPurpose && dataPurpose === "transcript-toggle"){
+                            console.log("[contentScript] Added Transcript Toggle Button");
+                            sendToBackground({isOpened: isTranscriptOpen()});
+                        }
+                    });
+
                     console.log('Removed nodes');
                     console.log(record.removedNodes);
-
-                    // if(/* record.addedNodes の子要素にトランスクリプト・トグルボタンが含まれているならば */) {
-                    //   // トランスクリプトが再表示された可能性がある
-                    //   if(/* もしもトランスクリプトDOMが取得で来たら*/){
-                    //     sendToBackground({ isOpened: true });
-                    //   }
-                    // }
-                    // if(/*record.removedNodesの子要素にトランスクリプト・トグルボタンが含まれているならば*/){
-                    //   // トランスクリプトが非表示になった可能性がある
-                    //   // いずれにしろ送信する
-                    //     sendToBackground({ isOpened: false });
-                    // }
-                    // if(record.addedNodes === ccPopupMenu){
-                    //   // いまのところ出番がない...
-                    // }
-                    // if(record.addedNodes === toggleTheatre){
-                    //   // いまのところ出番がない...
-                    // }
+                    record.removedNodes.forEach((node) => {
+                        // これで取得できた！！！
+                        const dataPurpose: string =
+                            node.childNodes[0].parentElement.firstElementChild.getAttribute(
+                                'data-purpose'
+                            );
+                            if(dataPurpose && dataPurpose === "transcript-toggle"){
+                                console.log("[contentScript] Removed Transcript Toggle Button");
+                                sendToBackground({isOpened: false});
+                            }
+                    });
                 }
             });
         };
@@ -448,6 +384,14 @@ const initialize = async (): Promise<void> => {
         console.error(err.message);
     }
 };
+
+// Entry point
+// 
+(function () {
+    initialize();
+})();
+
+// --- LEGACY CODE ------------------------------------------------
 
 // const initialize = async (): Promise<void> => {
 //   console.log("CONTENT SCRIPT INITIALIZING...");
@@ -483,14 +427,6 @@ const initialize = async (): Promise<void> => {
 //     console.error(err.message);
 //   }
 // };
-
-/*
-    main process
-    _________________________________________________
-*/
-(function () {
-    initialize();
-})();
 
 // -- LEGACY CODE -----------------------------------------------
 
@@ -543,3 +479,93 @@ const initialize = async (): Promise<void> => {
 //     // Send section title to background
 //     sendTitle();
 // };
+
+/**
+ * Callback of ClickEvent on CC Popup BUTTON
+ *
+ * Check if ClosedCaption Popup menu is opened.
+ * If it's opened, then add onClick event listener to document
+ * to detect subtitle change.
+ *
+ * NOTE: 変化タイミングの誤差のため"aria-expanded"がfalseの時にイベントリスナを取り付ける
+ * */
+// const ccPopupButtonHandler = (ev: MouseEvent): void => {
+//     // popupメニューが開かれているかチェック
+//     // 開かれているならclickリスナをメニューラッパーとdocumentに着ける
+//     // とにかく
+//     // メニューの外側をクリックしたらすべてのリスナをremoveする
+//     console.log('CC popup button was clicked');
+//     // is it opening?
+//     const e: HTMLElement = document.querySelector<HTMLElement>(
+//         selectors.controlBar.cc.popupButton
+//     );
+
+//     // aria-expanded === trueのときになぜかfalseを返すので
+//     // 反対の結果を送信する
+//     if (e.getAttribute('aria-expanded') !== 'true') {
+//         // CC popupメニューが表示された
+//         document.removeEventListener('click', ccPopupMenuClickHandler, true);
+//         document.addEventListener('click', ccPopupMenuClickHandler, true);
+//     }
+// };
+/**
+ * ブラウザウィンドウがX軸方向に境界線をまたいだときだけ機能する
+ *
+ * */
+// const onWindowResizeHandler = (ev): void => {
+//     const w: number = document.documentElement.clientWidth;
+//     console.log(w);
+//     // When window shrinks less than the boundary
+//     // Then send status.
+//     if (w < TOGGLE_VANISH_BOUNDARY && !isWindowTooSmall) {
+//         console.log('window is too small');
+//         isWindowTooSmall = true;
+//         // windowサイズが小さくなりすぎると、トグルボタンのDOMは消えるから
+//         // イベントリスナはremoveする必要がないけど、
+//         // 念のため
+//         const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
+//             selectors.controlBar.transcript.toggleButton
+//         );
+//         if (!toggleButton) {
+//             sendToBackground({ isOpened: false });
+//         }
+//     }
+//     // When window bend over vanish boundary
+//     // Then reset toggle button to add listener.
+//     if (w >= TOGGLE_VANISH_BOUNDARY && isWindowTooSmall) {
+//         console.log('window is not small');
+//         isWindowTooSmall = false;
+//         const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
+//             selectors.controlBar.transcript.toggleButton
+//         );
+//         toggleButton.addEventListener(
+//             'click',
+//             transcriptToggleButtonHandler,
+//             false
+//         );
+//     }
+// };
+
+/**
+ * Callback of ClickEvent on toggle button of Transcript.
+ *
+ * NOTE: When click event fired, "aria-expanded" is not change its value yet.
+ * So if this get true, then take that as "aria-expanded" about to be false.
+ * */
+// const transcriptToggleButtonHandler = (ev?: MouseEvent): void => {
+//     const latest: HTMLElement = document.querySelector<HTMLElement>(
+//         selectors.controlBar.transcript.toggleButton
+//     );
+
+//     // "aria-expanded"変更直前の値なので反対を返す
+//     latest.getAttribute('aria-expanded') === 'true'
+//         ? sendToBackground({ isOpened: false })
+//         : sendToBackground({ isOpened: true });
+
+
+// Transcriptが消えるブラウザウィンドウX軸の境界値
+// const TOGGLE_VANISH_BOUNDARY: number = 584;
+// Transcriptがブラウザサイズによって消えているのかどうか
+// let isWindowTooSmall: boolean;
+// windowのonResizeイベント発火遅延用
+// let timerQueue: NodeJS.Timeout = null;
