@@ -122,7 +122,9 @@ chrome.tabs.onUpdated.addListener(
                 return;
             } else if (!changeInfo.url.match(urlPattern)) {
                 // Udemy講義ページ以外に移動した
-                // TODO: 拡張機能OFF処理へ
+                // 拡張機能OFF処理へ
+                // TODO: 拡張機能OFF処理の実装
+
                 console.log('[background] OFF this extension');
             }
 
@@ -154,7 +156,7 @@ chrome.runtime.onMessage.addListener(
         if (message.to !== extensionNames.background) return;
         sortMessage(message, sender, sendResponse);
 
-        // NOTE: YOU SHOULD RETURN TRUE
+        // NOTE: MUST RETURN TRUE
         // If you wanna use asynchronous function.
         return true;
     }
@@ -522,6 +524,12 @@ const handlerOfReset = async (
         await resetEachContentScript(tabId);
         // 成功したとして、
         // データ再取得処理
+        //
+        // TODO: 字幕データがUdemyのページでロード完了されるまで時間を置く
+        //
+        // ロード完了を検知する仕組みはないので
+        // 無辺ループで長さが1以上の配列を取得できるまで取得を繰り返すか
+        // 予め決めた時間で取得させるか...
         const resFromCaptureSubtitle: iResponse =
             await sendMessageToTabsPromise(tabId, {
                 from: extensionNames.background,
@@ -529,7 +537,12 @@ const handlerOfReset = async (
                 order: [orderNames.sendSubtitles],
             });
 
+        console.log(resFromCaptureSubtitle.subtitles);
+
         // TODO: Validate subtitles data.
+        if (resFromCaptureSubtitle.subtitles.length) {
+            console.error('Error: subtitle data is empty');
+        }
         //
         // If okay, then save subtitles data.
         await _state.setState({

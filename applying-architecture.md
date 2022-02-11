@@ -2493,3 +2493,42 @@ CC：
     </div>
 </div>
 ```
+
+
+#### 実装：ローディング後に字幕取得を実現するために
+
+
+時間を置く方法と、取得できていなかったらもう一度取得しなおす方法
+の両方を実現する
+
+参考: setTimeoutとforループを組み合わせるときの注意に関して
+
+https://medium.com/@axionoso/watch-out-when-using-settimeout-in-for-loop-js-75a047e27a5f
+
+```TypeScript
+
+// 1秒ごとに
+const DELAY_TIMER = 1000;
+
+const delayer = async (): Promise<subtitle_piece[]> => {
+  return new Promise((resolve, reject) => {
+    let captured: boolean = false;
+    let subtitles: subtitle_piece[];
+    for(let i = 0; i < 10; i++) {
+      setTimeout(function() {
+        const r: iResponse =
+          await sendMessageToTabsPromise(tabId, {
+              from: extensionNames.background,
+              to: extensionNames.captureSubtitle,
+              order: [orderNames.sendSubtitles],
+          });
+        if(r.subtitles.length) {
+          captured = true;
+          subtitles = [...r.subtitles];
+        }
+      }, DELAY_TIMER);
+      if(captured)break;
+    }
+  })
+}
+```

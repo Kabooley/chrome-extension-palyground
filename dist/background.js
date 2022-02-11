@@ -779,7 +779,8 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
         }
         else if (!changeInfo.url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.urlPattern)) {
             // Udemy講義ページ以外に移動した
-            // TODO: 拡張機能OFF処理へ
+            // 拡張機能OFF処理へ
+            // TODO: 拡張機能OFF処理の実装
             console.log('[background] OFF this extension');
         }
         // 展開中のtabIdである && changeInfo.urlが講義ページだけど末尾が変化した(#以下は無視)
@@ -801,7 +802,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.to !== _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background)
         return;
     sortMessage(message, sender, sendResponse);
-    // NOTE: YOU SHOULD RETURN TRUE
+    // NOTE: MUST RETURN TRUE
     // If you wanna use asynchronous function.
     return true;
 });
@@ -1124,12 +1125,22 @@ const handlerOfReset = (tabId, newUrl) => __awaiter(void 0, void 0, void 0, func
         yield resetEachContentScript(tabId);
         // 成功したとして、
         // データ再取得処理
+        // 
+        // TODO: 字幕データがUdemyのページでロード完了されるまで時間を置く
+        // 
+        // ロード完了を検知する仕組みはないので
+        // 無辺ループで長さが1以上の配列を取得できるまで取得を繰り返すか
+        // 予め決めた時間で取得させるか...
         const resFromCaptureSubtitle = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.captureSubtitle,
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendSubtitles],
         });
+        console.log(resFromCaptureSubtitle.subtitles);
         // TODO: Validate subtitles data.
+        if (resFromCaptureSubtitle.subtitles.length) {
+            console.error('Error: subtitle data is empty');
+        }
         //
         // If okay, then save subtitles data.
         yield _state.setState({

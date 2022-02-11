@@ -1441,6 +1441,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaite
         }
         // 字幕データが送られてきたら
         if (rest.subtitles) {
+            console.log('[controller.ts] got subtitles');
+            console.log(rest.subtitles);
             //  setStateのnotify()がこの変更に必要な関数を実行してくれる
             sSubtitles.setState({ subtitles: rest.subtitles });
             sendResponse({ complete: true });
