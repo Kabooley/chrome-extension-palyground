@@ -431,16 +431,11 @@ handlerOfControlbar()でコントロールバー上のクリックイベント�
 moControlbarでコントロールバー上でトランスクリプト・トグルボタンが現れたか消えたかを監視する
 
 TODO:
-- ブラウザサイズが小さすぎると、トランスクリプトが表示されないことへの対応
-    トランスクリプトトグルボタンも、表示中だったトランスクリプトも非表示になる
-    こうなると拡張機能が使えない
-    つまり、
-    字幕：英語
-    トランスクリプト：ONになっている
-        実際にONになっている
-        かつ
-        windowサイズが小さい
-    アプリケーションのリセット機能にかかわるので結構大きな問題
+- トランスクリプトの非表示・再表示への対応 済
+- `orderNames.reset`機能の実装
+    controlbarがおそらく更新されるので、
+    DOMの更新が必要になる
+    それに伴って、mutationobserverなども更新が必要になる
 ************************************************************/
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -458,6 +453,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 // --- GLOBALS ---------------------------------------------------
 //
 let moControlbar;
+let controlbar;
 //
 // --- chrome API Listeners -------------------------------------
 //
@@ -473,7 +469,7 @@ let moControlbar;
         sendSectionTitle
 */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('CONTENT SCRIPT GOT MESSAGE');
+    console.log("CONTENT SCRIPT GOT MESSAGE");
     const { from, order, to } = message;
     const response = {
         from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
@@ -486,7 +482,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaite
         if (order && order.length) {
             // SEND STATUS
             if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.sendStatus)) {
-                console.log('Order: send status');
+                console.log("Order: SEND STATUS");
                 const isEnglish = isSubtitleEnglish();
                 // トランスクリプトボタンがコントロールバー上にある
                 // かつ
@@ -499,17 +495,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaite
                     isOpen = isTranscriptOpen();
                 response.language = isEnglish;
                 response.isTranscriptDisplaying = isOpen;
+                response.complete = true;
+                // DEBUG:
+                //
+                // LOG response
+                console.log("-----------------------------------");
+                console.log("LOG: response object before send");
+                console.log(response);
+                console.log("-----------------------------------");
+                sendResponse(response);
+            }
+            // RESET
+            if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.reset)) {
+                console.log("Order: RESET");
+                yield handlerOfReset();
+                console.log("sfdadfsadfsafdsadfa");
+                sendResponse({
+                    from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
+                    to: from,
+                    complete: true,
+                    success: true,
+                });
             }
         }
-        response.complete = true;
-        // DEBUG:
-        //
-        // LOG response
-        console.log('-----------------------------------');
-        console.log('LOG: response object before send');
-        console.log(response);
-        console.log('-----------------------------------');
-        sendResponse(response);
         return true;
     }
     catch (err) {
@@ -521,22 +529,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaite
  * @param order {object}
  * */
 const sendToBackground = (order) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('SENDING MESSAGE TO BACKGROUND');
+    console.log("SENDING MESSAGE TO BACKGROUND");
     const { isOpened, isEnglish } = order;
     const message = {
         from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
         to: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.background,
     };
     if (isOpened !== undefined) {
-        message['isTranscriptDisplaying'] = isOpened;
+        message["isTranscriptDisplaying"] = isOpened;
     }
     if (isEnglish !== undefined) {
-        message['language'] = isEnglish;
+        message["language"] = isEnglish;
     }
     //
     // DEBUG:
     //
-    console.log('DEBUG: make sure message object');
+    console.log("DEBUG: make sure message object");
     console.log(message);
     //
     //
@@ -551,13 +559,71 @@ const sendToBackground = (order) => __awaiter(void 0, void 0, void 0, function* 
 // ---- Event Handlers -----------------------------------------
 //
 /****
+ * Handler of RESET order.
+ *
+ * controlbar DOMを取得しなおす
+ * 伴って、
+ * controlbarについているリスナの解除、再設定
+ * controlbarを監視するMutationObserverの再設定
+ *
+ * */
+const handlerOfReset = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // いったんMutationObserverを停止してから...
+        moControlbar.disconnect();
+        // controlbarのDOMを再取得
+        controlbar.removeEventListener("click", handlerOfControlbar);
+        controlbar = yield repeatQueryDom(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.controlbar);
+        if (!controlbar)
+            throw new Error("Error: Failed to get controlbar DOM");
+        controlbar.addEventListener("click", handlerOfControlbar);
+        // TODO: <要確認> MutationObserverの再開方法はこれであっているのか？
+        // いったんmoControlbarはnullにする必要があるのかなど確認
+        moControlbar.observe(controlbar, config);
+    }
+    catch (err) {
+        console.error(err.message);
+    }
+});
+/****
+ *
+ * 取得元のwebページがローディング中などでなかなかすぐにDOMがロードされないときとかに使う
+ * 指定のDOMが取得できるまで、繰り返し取得を試みる
+ * １０回取得を試みても取得できなかったらnullを返す
+ * */
+const repeatQueryDom = (selector) => __awaiter(void 0, void 0, void 0, function* () {
+    const INTERVAL_TIME = 1000;
+    return new Promise((resolve, reject) => {
+        let intervalId;
+        let counter = 10;
+        intervalId = setInterval(function () {
+            if (counter <= 0) {
+                // Failed to query dom
+                console.log("[repeatQueryDom] Time out! It's over 10 times");
+                clearInterval(intervalId);
+                reject(null);
+            }
+            console.log("[repeatQueryDom] query dom");
+            const e = document.querySelector(selector);
+            if (e) {
+                // Succeed
+                console.log("[repeatQueryDom] Succeeed to query dom!");
+                clearInterval(intervalId);
+                resolve(e);
+            }
+            else
+                counter--;
+        }, INTERVAL_TIME);
+    });
+});
+/****
  *  Handler of Click Event on Controlbar
  *
  * setTimeout() callback will be fired after click event has been done immediately.
  *
  * */
 const handlerOfControlbar = function (ev) {
-    console.log('[contentScript] controlbar clicked');
+    console.log("[contentScript] controlbar clicked");
     // Clickイベント中にDOMを取得しておく...
     const path = ev.composedPath();
     const transcriptToggle = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
@@ -566,7 +632,7 @@ const handlerOfControlbar = function (ev) {
     // clickイベント完了後に実行したい事柄をsetTimeoutで実行する
     // 動作確認済
     setTimeout(function () {
-        console.log('fire after click event has been done');
+        console.log("fire after click event has been done");
         // トグルボタンが押されたら
         if (path.includes(transcriptToggle) || path.includes(theaterToggle)) {
             // トランスクリプト・トグルボタンがあるかどうかを確認し、
@@ -586,7 +652,7 @@ const handlerOfControlbar = function (ev) {
             ccPopupMenuClickHandler(ev);
         }
     }, 200);
-    console.log('[contentScript] controlbar clicke event done');
+    console.log("[contentScript] controlbar clicke event done");
 };
 /**
  * Callback of ClickEvent on CC Popup MENU
@@ -602,13 +668,13 @@ const ccPopupMenuClickHandler = (ev) => {
     if (path.includes(menu)) {
         // menuの内側でclickが発生した
         // 何もしない
-        console.log('clicked inside');
+        console.log("clicked inside");
     }
     else {
         // menuの外側でclickが発生した
         const r = isSubtitleEnglish();
         sendToBackground({ isEnglish: r });
-        document.removeEventListener('click', ccPopupMenuClickHandler, true);
+        document.removeEventListener("click", ccPopupMenuClickHandler, true);
     }
 };
 /**
@@ -620,7 +686,7 @@ const ccPopupMenuClickHandler = (ev) => {
  * */
 const isTranscriptOpen = () => {
     const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
-    return toggleButton.getAttribute('aria-expanded') === 'true' ? true : false;
+    return toggleButton.getAttribute("aria-expanded") === "true" ? true : false;
 };
 /**
  * Check Subtitle language is English or not.
@@ -637,20 +703,79 @@ const isSubtitleEnglish = () => {
     let i = null;
     const els = Array.from(checkButtons);
     for (const btn of els) {
-        if (btn.getAttribute('aria-checked') === 'true') {
+        if (btn.getAttribute("aria-checked") === "true") {
             i = counter;
             break;
         }
         counter++;
     }
     if (i === null) {
-        throw new Error('Error: [isSubtitleEnglish()] Something went wrong but No language is selected');
+        throw new Error("Error: [isSubtitleEnglish()] Something went wrong but No language is selected");
     }
     const currentLanguage = Array.from(menuList)[i].innerText;
-    if (currentLanguage.includes('English') || currentLanguage.includes('英語'))
+    if (currentLanguage.includes("English") || currentLanguage.includes("英語"))
         return true;
     else
         return false;
+};
+//
+// --- MutationObserver -----------------------------------------
+//
+// コントロールバーの子要素だけ追加されたのか削除されたのか知りたいので
+// childListだけtrueにする
+const config = {
+    attributes: false,
+    childList: true,
+    subtree: false,
+};
+/*
+    NOTE: JavaScript Tips: NodeからElementを取得して、datasetを取得する方法
+
+    record.removedNodes.forEach((node) => {
+        console.log(node);
+        console.log(node.childNodes[0]);
+        console.log(node.childNodes[0].parentElement);
+        console.log(
+            node.childNodes[0].parentElement.firstElementChild
+        );
+        console.log(
+            node.childNodes[0].parentElement.firstElementChild
+                .attributes
+        );
+        console.log(
+            node.childNodes[0].parentElement.firstElementChild.getAttribute(
+                'data-purpose'
+            )
+        );
+*/
+const moCallback = (mr) => {
+    let guard = false;
+    mr.forEach((record) => {
+        if (record.type === "childList" && !guard) {
+            // NOTE: MutationRecord[0]だけしらべればいいので1週目だけでループを止める
+            // じゃぁforEach()を使うなという話ではあるけど...
+            guard = true;
+            console.log("Added nodes");
+            console.log(record.addedNodes);
+            record.addedNodes.forEach((node) => {
+                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute("data-purpose");
+                if (dataPurpose && dataPurpose === "transcript-toggle") {
+                    console.log("[contentScript] Added Transcript Toggle Button");
+                    sendToBackground({ isOpened: isTranscriptOpen() });
+                }
+            });
+            console.log("Removed nodes");
+            console.log(record.removedNodes);
+            record.removedNodes.forEach((node) => {
+                // これで取得できた！！！
+                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute("data-purpose");
+                if (dataPurpose && dataPurpose === "transcript-toggle") {
+                    console.log("[contentScript] Removed Transcript Toggle Button");
+                    sendToBackground({ isOpened: false });
+                }
+            });
+        }
+    });
 };
 /****
  *  Immediately initializes after injected
@@ -659,74 +784,17 @@ const isSubtitleEnglish = () => {
  *  set up MutationObserver of controlbar.
  * */
 const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('CONTENT SCRIPT INITIALIZING...');
+    console.log("CONTENT SCRIPT INITIALIZING...");
     try {
         // --- Set up listeners ---
         // click event on cotrolbar
-        const controlbar = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.controlbar);
-        controlbar.addEventListener('click', handlerOfControlbar);
+        controlbar = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.controlbar);
+        controlbar.removeEventListener("click", handlerOfControlbar);
+        controlbar.addEventListener("click", handlerOfControlbar);
         // --- Set up MutationObserver for controlbar ---
-        // コントロールバーの子要素だけ追加されたのか削除されたのか知りたいので
-        // childListだけtrueにする
-        const config = {
-            attributes: false,
-            childList: true,
-            subtree: false,
-        };
-        /*
-            NOTE: JavaScript Tips: NodeからElementを取得して、datasetを取得する方法
-
-                    record.removedNodes.forEach((node) => {
-                        console.log(node);
-                        console.log(node.childNodes[0]);
-                        console.log(node.childNodes[0].parentElement);
-                        console.log(
-                            node.childNodes[0].parentElement.firstElementChild
-                        );
-                        console.log(
-                            node.childNodes[0].parentElement.firstElementChild
-                                .attributes
-                        );
-                        console.log(
-                            node.childNodes[0].parentElement.firstElementChild.getAttribute(
-                                'data-purpose'
-                            )
-                        );
-        */
-        const moCallback = (mr) => {
-            let guard = false;
-            mr.forEach((record) => {
-                if (record.type === 'childList' && !guard) {
-                    // NOTE: MutationRecord[0]だけしらべればいいので1週目だけでループを止める
-                    // じゃぁforEach()を使うなという話ではあるけど...
-                    guard = true;
-                    console.log('Added nodes');
-                    console.log(record.addedNodes);
-                    record.addedNodes.forEach((node) => {
-                        const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute('data-purpose');
-                        if (dataPurpose &&
-                            dataPurpose === 'transcript-toggle') {
-                            console.log('[contentScript] Added Transcript Toggle Button');
-                            sendToBackground({ isOpened: isTranscriptOpen() });
-                        }
-                    });
-                    console.log('Removed nodes');
-                    console.log(record.removedNodes);
-                    record.removedNodes.forEach((node) => {
-                        // これで取得できた！！！
-                        const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute('data-purpose');
-                        if (dataPurpose &&
-                            dataPurpose === 'transcript-toggle') {
-                            console.log('[contentScript] Removed Transcript Toggle Button');
-                            sendToBackground({ isOpened: false });
-                        }
-                    });
-                }
-            });
-        };
         moControlbar = new MutationObserver(moCallback);
         moControlbar.observe(controlbar, config);
-        console.log('content script initialize has been done');
+        console.log("content script initialize has been done");
     }
     catch (err) {
         console.error(err.message);

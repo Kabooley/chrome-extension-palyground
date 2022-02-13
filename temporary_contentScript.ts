@@ -189,13 +189,37 @@ const handlerOfReset = async (): Promise<void> => {
 
 /****
  *
- *
+ * 取得元のwebページがローディング中などでなかなかすぐにDOMがロードされないときとかに使う
  * 指定のDOMが取得できるまで、繰り返し取得を試みる
- * １０回取得を試みても取得できなかったらnull1を返す
+ * １０回取得を試みても取得できなかったらnullを返す
  * */
 const repeatQueryDom = async (selector: string): Promise<HTMLElement> => {
-  // TODO: repeat機能の実装
-  // repeatCaptureSubtitles()と同じ要領で作成
+  const INTERVAL_TIME = 1000;
+  return new Promise((resolve, reject): void => {
+    let intervalId: NodeJS.Timer;
+    let counter: number = 10;
+
+    intervalId = setInterval(function() {
+        if (counter <= 0) {
+            // Failed to query dom
+            console.log(
+                "[repeatQueryDom] Time out! It's over 10 times"
+            );
+            clearInterval(intervalId);
+            reject(null);
+        };
+
+        console.log("[repeatQueryDom] query dom");
+        const e: HTMLElement = document.querySelector(selector);
+        if(e) {
+            // Succeed
+            console.log("[repeatQueryDom] Succeeed to query dom!");
+            clearInterval(intervalId);
+            resolve(e);
+        }
+        else counter--;
+    }, INTERVAL_TIME);
+  })
 };
 
 /****
@@ -410,8 +434,9 @@ const initialize = async (): Promise<void> => {
     // click event on cotrolbar
     controlbar = document.querySelector<HTMLElement>(
       selectors.transcript.controlbar
-    );
-    controlbar.addEventListener("click", handlerOfControlbar);
+      );
+      controlbar.removeEventListener("click", handlerOfControlbar);
+      controlbar.addEventListener("click", handlerOfControlbar);
 
     // --- Set up MutationObserver for controlbar ---
 
