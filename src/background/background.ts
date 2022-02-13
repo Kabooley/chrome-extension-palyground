@@ -41,6 +41,11 @@ import State from '../utils/background/State';
 import { iModel, modelBase, iStateModule } from './annotations';
 
 //
+// --- GLOBALS -----------------------------------------------
+//
+const INTERVAL_TIME = 1000;
+
+//
 // --- Chrome API Listeners ---------------------------------
 //
 
@@ -530,25 +535,27 @@ const handlerOfReset = async (
         // ロード完了を検知する仕組みはないので
         // 無辺ループで長さが1以上の配列を取得できるまで取得を繰り返すか
         // 予め決めた時間で取得させるか...
-        const resFromCaptureSubtitle: iResponse =
-            await sendMessageToTabsPromise(tabId, {
-                from: extensionNames.background,
-                to: extensionNames.captureSubtitle,
-                order: [orderNames.sendSubtitles],
-            });
+        // const resFromCaptureSubtitle: iResponse =
+        //     await sendMessageToTabsPromise(tabId, {
+        //         from: extensionNames.background,
+        //         to: extensionNames.captureSubtitle,
+        //         order: [orderNames.sendSubtitles],
+        //     });
 
-        console.log(resFromCaptureSubtitle.subtitles);
+        // console.log(resFromCaptureSubtitle.subtitles);
 
-        // TODO: Validate subtitles data.
-        if (resFromCaptureSubtitle.subtitles.length) {
-            console.error('Error: subtitle data is empty');
-        }
-        //
+        const newSubtitles: subtitle_piece[] = await repeatCaptureSubtitles(
+            tabId
+        );
+
+        if (!newSubtitles.length)
+            throw new Error('Error: Failed to capture subtitles');
+
         // If okay, then save subtitles data.
         await _state.setState({
             isSubtitleCaptured: true,
             isSubtitleCapturing: false,
-            subtitles: resFromCaptureSubtitle.subtitles,
+            subtitles: newSubtitles,
         });
 
         // NOTE: 一旦resetオーダーを出してから字幕を送ること
@@ -561,7 +568,7 @@ const handlerOfReset = async (
         const resetSubtitle: iResponse = await sendMessageToTabsPromise(tabId, {
             from: extensionNames.background,
             to: extensionNames.controller,
-            subtitles: resFromCaptureSubtitle.subtitles,
+            subtitles: newSubtitles,
         });
 
         if (!resetOrder.success || !resetSubtitle) {
@@ -651,6 +658,48 @@ const resetEachContentScript = async (tabId: number): Promise<void> => {
 //
 // --- Other Methods ----------------------------------------
 //
+
+/***
+ *  Repeat to capture subtitles
+ *
+ *  Repeats 10 times so far.
+ * */
+const repeatCaptureSubtitles = async function (
+    tabId: number
+): Promise<subtitle_piece[]> {
+    return new Promise(async (resolve, reject) => {
+        let intervalId: NodeJS.Timer;
+        let counter: number = 0;
+
+        console.log('[repeatCaptureSubtitles]Begin to capture subtitles... ');
+
+        intervalId = setInterval(async function () {
+            if (counter >= 10) {
+                // Failed to capture subtitles
+
+                console.log(
+                    "[repeatCaptureSubtitles] Time out! It's over 10 times"
+                );
+
+                clearInterval(intervalId);
+                reject([]);
+            }
+
+            console.log('[repeatCaptureSubtitles] capture again...');
+            const r: iResponse = await sendMessageToTabsPromise(tabId, {
+                from: extensionNames.background,
+                to: extensionNames.captureSubtitle,
+                order: [orderNames.sendSubtitles],
+            });
+            if (r.subtitles !== undefined && r.subtitles.length) {
+                // Succeed to capture subtitles
+                console.log('[repeatCaptureSubtitles] Succeed to capture!');
+                clearInterval(intervalId);
+                resolve(r.subtitles);
+            } else counter++;
+        }, INTERVAL_TIME);
+    });
+};
 
 /*
     state module

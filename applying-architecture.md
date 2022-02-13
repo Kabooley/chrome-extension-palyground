@@ -2501,34 +2501,84 @@ CC：
 時間を置く方法と、取得できていなかったらもう一度取得しなおす方法
 の両方を実現する
 
-参考: setTimeoutとforループを組み合わせるときの注意に関して
+##### JavaScript Tips: setInterval()
 
-https://medium.com/@axionoso/watch-out-when-using-settimeout-in-for-loop-js-75a047e27a5f
+```TypeScript
+const INTERVAL_TIME = 1000;
+
+const captureSubtitle = async (): Promise<void> => {
+  try {
+    const r: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
+    if(!r.length) throw new Error("Error: Time out to capture subtitles"); 
+  }
+  catch(err) {
+    console.error(err.message);
+  }
+};
+
+const repeatCaptureSubtitles = async function(tabId: number): Promise<subtitle_piece[]> {
+  return new Promise(async (resolve, reject) => {
+    let intervalId: number;
+    let counter: number = 0;
+
+    intervalId = setInterval(async function() {
+      if(counter >= 10) {
+        clearInterval(intervalId);
+        reject([]);
+      }
+      const r: iResponse = await sendMessageToTabs(tabId,{
+        from: extensionNames.background,
+        to: extensionNames.captureSubtitle,
+        order: [orderNames.sendSubtitles]
+      });
+      if(r.subtitles !== undefined && r.subtitles.length) {
+        // Succeed to capture subtitles
+        clearInterval(intervalId);
+        resolve(r.subtitles);
+      }
+      else counter++;
+    }, INTERVAL_TIME)
+  })
+}
+```
+
+#### RESET実装： 確認できる不備
+
+- 字幕変更のためにCCPOPUPボタンをクリックしたらExTranscriptが消えた
+- 一旦loadingにともなうリセットが起こると、ExTranscriptが非表示にならなくなる？
+
+
+##### 字幕変更しようとしたらExTranscriptが消える件
+
+##### ExTranscriptが非表示にならなくなる件
+
+もしかしたらcontentScript消えた？
+
+loading後にcontent scriptがinjectされたままなのか確認する
+
+もしもinjectされたままなら、DOMが更新されている？
+
+参考：
+
+https://stackoverflow.com/questions/34528785/chrome-extension-checking-if-content-script-has-been-injected-or-not
+
+> もしも`chrome.tabs.sendMessage()`を送信して返事がなかったらcontent scriptはタブにインジェクトされていないと思っていいかも
 
 ```TypeScript
 
-// 1秒ごとに
-const DELAY_TIMER = 1000;
 
-const delayer = async (): Promise<subtitle_piece[]> => {
-  return new Promise((resolve, reject) => {
-    let captured: boolean = false;
-    let subtitles: subtitle_piece[];
-    for(let i = 0; i < 10; i++) {
-      setTimeout(function() {
-        const r: iResponse =
-          await sendMessageToTabsPromise(tabId, {
-              from: extensionNames.background,
-              to: extensionNames.captureSubtitle,
-              order: [orderNames.sendSubtitles],
-          });
-        if(r.subtitles.length) {
-          captured = true;
-          subtitles = [...r.subtitles];
-        }
-      }, DELAY_TIMER);
-      if(captured)break;
-    }
-  })
+const areContentScriptsAlive = async (): Promise<boolean> => {
+  
+}
+
+
+const handlerOfReset = async (
+    tabId: number,
+    newUrl?: string
+): Promise<void> => {
+    try {
+      // ....
+
+    }catch(){};
 }
 ```

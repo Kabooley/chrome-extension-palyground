@@ -708,6 +708,10 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 
 
 //
+// --- GLOBALS -----------------------------------------------
+//
+const INTERVAL_TIME = 1000;
+//
 // --- Chrome API Listeners ---------------------------------
 //
 /***
@@ -1125,28 +1129,27 @@ const handlerOfReset = (tabId, newUrl) => __awaiter(void 0, void 0, void 0, func
         yield resetEachContentScript(tabId);
         // 成功したとして、
         // データ再取得処理
-        // 
+        //
         // TODO: 字幕データがUdemyのページでロード完了されるまで時間を置く
-        // 
+        //
         // ロード完了を検知する仕組みはないので
         // 無辺ループで長さが1以上の配列を取得できるまで取得を繰り返すか
         // 予め決めた時間で取得させるか...
-        const resFromCaptureSubtitle = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
-            from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
-            to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.captureSubtitle,
-            order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendSubtitles],
-        });
-        console.log(resFromCaptureSubtitle.subtitles);
-        // TODO: Validate subtitles data.
-        if (resFromCaptureSubtitle.subtitles.length) {
-            console.error('Error: subtitle data is empty');
-        }
-        //
+        // const resFromCaptureSubtitle: iResponse =
+        //     await sendMessageToTabsPromise(tabId, {
+        //         from: extensionNames.background,
+        //         to: extensionNames.captureSubtitle,
+        //         order: [orderNames.sendSubtitles],
+        //     });
+        // console.log(resFromCaptureSubtitle.subtitles);
+        const newSubtitles = yield repeatCaptureSubtitles(tabId);
+        if (!newSubtitles.length)
+            throw new Error('Error: Failed to capture subtitles');
         // If okay, then save subtitles data.
         yield _state.setState({
             isSubtitleCaptured: true,
             isSubtitleCapturing: false,
-            subtitles: resFromCaptureSubtitle.subtitles,
+            subtitles: newSubtitles,
         });
         // NOTE: 一旦resetオーダーを出してから字幕を送ること
         const resetOrder = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
@@ -1157,7 +1160,7 @@ const handlerOfReset = (tabId, newUrl) => __awaiter(void 0, void 0, void 0, func
         const resetSubtitle = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.controller,
-            subtitles: resFromCaptureSubtitle.subtitles,
+            subtitles: newSubtitles,
         });
         if (!resetOrder.success || !resetSubtitle) {
             throw new Error(`Error: Failed to reset controller. ${resetOrder.success
@@ -1237,6 +1240,44 @@ const resetEachContentScript = (tabId) => __awaiter(void 0, void 0, void 0, func
 //
 // --- Other Methods ----------------------------------------
 //
+/***
+ *  Repeat to capture subtitles
+ *
+ *  Repeats 10 times so far.
+ * */
+const repeatCaptureSubtitles = function (tabId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            let intervalId;
+            let counter = 0;
+            console.log('[repeatCaptureSubtitles]Begin to capture subtitles... ');
+            intervalId = setInterval(function () {
+                return __awaiter(this, void 0, void 0, function* () {
+                    if (counter >= 10) {
+                        // Failed to capture subtitles
+                        console.log("[repeatCaptureSubtitles] Time out! It's over 10 times");
+                        clearInterval(intervalId);
+                        reject([]);
+                    }
+                    console.log('[repeatCaptureSubtitles] capture again...');
+                    const r = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
+                        from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
+                        to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.captureSubtitle,
+                        order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendSubtitles],
+                    });
+                    if (r.subtitles !== undefined && r.subtitles.length) {
+                        // Succeed to capture subtitles
+                        console.log('[repeatCaptureSubtitles] Succeed to capture!');
+                        clearInterval(intervalId);
+                        resolve(r.subtitles);
+                    }
+                    else
+                        counter++;
+                });
+            }, INTERVAL_TIME);
+        }));
+    });
+};
 /*
     state module
     ______________________________________________
