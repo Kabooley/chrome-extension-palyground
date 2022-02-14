@@ -667,16 +667,14 @@ __webpack_require__.r(__webpack_exports__);
  * chrome.runtime.onInstalled: Stateを初期化してstateへ保存する
  *  ***************************************************************/
 /**
- * 検証：
- * グローバルモジュールのmodelは、service workerがアンロードされたあとでも
- * 自身のinstanceを保持しているのか？
+ * NOTE: stateモジュールはアンロードされたら中身が保存されていないのでは？
  *
- * 結果：
- * ぜんぜんアンロードされない
- * 10分くらい放っておいても問題ない...
+ * 結論：　アンロードされないのでこのままで良しとしている
+ *      検証したところ、アンロードされてもなぜだかstateモジュールに渡した
+ *      変数は保持していたので、
+ *      ならば使用に耐えうると判断した。
  *
- * ということで雑だけれどservice workerでもわりとアンロードされないから
- * グローバル・モジュールに値を保持させるのはアリとする
+ *
  *
  *
  * TODO:
@@ -710,7 +708,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 //
 // --- GLOBALS -----------------------------------------------
 //
-const INTERVAL_TIME = 1000;
+const INTERVAL_TIME = 500;
 //
 // --- Chrome API Listeners ---------------------------------
 //
@@ -745,20 +743,20 @@ chrome.runtime.onInstalled.addListener((details) => __awaiter(void 0, void 0, vo
  *
  * ブラウザの挙動に対してonUpdatedが反応したときの振舞に関して：
  *
- * - 拡張機能が未展開であるけど、Udemy 講義ページである
- * なにもしない
+ * - Incase 拡張機能が未展開であるけど、Udemy 講義ページである
+ * then なにもしない
  *
- * - 拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
- * 拡張機能をリセットして引き続き展開する
+ * - incase 拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
+ * then 拡張機能をリセットして引き続き展開する
  *
- * - 拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
- * 拡張機能は OFF にする
+ * - incase 拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
+ * then ExTranscriptは非表示にする
  *
- * - タブが切り替わった
- *  何もしない
+ * - incase タブが切り替わった
+ *  then 何もしない
  *
- * - 拡張機能が展開されていたタブが閉じられた
- *  拡張機能を OFF にする
+ * - incase 拡張機能が展開されていたタブが閉じられた
+ *  then TODO: 拡張機能の後始末を実施する
  *
  * */
 chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __awaiter(void 0, void 0, void 0, function* () {
@@ -791,7 +789,6 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
         // 動画が切り替わった判定
         else if (changeInfo.url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.urlPattern) && changeInfo.url !== url) {
             // 動画が切り替わった
-            // TODO: リセット処理へ
             console.log("[background] RESET this extension");
             yield handlerOfReset(tabIdUpdatedOccured, changeInfo.url);
         }
@@ -837,28 +834,17 @@ const handlerOfPopupMessage = (message, sender, sendResponse) => __awaiter(void 
     try {
         const { order } = message, rest = __rest(message, ["order"]);
         if (order && order.length) {
-            // DEBUG: make sure what message got
-            console.log("[background] Validate URL");
-            //
-            // popupが開かれるたびに呼び出される処理
-            //
-            // なのでurlが正しいかだけを返信する
-            // Stateを変更しない
+            // Popupが開かれるたびにURLが正しいか判定する
             if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.inquireUrl)) {
+                console.log("[background] Validate URL");
                 const isValidPage = yield handlerOfVerifyValidPage();
                 sendResponse({ correctUrl: isValidPage, complete: true });
             }
             // 拡張機能の実行命令
             if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.run)) {
-                // DEBUG: make sure what message got
                 console.log("[background] RUN");
-                //
                 const isSuccess = yield handlerOfRun();
-                // sendResponse({ successDeployment: isSuccess, complete: true });
                 if (!isSuccess) {
-                    // ここでエラーを出すのか
-                    // handlerOfRunでエラーを出すのか
-                    // 未定
                     sendResponse({ complete: true, success: false });
                 }
                 else {
@@ -881,8 +867,7 @@ const handlerOfContentScriptMessage = (message, sender, sendResponse) => __await
         const { order } = message, rest = __rest(message, ["order"]);
         const _state = state.getInstance();
         const { isExTranscriptStructured, isTranscriptDisplaying, isEnglish, tabId, } = yield _state.getState();
-        if (order && order.length) {
-        }
+        if (order && order.length) { }
         // ExTRanscriptを表示する条件が揃わなくなったとき...
         if (!rest.isTranscriptDisplaying || !rest.language) {
             // ExTranscriptを非表示にするかする
@@ -891,7 +876,7 @@ const handlerOfContentScriptMessage = (message, sender, sendResponse) => __await
                 console.log("[background] Hide ExTranscript...");
                 yield handlerOfHide(tabId);
             }
-            // Stateを更新する
+            // あとはStateを更新するだけ
             let s = {};
             if (rest.isTranscriptDisplaying !== undefined) {
                 s["isTranscriptDisplaying"] = rest.isTranscriptDisplaying;
@@ -933,6 +918,7 @@ const handlerOfContentScriptMessage = (message, sender, sendResponse) => __await
     }
 });
 /**
+ * Message handler for captureSubtitle.js
  *
  *
  * */
@@ -944,6 +930,7 @@ const handlerOfCaptureSubtitleMessage = (message, sender, sendResponse) => __awa
     }
 });
 /**
+ *  Messag handler for controller.js
  *
  *
  * */
@@ -981,16 +968,11 @@ const handlerOfVerifyValidPage = (_url) => __awaiter(void 0, void 0, void 0, fun
  * handler of RUN order.
  * _______________________________________________
  *
- * TODO:
+ * TODO: エラーハンドリングの改善
  * - 処理中の失敗を段階ごとに理由と一緒に返せるようにしたい
  *  失敗理由によってはエラーじゃない場合もある
- *  あと各段階でおこるエラースローは各段階のcatchへキャッチさせたほうがいいのかな？
- *
  *
  * - injectしたコンテントスクリプトからのinject成功信号を受信したら、こっちに処理が戻ってくるようにしたい
- *  いまのワイの腕では無理
- *
- * - controller.jsへの字幕データの渡し方を変更したい
  *
  *
  * 例：
@@ -1120,27 +1102,12 @@ const handlerOfReset = (tabId, newUrl) => __awaiter(void 0, void 0, void 0, func
             isTranscriptDisplaying: false,
             isSubtitleCaptured: false,
             isSubtitleCapturing: true,
-            // TODO: 既存配列変数を再度空にするのはこの方法で大丈夫なのか?
-            //
             subtitles: [],
         });
         // reset 処理: 各content scritpのリセットを実施する
         yield resetEachContentScript(tabId);
         // 成功したとして、
         // データ再取得処理
-        //
-        // TODO: 字幕データがUdemyのページでロード完了されるまで時間を置く
-        //
-        // ロード完了を検知する仕組みはないので
-        // 無辺ループで長さが1以上の配列を取得できるまで取得を繰り返すか
-        // 予め決めた時間で取得させるか...
-        // const resFromCaptureSubtitle: iResponse =
-        //     await sendMessageToTabsPromise(tabId, {
-        //         from: extensionNames.background,
-        //         to: extensionNames.captureSubtitle,
-        //         order: [orderNames.sendSubtitles],
-        //     });
-        // console.log(resFromCaptureSubtitle.subtitles);
         const newSubtitles = yield repeatCaptureSubtitles(tabId);
         if (!newSubtitles.length)
             throw new Error("Error: Failed to capture subtitles");
@@ -1199,7 +1166,6 @@ const handlerOfHide = (tabId) => __awaiter(void 0, void 0, void 0, function* () 
         yield _state.setState({
             isTranscriptDisplaying: false,
             isSubtitleCaptured: false,
-            // TODO: <確認>既存配列変数を再度空にするのはこの方法で大丈夫なのか?
             subtitles: [],
         });
         // reset 処理: 各content scritpのリセットを実施する

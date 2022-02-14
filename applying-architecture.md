@@ -2342,16 +2342,16 @@ const config: MutationObserverInit = {
 
 トグル・トランスクリプト：
 `div.popper--popper--2r2To`
-  `button[data-purpose="transcript-toggle"]`
+`button[data-purpose="transcript-toggle"]`
 
 CC：
 `div.popper--popper--2r2To`
-  `div.popper--popper--2r2To`
-    `button[data-purpose="captions-dropdown-button"]`
+`div.popper--popper--2r2To`
+`button[data-purpose="captions-dropdown-button"]`
 
 トグル・シアター：
 `div.popper--popper--2r2To`
-  `button[data-purpose="theatre-mode-toggle-button"]`
+`button[data-purpose="theatre-mode-toggle-button"]`
 
 ```html
 <!-- コントロールバー内部 -->
@@ -2364,8 +2364,7 @@ CC：
             class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
             id="popper-trigger--414"
             tabindex="0"
-        >
-        </button>
+        ></button>
     </div>
     <!-- rewind skip  -->
     <div class="popper--popper--2r2To">
@@ -2375,8 +2374,7 @@ CC：
             class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
             id="popper-trigger--416"
             tabindex="0"
-        >
-        </button>
+        ></button>
     </div>
     <!-- 再生速度 -->
     <div class="playback-rate--playback-rate--1XOKO popper--popper--2r2To">
@@ -2390,12 +2388,12 @@ CC：
             class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
             id="popper-trigger--422"
             tabindex="0"
-        >
-        </button>
+        ></button>
     </div>
 
-    <div class="udlite-heading-sm progress-display--progress-display--B20-A">
-    </div>
+    <div
+        class="udlite-heading-sm progress-display--progress-display--B20-A"
+    ></div>
     <!-- ブックマーク -->
     <div class="popper--popper--2r2To">
         <button
@@ -2404,8 +2402,7 @@ CC：
             class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
             id="popper-trigger--424"
             tabindex="0"
-        >
-        </button>
+        ></button>
     </div>
     <div class="control-bar--spacer--32VvX"></div>
     <div>
@@ -2419,84 +2416,76 @@ CC：
             aria-label="音量"
             tabindex="0"
             class="volume-control--slider-focus-wrapper--1DEg2 volume-control--invisible-unless-focused--2jCET"
-        >
-    </div>
-    <!-- トグル　トランスクリプト -->
-    <div class="popper--popper--2r2To">
-        <button
-            type="button"
-            aria-expanded="false"
-            data-purpose="transcript-toggle"
-            class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-            id="popper-trigger--1256"
-            tabindex="0"
-        >
-        </button>
-    </div>
-    <!-- CC MENU -->
-    <div class="popper--popper--2r2To">
+        ></div>
+        <!-- トグル　トランスクリプト -->
         <div class="popper--popper--2r2To">
             <button
                 type="button"
-                aria-haspopup="menu"
-                data-purpose="captions-dropdown-button"
-                id="control-bar-dropdown-trigger--429"
-                tabindex="0"
                 aria-expanded="false"
+                data-purpose="transcript-toggle"
                 class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-            >
-            </button>
+                id="popper-trigger--1256"
+                tabindex="0"
+            ></button>
         </div>
-    </div>
-    <!-- 設定 -->
-    <div class="popper--popper--2r2To">
+        <!-- CC MENU -->
+        <div class="popper--popper--2r2To">
+            <div class="popper--popper--2r2To">
+                <button
+                    type="button"
+                    aria-haspopup="menu"
+                    data-purpose="captions-dropdown-button"
+                    id="control-bar-dropdown-trigger--429"
+                    tabindex="0"
+                    aria-expanded="false"
+                    class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+                ></button>
+            </div>
+        </div>
+        <!-- 設定 -->
+        <div class="popper--popper--2r2To">
+            <div class="popper--popper--2r2To">
+                <button
+                    type="button"
+                    aria-haspopup="menu"
+                    data-purpose="settings-button"
+                    id="control-bar-dropdown-trigger--433"
+                    tabindex="0"
+                    aria-expanded="false"
+                    class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+                ></button>
+            </div>
+            <div
+                id="popper-content--435"
+                aria-labelledby="control-bar-dropdown-trigger--433"
+                class="popper--popper-content--2tG0H"
+                style="bottom: 100%; right: 0px; margin-bottom: 3.2rem;"
+            ></div>
+        </div>
+        <!-- 全画面表示 -->
         <div class="popper--popper--2r2To">
             <button
                 type="button"
-                aria-haspopup="menu"
-                data-purpose="settings-button"
-                id="control-bar-dropdown-trigger--433"
-                tabindex="0"
-                aria-expanded="false"
                 class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-            >
-            </button>
+                id="popper-trigger--445"
+                tabindex="0"
+            ></button>
         </div>
-        <div
-            id="popper-content--435"
-            aria-labelledby="control-bar-dropdown-trigger--433"
-            class="popper--popper-content--2tG0H"
-            style="bottom: 100%; right: 0px; margin-bottom: 3.2rem;"
-        >
+        <!-- toggle theatre -->
+        <div class="popper--popper--2r2To">
+            <button
+                type="button"
+                data-purpose="theatre-mode-toggle-button"
+                class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
+                id="popper-trigger--1270"
+                tabindex="0"
+            ></button>
         </div>
-    </div>
-    <!-- 全画面表示 -->
-    <div class="popper--popper--2r2To">
-        <button
-            type="button"
-            class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-            id="popper-trigger--445"
-            tabindex="0"
-        >
-        </button>
-    </div>
-    <!-- toggle theatre -->
-    <div class="popper--popper--2r2To">
-        <button
-            type="button"
-            data-purpose="theatre-mode-toggle-button"
-            class="udlite-btn udlite-btn-small udlite-btn-ghost udlite-heading-sm control-bar-dropdown--trigger--iFz7P control-bar-dropdown--trigger-dark--1qTuU control-bar-dropdown--trigger-small--1ZPqx"
-            id="popper-trigger--1270"
-            tabindex="0"
-        >
-        </button>
     </div>
 </div>
 ```
 
-
 #### 実装：ローディング後に字幕取得を実現するために
-
 
 時間を置く方法と、取得できていなかったらもう一度取得しなおす方法
 の両方を実現する
@@ -2509,7 +2498,7 @@ const INTERVAL_TIME = 1000;
 const captureSubtitle = async (): Promise<void> => {
   try {
     const r: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
-    if(!r.length) throw new Error("Error: Time out to capture subtitles"); 
+    if(!r.length) throw new Error("Error: Time out to capture subtitles");
   }
   catch(err) {
     console.error(err.message);
@@ -2542,43 +2531,146 @@ const repeatCaptureSubtitles = async function(tabId: number): Promise<subtitle_p
 }
 ```
 
-#### RESET実装： 確認できる不備
+#### RESET 実装： 確認できる不備
 
-- 字幕変更のためにCCPOPUPボタンをクリックしたらExTranscriptが消えた
-- 一旦loadingにともなうリセットが起こると、ExTranscriptが非表示にならなくなる？
+-   字幕変更のために CCPOPUP ボタンをクリックしたら ExTranscript が消えた
+-   一旦 loading にともなうリセットが起こると、ExTranscript が非表示にならなくなる？
 
+##### 字幕変更しようとしたら ExTranscript が消える件
 
-##### 字幕変更しようとしたらExTranscriptが消える件
+動画の切り替えでコントロールバーの DOM も更新される模様
 
-##### ExTranscriptが非表示にならなくなる件
+order.reset を contentScript.ts でも実施して
+controlbar の DOM を更新することで解決した
 
-もしかしたらcontentScript消えた？
+解決済
 
-loading後にcontent scriptがinjectされたままなのか確認する
+##### 字幕変更のために CC POPUP ボタンを押したら EX トランスクリプトが消える件
 
-もしもinjectされたままなら、DOMが更新されている？
+呼出すべき関数を勘違いしていた
 
-参考：
+CC POPUPMENU 　内部の click イベントも
+`handlerOfControlbar`で検知できるはずなので
+document にイベントリスナをつけずとも
+`handlerOfControlbar`に任せればよい
 
-https://stackoverflow.com/questions/34528785/chrome-extension-checking-if-content-script-has-been-injected-or-not
-
-> もしも`chrome.tabs.sendMessage()`を送信して返事がなかったらcontent scriptはタブにインジェクトされていないと思っていいかも
+解決済
 
 ```TypeScript
+// contentScript.ts
 
+const handlerOfControlbar = function (ev: PointerEvent): void {
+  console.log("[contentScript] controlbar clicked");
 
-const areContentScriptsAlive = async (): Promise<boolean> => {
-  
-}
+  const path: EventTarget[] = ev.composedPath();
+  const transcriptToggle: HTMLElement = document.querySelector<HTMLElement>(
+    selectors.controlBar.transcript.toggleButton
+  );
+  const theaterToggle: HTMLElement = document.querySelector<HTMLElement>(
+    selectors.controlBar.theatre.theatreToggle
+  );
+  const ccPopupButton: HTMLElement = document.querySelector<HTMLElement>(
+    selectors.controlBar.cc.popupButton
+  );
 
+  // NOTE: NEW ADDED
+  const ccPopupMenu:HTMLElement = document.querySelector<HTMLElement>(selectors.controlBar.cc.menuListParent);
 
-const handlerOfReset = async (
-    tabId: number,
-    newUrl?: string
-): Promise<void> => {
-    try {
-      // ....
+  setTimeout(function () {
+    // ...
 
-    }catch(){};
-}
+    // NOTE: いらないかも...
+    // 結局、字幕が変更されたかどうかがわかればいいので
+    // 字幕変更はPOPUP MENIの内部がクリックされたあとにわかるものである
+    // となると、クリックされるかどうかわからない状況で反応しても意味がない...
+    // CC POUPボタンが押されたら
+    if (path.includes(ccPopupButton)) {
+      console.log("[contentScript] CC Popup button clicked");
+      document.removeEventListener("click", ccPopupMenuClickHandler);
+      document.addEventListener("click", ccPopupMenuClickHandler);
+    }
+
+    // NOTE: NEW ADDED cc popup menu内部でクリックイベントが起こったら
+    // 字幕が変更されたのか調べる
+    //
+    // これがうまく働けば
+    // documentにイベントリスナをつける必要もないし
+    // ccPopupMenuClickHandler()も必要ない
+    if(path.includes(ccPopupMenu)){
+      const r: boolean = isSubtitleEnglish();
+      console.log(`Have subtitle language been changed? ${r}`);
+      sendToBackground({isEnglish: r});
+    }
+  }, 200);
+  console.log("[contentScript] controlbar clicke event done");
+};
+
 ```
+
+#### 残るタスク
+
+-   自動スクロール機能: のこる大きな課題
+-   ブラウザ横幅を小さくしても、ExTranscript 残り続けてしまう問題
+-   popup で正しい動作をさせる：RUN した後は RUN ボタンを無効にするとか
+-   controller.ts の onwWindowResizeHandler をもうちょっとサクサク動かしたい
+-   拡張機能を展開していたタブが閉じられたときの後始末
+-   エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
+-   デザイン改善: 見た目の話
+
+##### RESET 機能実装：ウィンドウが小さくなった時、ExTranscript が消えない件
+
+controller.ts 以外は正常に稼働している...
+
+ログ：
+
+```bash
+# Message Handler
+CONTROLLER GOT MESSAGE  controller.js:1437
+order: TURN OFF ExTranscript   controller.js:1484
+# handlerOfTurnOff()
+Turning off ExTranscript   controller.js:703
+[BottomTranscriptView] clear  controller.js:1689
+setup Auto Scroll System  controller.js:1540
+# ここでリサイズハンドラが呼び出されているために再レンダリングされてしまっている
+[onWindowResizeHandler]  controller.js:804
+# おそらくonWindowResizeHandler内でbottomTranscriptView.render()が呼び出されている
+[SidebarTranscriptView] clear  controller.js:703 [BottomTranscriptView] clear  controller.js:685 [BottomTranscriptView] render  controller.js:686
+[]
+```
+
+`onWindowResizeHandler`を呼出した存在を突き止める
+
+`updatePosition`が反応していた
+
+`position: null`を渡していはずがいつの間にか`position`に値が与えられていた
+
+その場所は？
+
+`onWindowResizeHandler`だった
+
+つまりこういうことである
+
+contentScript から発せられるトランスクリプト閉じての order と
+controller 自身が管理している onWindoeResizeHandler が
+同時に発火したために
+バッティングが起こったのである
+
+簡潔に言うと
+
+`handlerOfReset()`と
+`onWindowResizeHandler()`の同時発火である
+
+`handlerOfReset()`で`statusBase`の状態に state を戻したけど
+別軸で実行された`onWindowResizeHandler()`がすぐに state を更新してしまい
+結果 ExTranscript がレンダーされてしまった...
+
+解決策：
+
+window のリサイズハンドラは唯一にすべき？
+
+結構難しい問題...
+
+controller はもう一つ state を扱った方がいいのかも
+`hide`みたいなプロパティを
+
+##### 自動スクロール機能実装

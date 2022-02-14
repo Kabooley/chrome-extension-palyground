@@ -188,7 +188,7 @@ const handlerOfTurnOff = (): void => {
 
     // REMOVAL MutationObserver
     transcriptListObserver.disconnect();
-    transcriptListObserver = null;
+    // transcriptListObserver = null;
 
     // RESET State
     sStatus.setState({ ...statusBase });

@@ -1495,7 +1495,7 @@ const handlerOfTurnOff = () => {
     }
     // REMOVAL MutationObserver
     transcriptListObserver.disconnect();
-    transcriptListObserver = null;
+    // transcriptListObserver = null;
     // RESET State
     sStatus.setState(Object.assign({}, statusBase));
     sSubtitles.setState(Object.assign({}, subtitleBase));
