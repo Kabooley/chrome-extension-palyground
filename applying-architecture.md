@@ -2619,6 +2619,8 @@ const handlerOfControlbar = function (ev: PointerEvent): void {
 
 ##### RESET 機能実装：ウィンドウが小さくなった時、ExTranscript が消えない件
 
+解決済
+
 controller.ts 以外は正常に稼働している...
 
 ログ：
@@ -2664,13 +2666,18 @@ controller 自身が管理している onWindoeResizeHandler が
 別軸で実行された`onWindowResizeHandler()`がすぐに state を更新してしまい
 結果 ExTranscript がレンダーされてしまった...
 
-解決策：
+解決策：`onWindowResizeHandler()`がウィンドウサイズ更新時、ブラウザ横幅小さくなりすぎ境界線をまたぐ時だけ何もしないようにする
 
-window のリサイズハンドラは唯一にすべき？
 
-結構難しい問題...
-
-controller はもう一つ state を扱った方がいいのかも
-`hide`みたいなプロパティを
 
 ##### 自動スクロール機能実装
+
+まずいまちゃんと動いていない
+あとcontrollerから分離したいね
+
+自動スクロール機能開始条件：
+
+字幕データを受け取ったときに`sStatus.isAutoscrollInitialized`がfalseだったら`setDetectScroll()`実行する
+
+`setDetectScroll()`ではMutationObserverを生成してobserve()開始
+

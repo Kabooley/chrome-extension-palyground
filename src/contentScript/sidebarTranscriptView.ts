@@ -61,8 +61,6 @@ SidebarTranscriptView.prototype.generateSubtitleMarkup = function (
 SidebarTranscriptView.prototype.render = function (
   subtitles?: subtitle_piece[]
 ): void {
-  console.log("[SidebarTranscriptView] render");
-
   const e: Element = document.querySelector(this.insertParentSelector);
   const p: InsertPosition = this.insertPosition;
   var html: string = "";
@@ -76,8 +74,6 @@ SidebarTranscriptView.prototype.render = function (
 };
 
 SidebarTranscriptView.prototype.clear = function (): void {
-  console.log("[SidebarTranscriptView] clear");
-
   this.transcriptSelectors.forEach((s: string) => {
     const e: Element = document.querySelector(s);
     if (e) e.remove();
@@ -95,7 +91,6 @@ SidebarTranscriptView.prototype.updateContentTop = function (
 };
 
 SidebarTranscriptView.prototype.updateContentHeight = function (): void {
-  console.log("[SidebarTranscriptView] height update");
   const content = document.querySelector<HTMLElement>(
     selectors.EX.sidebarContent
   );

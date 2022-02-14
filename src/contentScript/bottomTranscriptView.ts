@@ -1,4 +1,4 @@
-import * as selectors from '../utils/selectors';
+import * as selectors from "../utils/selectors";
 import { subtitle_piece } from "../utils/constants";
 import "./bottomTranscriptView.css";
 
@@ -14,21 +14,24 @@ const BottomTranscriptView = function () {
   ];
 };
 
-
 /*
 .ex--dashboard-transcript--cue-container
 .ex--dashboard-transcript--cue--underline
 span[data-purpose="ex--dashboard-cue-text"]
 
-*/ 
+*/
 BottomTranscriptView.prototype.generateSubtitleMarkup = function (
   subtitles: subtitle_piece[]
 ): string {
   var mu: string = "";
   for (const s of subtitles) {
     const _mu: string = `
-        <div class="${selectors.EX.dashboardTranscriptCueContainer.slice(1)}" data-id="${s.index}">
-            <p data-purpose="ex-transcript-cue" class="${selectors.EX.dashboardTranscriptCue.slice(1)}">
+        <div class="${selectors.EX.dashboardTranscriptCueContainer.slice(
+          1
+        )}" data-id="${s.index}">
+            <p data-purpose="ex-transcript-cue" class="${selectors.EX.dashboardTranscriptCue.slice(
+              1
+            )}">
                 <span data-purpose="ex--dashboard-cue-text">
                     ${s.subtitle}
                 </span>
@@ -38,7 +41,6 @@ BottomTranscriptView.prototype.generateSubtitleMarkup = function (
     // concatでいいのかな...
     mu = mu.concat(_mu);
   }
-  console.log(mu);
   return mu;
 };
 
@@ -76,9 +78,6 @@ BottomTranscriptView.prototype.generateMarkup = function (
 BottomTranscriptView.prototype.render = function (
   subtitles?: subtitle_piece[]
 ): void {
-  console.log("[BottomTranscriptView]render");
-  console.log(subtitles);
-
   //   親要素を`position: relative`にする
   const e: HTMLElement = document.querySelector<HTMLElement>(
     this.insertParentSelector
@@ -97,8 +96,6 @@ BottomTranscriptView.prototype.render = function (
 
 // Udemyページのコンテンツを間違っても消してしまわないように
 BottomTranscriptView.prototype.clear = function (): void {
-  console.log("[BottomTranscriptView]clear");
-
   this.transcriptSelectors.forEach((s: string) => {
     const e: Element = document.querySelector(s);
     if (e) e.remove();
@@ -125,4 +122,4 @@ BottomTranscriptView.prototype.renderMessage = function (): void {
 export default new BottomTranscriptView();
 
 /*
-*/
+ */
