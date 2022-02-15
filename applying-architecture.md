@@ -10,6 +10,22 @@ MVC と DDD の設計思想を取り入れたい
 
 [1/25:処理についておさらい](#1/25:処理についておさらい)
 
+## 残る課題
+
+頻繁に更新
+
+- [済] sidebarの時の自動スクロール機能関数`controller.ts::scrollToHighlight()`が機能するようにすること
+- NOTE: background.tsはいったんアンロードされるとstateに渡した変数がすべて消えることへの対処
+    これが治らないと急に拡張機能が機能しなくなる...
+
+- popup で正しい動作をさせる：RUN した後は RUN ボタンを無効にするとか
+- 拡張機能を展開していたタブが閉じられたときの後始末
+- エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
+- デザイン改善: 見た目の話
+- controller.ts の onwWindowResizeHandler をもうちょっとサクサク動かしたい
+
+
+
 ## DDD 設計思想の導入に関するメモ
 
 聞きかじりでしかない
@@ -253,7 +269,6 @@ manager.execute(new CancelOrderCommand("1234"));
 ```
 
 つまり
-<<<<<<< HEAD
 Command インスタンスには execute()呼出で実行できる関数を登録する
 Command インスタンスを生成する関数はコンストラクタ関数である
 OrderManager インスタンスの execute()にはこのコンストラクタ関数の new オブジェクトを渡す
@@ -266,7 +281,6 @@ Command インスタンスを生成する関数はコンストラクタ関数で
 OrderManager インスタンスの execute()にはこのコンストラクタ関数の new オブジェクトを渡す
 つまり実際には OrderManager.execute()には Command のインスタンスを渡している
 
-> > > > > > > e25cafebc477bc30a375b8a4dc0acd425ccf00cc
 
 これにより
 
@@ -2674,42 +2688,12 @@ controller 自身が管理している onWindoeResizeHandler が
 
 ##### 自動スクロール機能のリセット
 
+解決済
+
 Ex トランスクリプトの position が変更になったりすると
 途端に自動スクロール機能が使えなくなる
 
 なのでリセット、再起動できるようにする
-
-observer の生成タイミング：
-
-```TypeScript
-const updateSubtitle = (prop, prev): void => {
-  if (prop.subtitles === undefined) return;
-
-  // 字幕データのアップデート
-  const { position, view, isAutoscrollInitialized } = sStatus.getState();
-
-  // ...
-
-  if (!isAutoscrollInitialized) {
-    // NOTE: 自動スクロール機能はここで初期化される
-    setDetectScroll();
-    sStatus.setState({ isAutoscrollInitialized: true });
-  }
-};
-
-```
-
-`setDetectScroll()`内部で MutationObserver\_を生成してオブザーブを開始する
-
-`MutationObserver_`は`MutationObserver`のラップ class で target がリストの時に使う
-
-`MutationObserver_`が初期化済かどうかは`sStatus.isAutoscrollInitiliazed`の真偽値で判断する
-
-とうことで
-
-`if (sStatus.isAutoScrollInitialized) /* リセット処理 */`
-`else /* 初期化処理 */`
-とする
 
 ```TypeScript
 // controler.ts
@@ -2723,7 +2707,7 @@ const moConfig: MutationObserverInit = {
   childList: false,
   subtree: false,
   attributeOldValue: true,
-};
+} as const;
 
 const moCallback = function (
   this: MutationObserver_,
@@ -2756,28 +2740,63 @@ const resetDetectScroll = (): void => {
     const { isAutoscrollInitialized } = sStatus.getState();
     if(!isAutoscrollInitialized) {
       // 初期化処理
+        // 一旦リセットしてから
+        if (transcriptListObserver) {
+            transcriptListObserver.disconnect();
+            transcriptListObserver = null;
+        }
+        //   NodeListOf HTMLSpanElement
+        const transcriptList: NodeListOf<Element> = document.querySelectorAll(
+            selectors.transcript.transcripts
+        );
+        transcriptListObserver = new MutationObserver_(
+            moCallback,
+            moConfig,
+            transcriptList
+        );
+        transcriptListObserver.observe();
     }
     else {
-      // リセット処理
+      // リセット処理: targetを変更するだけ
+        transcriptListObserver.disconnect();
+                //   NodeListOf HTMLSpanElement
+        const transcriptList: NodeListOf<Element> = document.querySelectorAll(
+            selectors.transcript.transcripts
+        );
+        transcriptListObserver._target = transcriptList;
+        transcriptListObserver.observe();
     }
 
+};
 
-  // 一旦リセットしてから
-  if (transcriptListObserver) {
-    transcriptListObserver.disconnect();
-    transcriptListObserver = null;
-  }
-  //   NodeListOf HTMLSpanElement
-  const transcriptList: NodeListOf<Element> = document.querySelectorAll(
-    selectors.transcript.transcripts
-  );
-  transcriptListObserver = new MutationObserver_(
-    moCallback,
-    moConfig,
-    transcriptList
-  );
-  initializeIndexList();
-  transcriptListObserver.observe();
+
+const updateSubtitle = (prop, prev): void => {
+  if (prop.subtitles === undefined) return;
+
+  // 字幕データのアップデート
+  const { position, view, 
+//   isAutoscrollInitialized 
+  } = sStatus.getState();
+
+  // ...
+
+    //   if (!isAutoscrollInitialized) {
+    //     // NOTE: 自動スクロール機能はここで初期化される
+    //     setDetectScroll();
+    //     sStatus.setState({ isAutoscrollInitialized: true });
+    //   }
+    initializeIndexList();
+    resetDetectScroll();
 };
 
 ```
+
+
+#### 2/16
+
+残る課題: 更新
+
+
+##### 自動スクロール機能の実装： ExTranscriptがsidebarだと`scrollToHighlight()`が機能しなくなる件の修正
+
+解決済

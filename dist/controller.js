@@ -764,7 +764,7 @@ SidebarTranscriptView.prototype.generateSubtitleMarkup = function (subtitles) {
     var mu = "";
     for (const s of subtitles) {
         const _mu = `
-        <div class="nothingYet" data-id="${s.index}">
+        <div class="${_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.EX.sidebarCueContainer.slice(1)}" data-id="${s.index}">
           <p class="nothingYet">
             <span data-purpose="nothingYet">${s.subtitle}</span>
           </p>
@@ -1179,19 +1179,19 @@ __webpack_require__.r(__webpack_exports__);
 // --- Selectors related to Transcript ---------------------------
 const transcript = {
     // HTMLSpanElement which is Highlight as current subtitle on movie.
-    highlight: 'span.transcript--highlight-cue--1bEgq',
+    highlight: "span.transcript--highlight-cue--1bEgq",
     // NodeListOf<HTMLSpanElement> which are list of subtitle element.
-    transcripts: 'div.transcript--cue-container--wu3UY p.transcript--underline-cue--3osdw span',
+    transcripts: "div.transcript--cue-container--wu3UY p.transcript--underline-cue--3osdw span",
     // top element of side bar
-    noSidebar: 'div.app--no-sidebar--1naXE',
-    sidebar: 'div.has-sidebar',
+    noSidebar: "div.app--no-sidebar--1naXE",
+    sidebar: "div.has-sidebar",
     // High level element of Movie element
-    movieContainer: 'div.app--curriculum-item--2GBGE',
+    movieContainer: "div.app--curriculum-item--2GBGE",
     // Movie Replay button
     replayButton: "button[data-purpose='video-play-button-initial']",
     // Controlbar
     controlbar: "div.control-bar--control-bar--MweER[data-purpose='video-controls']",
-    // 
+    //
 };
 // --- Selectors related to control bar. -------------------------
 const controlBar = {
@@ -1205,48 +1205,49 @@ const controlBar = {
         //
         // 言語リストを取得するには一旦languageButtonsを取得してからそれからquerySelectorする
         // いらないかも
-        menuCheckButtons: 'button',
-        menuList: '.udlite-block-list-item-content',
+        menuCheckButtons: "button",
+        menuList: ".udlite-block-list-item-content",
         menuListParent: "ul[role='menu'][data-purpose='captions-dropdown-menu']",
         // 上記のセレクタのラッパーボタン。
         // 属性`aria-checked`で選択されているかどうかわかる
-        checkButtons: 'button.udlite-btn.udlite-btn-large.udlite-btn-ghost.udlite-text-sm.udlite-block-list-item.udlite-block-list-item-small.udlite-block-list-item-neutral',
+        checkButtons: "button.udlite-btn.udlite-btn-large.udlite-btn-ghost.udlite-text-sm.udlite-block-list-item.udlite-block-list-item-small.udlite-block-list-item-neutral",
     },
     transcript: {
         toggleButton: "button[data-purpose='transcript-toggle']",
     },
     theatre: {
-        theatreToggle: "button[data-purpose='theatre-mode-toggle-button']"
-    }
+        theatreToggle: "button[data-purpose='theatre-mode-toggle-button']",
+    },
 };
 // --- Selectors related ex-transcript -----------------------
 const EX = {
     // Udemy page-specific selector
-    sidebarParent: '.app--content-column--HC_i1',
-    noSidebarParent: '.app--dashboard-content--r2Ce9',
-    movieContainer: '.app--body-container',
+    sidebarParent: ".app--content-column--HC_i1",
+    noSidebarParent: ".app--dashboard-content--r2Ce9",
+    movieContainer: ".app--body-container",
     // 独自selector `ex--`を接頭辞とする
     // sidebar ex-transcript selectors
-    sidebarWrapper: '.ex--sidebar-column',
-    sidebarSection: '.ex--sidebar--sidebar',
-    sidebarHeader: '.ex--sidebar--sidebar-header',
-    sidebarContent: '.ex--sidebar--content',
-    sidebarContentPanel: '.ex--sidebar-content-panel',
-    sidebarFooter: '.ex--sidebar-transcript--autoscroll-wrapper',
+    sidebarWrapper: ".ex--sidebar-column",
+    sidebarSection: ".ex--sidebar--sidebar",
+    sidebarHeader: ".ex--sidebar--sidebar-header",
+    sidebarContent: ".ex--sidebar--content",
+    sidebarContentPanel: ".ex--sidebar-content-panel",
+    sidebarCueContainer: ".ex--sidebar-transcript--cue-container",
+    sidebarFooter: ".ex--sidebar-transcript--autoscroll-wrapper",
     // sidebar width in case more than SIDEBAR_WIDTH_BOUNDARY
-    wideView: '.ex--sidebar--wideview',
+    wideView: ".ex--sidebar--wideview",
     // sidebar width in case less than SIDEBAR_WIDTH_BOUNDARY
-    middleView: '.ex--sidebar--middleview',
+    middleView: ".ex--sidebar--middleview",
     // bottom ex-transcript selectors
-    dashboardTranscriptWrapper: '.ex--dashboard-transcript-wrapper',
-    dashboardTranscriptHeader: '.ex--dashboard-transcript--header',
-    dashboardTranscriptPanel: '.ex--dashboard-transcript--transcript-panel',
-    dashboardTranscriptCueContainer: '.ex--dashboard-transcript--cue-container',
-    dashboardTranscriptCue: '.ex--dashboard-transcript--cue--underline',
+    dashboardTranscriptWrapper: ".ex--dashboard-transcript-wrapper",
+    dashboardTranscriptHeader: ".ex--dashboard-transcript--header",
+    dashboardTranscriptPanel: ".ex--dashboard-transcript--transcript-panel",
+    dashboardTranscriptCueContainer: ".ex--dashboard-transcript--cue-container",
+    dashboardTranscriptCue: ".ex--dashboard-transcript--cue--underline",
     dashboardTranscriptCueText: "span[data-purpose='ex--dashboard-cue-text']",
-    dashboardTranscriptBottom: '.ex--dashboard-transcript--autoscroll-wrapper',
+    dashboardTranscriptBottom: ".ex--dashboard-transcript--autoscroll-wrapper",
     // To Highlight Transcriot Cue Container
-    highlight: '.--highlight--',
+    highlight: ".--highlight--",
 };
 // --- LEGACY -------------------------
 // sectionTitle: 'div.udlite-text-md.video-viewer--title-overlay--OoQ6e',
@@ -1406,7 +1407,7 @@ const statusBase = {
     view: null,
     highlight: null,
     ExHighlight: null,
-    indexList: [],
+    indexList: null,
     isAutoscrollInitialized: false,
     isWindowTooSmall: false,
 };
@@ -1419,6 +1420,27 @@ let timerQueue = null;
 let sStatus;
 let sSubtitles;
 let transcriptListObserver = null;
+const moConfig = {
+    attributes: true,
+    childList: false,
+    subtree: false,
+    attributeOldValue: true,
+};
+const moCallback = function (mr) {
+    let guard = false;
+    mr.forEach((record) => {
+        if (record.type === "attributes" &&
+            record.attributeName === "class" &&
+            record.oldValue === "" &&
+            !guard) {
+            console.log("OBSERVED");
+            guard = true;
+            updateHighlightIndexes();
+            updateExTranscriptHighlight();
+            scrollToHighlight();
+        }
+    });
+};
 //
 // --- CHROME LISTENERS -------------------
 //
@@ -1606,8 +1628,10 @@ const onWindowResizeHandler = () => {
  *
  * */
 const initializeIndexList = () => {
+    console.log("[controller] initializeIndexList()");
     const { subtitles } = sSubtitles.getState();
     const indexes = subtitles.map((s) => s.index);
+    console.log(indexes);
     sStatus.setState({ indexList: indexes });
 };
 /*
@@ -1679,10 +1703,14 @@ const updateHighlightIndexes = () => {
 const updateExTranscriptHighlight = () => {
     console.log("[controller] updateExTranscriptHighlight()");
     // 次ハイライトする要素のdata-idの番号
-    const { ExHighlight } = sStatus.getState();
-    const next = document.querySelector(`${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.dashboardTranscriptCueContainer}[data-id="${ExHighlight}"]`);
+    const { ExHighlight, position } = sStatus.getState();
+    const next = position === _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.sidebar
+        ? document.querySelector(`${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.sidebarCueContainer}[data-id="${ExHighlight}"]`)
+        : document.querySelector(`${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.dashboardTranscriptCueContainer}[data-id="${ExHighlight}"]`);
     // 現在のハイライト要素
-    const current = document.querySelector(`${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.dashboardTranscriptCueContainer}${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.highlight}`);
+    const current = position === _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.sidebar
+        ? document.querySelector(`${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.sidebarCueContainer}${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.highlight}`)
+        : document.querySelector(`${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.dashboardTranscriptCueContainer}${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.highlight}`);
     if (!current) {
         //   初期化時
         console.log("---- INITIALIZE -----");
@@ -1719,48 +1747,37 @@ const updateExTranscriptHighlight = () => {
  *
  * これに伴って
  * MutationObserverのMutationRecordも複数ある要素のすべてを記録するので
- * 1度だけ行いたい処理を2回以上行わなくてはならない危険性がある
+ * 1度だけ行いたい処理を2回以上行わなってしまう危険性がある
  *
- *  これを避けるためにisItDoneで処理が既に完了しているのかどうかを
+ *  これを避けるために`guard`でループ処理が既に完了しているのかどうかを
  *  確認するようにしている
+ *
+ *
  * ***/
-const setDetectScroll = () => {
-    console.log("[controller] setup Autro Scroll System");
-    const moConfig = {
-        attributes: true,
-        childList: false,
-        subtree: false,
-        attributeOldValue: true,
-    };
-    const moCallback = function (mr) {
-        let guard = false;
-        mr.forEach((record) => {
-            if (record.type === "attributes" &&
-                record.attributeName === "class" &&
-                record.oldValue === "" &&
-                !guard) {
-                console.log("OBSERVED");
-                guard = true;
-                // this._observer.disconnect();
-                // DOM への変更中はdisconnectで無限ループ防止できる ----
-                updateHighlightIndexes();
-                updateExTranscriptHighlight();
-                scrollToHighlight();
-                // ------------------------------------------------------
-                // this._observer.observe(record.target, this._config);
-            }
-        });
-    };
-    // 一旦リセットしてから
-    if (transcriptListObserver) {
-        transcriptListObserver.disconnect();
-        transcriptListObserver = null;
+const resetDetectScroll = () => {
+    console.log("[controller] reset Autro Scroll System");
+    const { isAutoscrollInitialized } = sStatus.getState();
+    if (!isAutoscrollInitialized) {
+        // 初期化処理
+        // 一旦リセットしてから
+        if (transcriptListObserver) {
+            transcriptListObserver.disconnect();
+            transcriptListObserver = null;
+        }
+        //   NodeListOf HTMLSpanElement
+        const transcriptList = document.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.transcript.transcripts);
+        transcriptListObserver = new _utils_MutationObserver___WEBPACK_IMPORTED_MODULE_6__["default"](moCallback, moConfig, transcriptList);
+        transcriptListObserver.observe();
+        sStatus.setState({ isAutoscrollInitialized: true });
     }
-    //   NodeListOf HTMLSpanElement
-    const transcriptList = document.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.transcript.transcripts);
-    transcriptListObserver = new _utils_MutationObserver___WEBPACK_IMPORTED_MODULE_6__["default"](moCallback, moConfig, transcriptList);
-    initializeIndexList();
-    transcriptListObserver.observe();
+    else {
+        // リセット処理: targetを変更するだけ
+        transcriptListObserver.disconnect();
+        //   NodeListOf HTMLSpanElement
+        const transcriptList = document.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.transcript.transcripts);
+        transcriptListObserver._target = transcriptList;
+        transcriptListObserver.observe();
+    }
 };
 /**
  *  Scroll to Highlight
@@ -1772,11 +1789,17 @@ const setDetectScroll = () => {
 const scrollToHighlight = () => {
     console.log("[controller] scrollToHighlight()");
     // そのたびにいまハイライトしている要素を取得する
-    const { ExHighlight } = sStatus.getState();
-    const current = document.querySelector(`${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.dashboardTranscriptCueContainer}[data-id="${ExHighlight}"]`);
-    const panel = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.dashboardTranscriptPanel);
+    const { ExHighlight, position } = sStatus.getState();
+    const current = position === _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.sidebar
+        ? document.querySelector(`${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.sidebarCueContainer}[data-id="${ExHighlight}"]`)
+        : document.querySelector(`${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.dashboardTranscriptCueContainer}[data-id="${ExHighlight}"]`);
+    const panel = position === _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.sidebar
+        ? document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.sidebarContent)
+        : document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.dashboardTranscriptPanel);
     const panelRect = panel.getBoundingClientRect();
     const currentRect = current.getBoundingClientRect();
+    console.log(`currentRect.y: ${currentRect.y}`);
+    console.log(`panelRect.y: ${panelRect.y}`);
     if (currentRect.y > panelRect.y) {
         const distance = currentRect.y - panelRect.y;
         panel.scrollTop = distance + panel.scrollTop;
@@ -1806,7 +1829,7 @@ const updateSubtitle = (prop, prev) => {
     if (prop.subtitles === undefined)
         return;
     // 字幕データのアップデート
-    const { position, view, isAutoscrollInitialized } = sStatus.getState();
+    const { position, view } = sStatus.getState();
     if (position === "sidebar") {
         renderSidebarTranscript();
         _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateContentHeight();
@@ -1817,11 +1840,8 @@ const updateSubtitle = (prop, prev) => {
     if (position === "noSidebar") {
         renderBottomTranscript();
     }
-    if (!isAutoscrollInitialized) {
-        // NOTE: 自動スクロール機能はここで初期化される
-        setDetectScroll();
-        sStatus.setState({ isAutoscrollInitialized: true });
-    }
+    initializeIndexList();
+    resetDetectScroll();
 };
 const updatePosition = (prop, prev) => {
     const { position } = prop;
@@ -1831,6 +1851,8 @@ const updatePosition = (prop, prev) => {
         renderSidebarTranscript();
     else if (position === "noSidebar")
         renderBottomTranscript();
+    // 必須：自動スクロール機能のリセット
+    resetDetectScroll();
 };
 const updateSidebarView = (prop, prev) => {
     const { view } = prop;
@@ -1953,10 +1975,10 @@ const updateExHighlight = (prop, prev) => {
 //   movieContainer.removeEventListener("click", movieReplayClickHandler);
 //   //   set up auto scroll handling
 //   //   initializeDetecting();
-//   setDetectScroll();
+//   resetDetectScroll();
 // };
 // /*
-//     setDetectScroll()
+//     resetDetectScroll()
 //     ______________________________________
 //     本家のハイライトされている字幕が、
 //     自動スクロール機能で移り変わるたびに反応するオブザーバを生成する
@@ -1970,7 +1992,7 @@ const updateExHighlight = (prop, prev) => {
 //     1度だけ行いたい処理を2回以上行わなくてはならない危険性がある
 //     これを避けるためにisItDoneで処理が既に完了しているのかどうかを確認するようにしている
 // */
-// const setDetectScroll = (): void => {
+// const resetDetectScroll = (): void => {
 //   const _callback = (mr: MutationRecord[]): void => {
 //     console.log("observed");
 //     var isItDone: boolean = false;
@@ -2030,7 +2052,7 @@ const updateExHighlight = (prop, prev) => {
 //   movieContainer.removeEventListener("click", movieReplayClickHandler);
 //   //   set up auto scroll handling
 //   //   initializeDetecting();
-//   setDetectScroll();
+//   resetDetectScroll();
 
 })();
 

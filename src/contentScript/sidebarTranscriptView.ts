@@ -39,7 +39,9 @@ SidebarTranscriptView.prototype.generateSubtitleMarkup = function (
   var mu: string = "";
   for (const s of subtitles) {
     const _mu: string = `
-        <div class="nothingYet" data-id="${s.index}">
+        <div class="${selectors.EX.sidebarCueContainer.slice(1)}" data-id="${
+      s.index
+    }">
           <p class="nothingYet">
             <span data-purpose="nothingYet">${s.subtitle}</span>
           </p>
