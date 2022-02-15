@@ -2668,16 +2668,116 @@ controller 自身が管理している onWindoeResizeHandler が
 
 解決策：`onWindowResizeHandler()`がウィンドウサイズ更新時、ブラウザ横幅小さくなりすぎ境界線をまたぐ時だけ何もしないようにする
 
-
-
 ##### 自動スクロール機能実装
 
-まずいまちゃんと動いていない
-あとcontrollerから分離したいね
+解決済
 
-自動スクロール機能開始条件：
+##### 自動スクロール機能のリセット
 
-字幕データを受け取ったときに`sStatus.isAutoscrollInitialized`がfalseだったら`setDetectScroll()`実行する
+Ex トランスクリプトの position が変更になったりすると
+途端に自動スクロール機能が使えなくなる
 
-`setDetectScroll()`ではMutationObserverを生成してobserve()開始
+なのでリセット、再起動できるようにする
 
+observer の生成タイミング：
+
+```TypeScript
+const updateSubtitle = (prop, prev): void => {
+  if (prop.subtitles === undefined) return;
+
+  // 字幕データのアップデート
+  const { position, view, isAutoscrollInitialized } = sStatus.getState();
+
+  // ...
+
+  if (!isAutoscrollInitialized) {
+    // NOTE: 自動スクロール機能はここで初期化される
+    setDetectScroll();
+    sStatus.setState({ isAutoscrollInitialized: true });
+  }
+};
+
+```
+
+`setDetectScroll()`内部で MutationObserver\_を生成してオブザーブを開始する
+
+`MutationObserver_`は`MutationObserver`のラップ class で target がリストの時に使う
+
+`MutationObserver_`が初期化済かどうかは`sStatus.isAutoscrollInitiliazed`の真偽値で判断する
+
+とうことで
+
+`if (sStatus.isAutoScrollInitialized) /* リセット処理 */`
+`else /* 初期化処理 */`
+とする
+
+```TypeScript
+// controler.ts
+
+
+// Put out requirements of MutationObserver.
+// - config object
+// - callback function
+const moConfig: MutationObserverInit = {
+  attributes: true,
+  childList: false,
+  subtree: false,
+  attributeOldValue: true,
+};
+
+const moCallback = function (
+  this: MutationObserver_,
+  mr: MutationRecord[]
+): void {
+  let guard: boolean = false;
+  mr.forEach((record: MutationRecord) => {
+    if (
+      record.type === "attributes" &&
+      record.attributeName === "class" &&
+      record.oldValue === "" &&
+      !guard
+    ) {
+      console.log("OBSERVED");
+      guard = true;
+      updateHighlightIndexes();
+      updateExTranscriptHighlight();
+      scrollToHighlight();
+    }
+  });
+};
+
+
+// NOTE: Renamed. `resetDetectScroll` as new name.
+// check `isAutoscrollInitialized` inside funciton.
+// Put out requiremnts of MutationObserver.
+const resetDetectScroll = (): void => {
+  console.log("[controller] reset Autro Scroll System");
+
+    const { isAutoscrollInitialized } = sStatus.getState();
+    if(!isAutoscrollInitialized) {
+      // 初期化処理
+    }
+    else {
+      // リセット処理
+    }
+
+
+  // 一旦リセットしてから
+  if (transcriptListObserver) {
+    transcriptListObserver.disconnect();
+    transcriptListObserver = null;
+  }
+  //   NodeListOf HTMLSpanElement
+  const transcriptList: NodeListOf<Element> = document.querySelectorAll(
+    selectors.transcript.transcripts
+  );
+  transcriptListObserver = new MutationObserver_(
+    moCallback,
+    moConfig,
+    transcriptList
+  );
+  initializeIndexList();
+  transcriptListObserver.observe();
+};
+
+```

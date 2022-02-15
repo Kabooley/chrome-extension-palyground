@@ -34,27 +34,27 @@
  * - [済] 自動スクロール機能の発火条件の発見とそれに伴う修正
  * - [済] 字幕データは受動的に取得する仕様にする
  * *******************************************************/
-import sidebarTranscriptView from "./sidebarTranscriptView";
-import bottomTranscriptView from "./bottomTranscriptView";
-import * as selectors from "../utils/selectors";
+import sidebarTranscriptView from './sidebarTranscriptView';
+import bottomTranscriptView from './bottomTranscriptView';
+import * as selectors from '../utils/selectors';
 import {
-  extensionNames,
-  iMessage,
-  iResponse,
-  orderNames,
-  subtitle_piece,
-  RESIZE_BOUNDARY,
-  SIDEBAR_WIDTH_BOUNDARY,
-  RESIZE_TIMER,
-  SIGNAL,
-  positionStatus,
-  viewStatusNames,
-  keyof_viewStatus,
-  keyof_positionStatus,
-} from "../utils/constants";
-import Observable from "../utils/Observable";
-import State from "../utils/contentScript/State";
-import MutationObserver_ from "../utils/MutationObserver_";
+    extensionNames,
+    iMessage,
+    iResponse,
+    orderNames,
+    subtitle_piece,
+    RESIZE_BOUNDARY,
+    SIDEBAR_WIDTH_BOUNDARY,
+    RESIZE_TIMER,
+    SIGNAL,
+    positionStatus,
+    viewStatusNames,
+    keyof_viewStatus,
+    keyof_positionStatus,
+} from '../utils/constants';
+import Observable from '../utils/Observable';
+import State from '../utils/contentScript/State';
+import MutationObserver_ from '../utils/MutationObserver_';
 // import { sendMessagePromise } from "../utils/helpers";
 
 // ----- GLOBALS --------------------------
@@ -62,42 +62,42 @@ import MutationObserver_ from "../utils/MutationObserver_";
 // Annotations
 //
 interface iController {
-  // 本家Transcriptのポジション2通り
-  position: keyof_positionStatus;
-  // 本家Transcriptがsidebarであるときの表示のされ方2通り
-  view: keyof_viewStatus;
-  // 本家Transcriptでハイライトされている字幕の要素の順番
-  highlight: number;
-  // ExTranscriptの字幕要素のうち、いまハイライトしている要素の順番
-  ExHighlight: number;
-  // _subtitlesのindexプロパティからなる配列
-  indexList: number[];
-  // 自動スクロール機能が展開済かどうか
-  isAutoscrollInitialized: boolean;
-  // ブラウザサイズが小さすぎる状態かどうか
-  isWindowTooSmall: boolean;
+    // 本家Transcriptのポジション2通り
+    position: keyof_positionStatus;
+    // 本家Transcriptがsidebarであるときの表示のされ方2通り
+    view: keyof_viewStatus;
+    // 本家Transcriptでハイライトされている字幕の要素の順番
+    highlight: number;
+    // ExTranscriptの字幕要素のうち、いまハイライトしている要素の順番
+    ExHighlight: number;
+    // _subtitlesのindexプロパティからなる配列
+    indexList: number[];
+    // 自動スクロール機能が展開済かどうか
+    isAutoscrollInitialized: boolean;
+    // ブラウザサイズが小さすぎる状態かどうか
+    isWindowTooSmall: boolean;
 }
 
 // 字幕データはでかいので、毎回気軽に呼び出さないでほしい
 // そのため別にしておく
 interface iSubtitles {
-  subtitles: subtitle_piece[];
+    subtitles: subtitle_piece[];
 }
 
 const statusBase: iController = {
-  // position, viewの初期値は意味をなさず、
-  // すぐに変更されることが前提である
-  position: null,
-  view: null,
-  highlight: null,
-  ExHighlight: null,
-  indexList: null,
-  isAutoscrollInitialized: false,
-  isWindowTooSmall: false,
+    // position, viewの初期値は意味をなさず、
+    // すぐに変更されることが前提である
+    position: null,
+    view: null,
+    highlight: null,
+    ExHighlight: null,
+    indexList: null,
+    isAutoscrollInitialized: false,
+    isWindowTooSmall: false,
 };
 
 const subtitleBase: iSubtitles = {
-  subtitles: [],
+    subtitles: [],
 };
 
 // ウィンドウが小さすぎてトランスクリプトが表示されなくなる境界値
@@ -116,41 +116,41 @@ let transcriptListObserver: MutationObserver_ = null;
  *
  * */
 chrome.runtime.onMessage.addListener(
-  async (
-    message: iMessage,
-    sender: chrome.runtime.MessageSender,
-    sendResponse: (response: iResponse) => void
-  ): Promise<boolean> => {
-    try {
-      if (message.to !== extensionNames.controller) return;
-      console.log("[controller] CONTROLLER GOT MESSAGE");
-      const { order, ...rest } = message;
-      if (order && order.length) {
-        if (order.includes(orderNames.reset)) {
-          console.log("[controller] order: RESET");
-          handlerOfReset();
-          sendResponse({ complete: true, success: true });
-        }
-        if (order.includes(orderNames.turnOff)) {
-          console.log("[controller] order: TURN OFF ExTranscript");
-          handlerOfTurnOff();
-          sendResponse({ complete: true, success: true });
-        }
-      }
-      // 字幕データが送られてきたら
-      if (rest.subtitles) {
-        console.log("[controller] [controller] got subtitles");
-        console.log(rest.subtitles);
-        //  setStateのnotify()がこの変更に必要な関数を実行してくれる
+    async (
+        message: iMessage,
+        sender: chrome.runtime.MessageSender,
+        sendResponse: (response: iResponse) => void
+    ): Promise<boolean> => {
+        try {
+            if (message.to !== extensionNames.controller) return;
+            console.log('[controller] CONTROLLER GOT MESSAGE');
+            const { order, ...rest } = message;
+            if (order && order.length) {
+                if (order.includes(orderNames.reset)) {
+                    console.log('[controller] order: RESET');
+                    handlerOfReset();
+                    sendResponse({ complete: true, success: true });
+                }
+                if (order.includes(orderNames.turnOff)) {
+                    console.log('[controller] order: TURN OFF ExTranscript');
+                    handlerOfTurnOff();
+                    sendResponse({ complete: true, success: true });
+                }
+            }
+            // 字幕データが送られてきたら
+            if (rest.subtitles) {
+                console.log('[controller] [controller] got subtitles');
+                console.log(rest.subtitles);
+                //  setStateのnotify()がこの変更に必要な関数を実行してくれる
 
-        sSubtitles.setState({ subtitles: rest.subtitles });
-        sendResponse({ complete: true });
-      }
-      return true;
-    } catch (err) {
-      console.error(err.message);
+                sSubtitles.setState({ subtitles: rest.subtitles });
+                sendResponse({ complete: true });
+            }
+            return true;
+        } catch (err) {
+            console.error(err.message);
+        }
     }
-  }
 );
 
 //
@@ -158,25 +158,25 @@ chrome.runtime.onMessage.addListener(
 //
 
 const renderSidebarTranscript = (): void => {
-  console.log("[controller] Rerender sidebar ExTranscript");
-  const { subtitles } = sSubtitles.getState();
-  bottomTranscriptView.clear();
-  sidebarTranscriptView.clear();
-  sidebarTranscriptView.render(subtitles);
-  sidebarTranscriptView.updateContentHeight();
-  // sidebarの時だけに必要
-  window.addEventListener("scroll", onWindowScrollHandler);
+    console.log('[controller] Rerender sidebar ExTranscript');
+    const { subtitles } = sSubtitles.getState();
+    bottomTranscriptView.clear();
+    sidebarTranscriptView.clear();
+    sidebarTranscriptView.render(subtitles);
+    sidebarTranscriptView.updateContentHeight();
+    // sidebarの時だけに必要
+    window.addEventListener('scroll', onWindowScrollHandler);
 };
 
 const renderBottomTranscript = (): void => {
-  console.log("[controller] Rerender bottom ExTranscript");
+    console.log('[controller] Rerender bottom ExTranscript');
 
-  const { subtitles } = sSubtitles.getState();
-  sidebarTranscriptView.clear();
-  bottomTranscriptView.clear();
-  bottomTranscriptView.render(subtitles);
-  // noSidebarの時は不要
-  window.removeEventListener("scroll", onWindowScrollHandler);
+    const { subtitles } = sSubtitles.getState();
+    sidebarTranscriptView.clear();
+    bottomTranscriptView.clear();
+    bottomTranscriptView.render(subtitles);
+    // noSidebarの時は不要
+    window.removeEventListener('scroll', onWindowScrollHandler);
 };
 
 //
@@ -188,34 +188,34 @@ const renderBottomTranscript = (): void => {
  *
  * */
 const reductionOfwindowResizeHandler = (): void => {
-  clearTimeout(timerQueue);
-  timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
+    clearTimeout(timerQueue);
+    timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
 };
 
 /****
  *
  * */
 const handlerOfTurnOff = (): void => {
-  console.log("[controller] handlerOfTurnOff()");
+    console.log('[controller] handlerOfTurnOff()');
 
-  // REMOVAL Listeners
-  window.removeEventListener("resize", reductionOfwindowResizeHandler);
-  window.removeEventListener("scroll", onWindowScrollHandler);
+    // REMOVAL Listeners
+    window.removeEventListener('resize', reductionOfwindowResizeHandler);
+    window.removeEventListener('scroll', onWindowScrollHandler);
 
-  // CLEAR ExTranscript
-  const { position } = sStatus.getState();
-  if (position === positionStatus.sidebar) {
-    sidebarTranscriptView.clear();
-  } else {
-    bottomTranscriptView.clear();
-  }
+    // CLEAR ExTranscript
+    const { position } = sStatus.getState();
+    if (position === positionStatus.sidebar) {
+        sidebarTranscriptView.clear();
+    } else {
+        bottomTranscriptView.clear();
+    }
 
-  // REMOVAL MutationObserver
-  transcriptListObserver.disconnect();
+    // REMOVAL MutationObserver
+    transcriptListObserver.disconnect();
 
-  // RESET State
-  sStatus.setState({ ...statusBase });
-  sSubtitles.setState({ ...subtitleBase });
+    // RESET State
+    sStatus.setState({ ...statusBase });
+    sSubtitles.setState({ ...subtitleBase });
 };
 
 /****
@@ -223,26 +223,26 @@ const handlerOfTurnOff = (): void => {
  *
  * */
 const handlerOfReset = (): void => {
-  console.log("[controller] handlerOfReset()");
+    console.log('[controller] handlerOfReset()');
 
-  handlerOfTurnOff();
+    handlerOfTurnOff();
 
-  // NOTE: 以下はMAINの後半の処理と同じである
-  const w: number = document.documentElement.clientWidth;
-  const s: keyof_positionStatus =
-    w > RESIZE_BOUNDARY ? positionStatus.sidebar : positionStatus.noSidebar;
-  sStatus.setState({ position: s });
+    // NOTE: 以下はMAINの後半の処理と同じである
+    const w: number = document.documentElement.clientWidth;
+    const s: keyof_positionStatus =
+        w > RESIZE_BOUNDARY ? positionStatus.sidebar : positionStatus.noSidebar;
+    sStatus.setState({ position: s });
 
-  if (s === positionStatus.sidebar) {
-    sStatus.setState({
-      view:
-        w > SIDEBAR_WIDTH_BOUNDARY
-          ? viewStatusNames.wideView
-          : viewStatusNames.middleView,
-    });
-  }
+    if (s === positionStatus.sidebar) {
+        sStatus.setState({
+            view:
+                w > SIDEBAR_WIDTH_BOUNDARY
+                    ? viewStatusNames.wideView
+                    : viewStatusNames.middleView,
+        });
+    }
 
-  window.addEventListener("resize", reductionOfwindowResizeHandler);
+    window.addEventListener('resize', reductionOfwindowResizeHandler);
 };
 
 /**
@@ -250,11 +250,11 @@ const handlerOfReset = (): void => {
  *
  * */
 const onWindowScrollHandler = (): void => {
-  console.log("[controller] onWindowScrollHandler()");
-  const y: number = window.scrollY;
-  y < 56
-    ? sidebarTranscriptView.updateContentTop(56 - y)
-    : sidebarTranscriptView.updateContentTop(0);
+    console.log('[controller] onWindowScrollHandler()');
+    const y: number = window.scrollY;
+    y < 56
+        ? sidebarTranscriptView.updateContentTop(56 - y)
+        : sidebarTranscriptView.updateContentTop(0);
 };
 
 /*
@@ -268,55 +268,55 @@ const onWindowScrollHandler = (): void => {
   
   */
 const onWindowResizeHandler = (): void => {
-  console.log("[controller] onWindowResizeHandler()");
+    console.log('[controller] onWindowResizeHandler()');
 
-  const w: number = document.documentElement.clientWidth;
-  const { position, view, isWindowTooSmall } = sStatus.getState();
+    const w: number = document.documentElement.clientWidth;
+    const { position, view, isWindowTooSmall } = sStatus.getState();
 
-  //  MINIMUM_BOUNDARYの境界値をまたいだ時は何もしない
-  if (w < MINIMUM_BOUNDARY && !isWindowTooSmall) {
-    sStatus.setState({ isWindowTooSmall: true });
-    return;
-  }
-  if (w > MINIMUM_BOUNDARY && isWindowTooSmall) {
-    sStatus.setState({ isWindowTooSmall: false });
-    return;
-  }
-
-  // ブラウザの幅がRESIZE_BOUNDARYを上回るとき
-  // Transcriptをsidebarに設置する
-  if (w > RESIZE_BOUNDARY && position !== positionStatus.sidebar) {
-    sStatus.setState({ position: positionStatus.sidebar });
-    sStatus.setState({ view: viewStatusNames.middleView });
-
-    // 同時に、sidebar時のTranscriptの表示方法の変更
-    sStatus.setState({
-      view:
-        w > SIDEBAR_WIDTH_BOUNDARY
-          ? viewStatusNames.wideView
-          : viewStatusNames.middleView,
-    });
-  }
-
-  // ブラウザの幅がRESIZE＿BOUNDARYを下回るとき
-  // Transcriptを動画下部に表示する
-  if (w < RESIZE_BOUNDARY && position !== positionStatus.noSidebar) {
-    sStatus.setState({ position: positionStatus.noSidebar });
-  }
-
-  // Transcriptがsidebarの時、
-  // 2通りある表示方法を決定する
-  if (position === positionStatus.sidebar) {
-    sidebarTranscriptView.updateContentHeight();
-    if (view === viewStatusNames.middleView && w > SIDEBAR_WIDTH_BOUNDARY) {
-      // sidebar widthを300pxから25%へ
-      sStatus.setState({ view: viewStatusNames.wideView });
+    //  MINIMUM_BOUNDARYの境界値をまたいだ時は何もしない
+    if (w < MINIMUM_BOUNDARY && !isWindowTooSmall) {
+        sStatus.setState({ isWindowTooSmall: true });
+        return;
     }
-    if (view === viewStatusNames.wideView && w < SIDEBAR_WIDTH_BOUNDARY) {
-      // sideba widthを25%から300pxへ
-      sStatus.setState({ view: viewStatusNames.middleView });
+    if (w > MINIMUM_BOUNDARY && isWindowTooSmall) {
+        sStatus.setState({ isWindowTooSmall: false });
+        return;
     }
-  }
+
+    // ブラウザの幅がRESIZE_BOUNDARYを上回るとき
+    // Transcriptをsidebarに設置する
+    if (w > RESIZE_BOUNDARY && position !== positionStatus.sidebar) {
+        sStatus.setState({ position: positionStatus.sidebar });
+        sStatus.setState({ view: viewStatusNames.middleView });
+
+        // 同時に、sidebar時のTranscriptの表示方法の変更
+        sStatus.setState({
+            view:
+                w > SIDEBAR_WIDTH_BOUNDARY
+                    ? viewStatusNames.wideView
+                    : viewStatusNames.middleView,
+        });
+    }
+
+    // ブラウザの幅がRESIZE＿BOUNDARYを下回るとき
+    // Transcriptを動画下部に表示する
+    if (w < RESIZE_BOUNDARY && position !== positionStatus.noSidebar) {
+        sStatus.setState({ position: positionStatus.noSidebar });
+    }
+
+    // Transcriptがsidebarの時、
+    // 2通りある表示方法を決定する
+    if (position === positionStatus.sidebar) {
+        sidebarTranscriptView.updateContentHeight();
+        if (view === viewStatusNames.middleView && w > SIDEBAR_WIDTH_BOUNDARY) {
+            // sidebar widthを300pxから25%へ
+            sStatus.setState({ view: viewStatusNames.wideView });
+        }
+        if (view === viewStatusNames.wideView && w < SIDEBAR_WIDTH_BOUNDARY) {
+            // sideba widthを25%から300pxへ
+            sStatus.setState({ view: viewStatusNames.middleView });
+        }
+    }
 };
 
 //
@@ -328,26 +328,26 @@ const onWindowResizeHandler = (): void => {
  *
  * */
 const initializeIndexList = (): void => {
-  const { subtitles } = sSubtitles.getState();
-  const indexes: number[] = subtitles.map((s) => s.index);
-  sStatus.setState({ indexList: indexes });
+    const { subtitles } = sSubtitles.getState();
+    const indexes: number[] = subtitles.map((s) => s.index);
+    sStatus.setState({ indexList: indexes });
 };
 
 /*
       字幕要素群の中から、引数の要素が何番目にあるのかを探してその順番を返す
   */
 const getElementIndexOfList = (
-  from: NodeListOf<Element>,
-  lookFor: Element
+    from: NodeListOf<Element>,
+    lookFor: Element
 ): number => {
-  console.log("[controller] getElementIndexOfList()");
-  var num: number = 0;
-  for (const el of Array.from(from)) {
-    if (el === lookFor) return num;
-    num++;
-  }
-  // 一致するものがなかった場合
-  return -1;
+    console.log('[controller] getElementIndexOfList()');
+    var num: number = 0;
+    for (const el of Array.from(from)) {
+        if (el === lookFor) return num;
+        num++;
+    }
+    // 一致するものがなかった場合
+    return -1;
 };
 
 /*
@@ -366,34 +366,34 @@ const getElementIndexOfList = (
       動画が再生する前の状態の時(再生画面が動画の真ん中に表示されている状態)はこのセレクタはどの要素にも追加されていないからである
   */
 const updateHighlightIndexes = (): void => {
-  console.log("[controller] updateHighlightIndexes()");
-  // １．本家のハイライト要素を取得して、その要素群の中での「順番」を保存する
-  const nextHighlight: Element = document.querySelector<Element>(
-    selectors.transcript.highlight
-  );
-  const list: NodeListOf<HTMLSpanElement> = document.querySelectorAll(
-    selectors.transcript.transcripts
-  );
-  const next: number = getElementIndexOfList(list, nextHighlight);
-  sStatus.setState({ highlight: next });
+    console.log('[controller] updateHighlightIndexes()');
+    // １．本家のハイライト要素を取得して、その要素群の中での「順番」を保存する
+    const nextHighlight: Element = document.querySelector<Element>(
+        selectors.transcript.highlight
+    );
+    const list: NodeListOf<HTMLSpanElement> = document.querySelectorAll(
+        selectors.transcript.transcripts
+    );
+    const next: number = getElementIndexOfList(list, nextHighlight);
+    sStatus.setState({ highlight: next });
 
-  // 2. 1で取得した「順番」がstate._subtitlesのindexと一致するか比較して、
-  // ExTranscriptのハイライト要素の番号を保存する
-  const { indexList } = sStatus.getState();
-  if (indexList.includes(next)) {
-    sStatus.setState({ ExHighlight: next });
-  } else {
-    // 一致するindexがない場合
-    // currentHighlightの番号に最も近い、currentHighlightより小さいindexをsetする
-    var prev: number = null;
-    for (let i of indexList) {
-      if (i > next) {
-        sStatus.setState({ ExHighlight: prev });
-        break;
-      }
-      prev = i;
+    // 2. 1で取得した「順番」がstate._subtitlesのindexと一致するか比較して、
+    // ExTranscriptのハイライト要素の番号を保存する
+    const { indexList } = sStatus.getState();
+    if (indexList.includes(next)) {
+        sStatus.setState({ ExHighlight: next });
+    } else {
+        // 一致するindexがない場合
+        // currentHighlightの番号に最も近い、currentHighlightより小さいindexをsetする
+        var prev: number = null;
+        for (let i of indexList) {
+            if (i > next) {
+                sStatus.setState({ ExHighlight: prev });
+                break;
+            }
+            prev = i;
+        }
     }
-  }
 };
 
 /*
@@ -408,38 +408,38 @@ const updateHighlightIndexes = (): void => {
       どれをハイライトさせるかは`state._ExHighlight`に依存する
   */
 const updateExTranscriptHighlight = (): void => {
-  console.log("[controller] updateExTranscriptHighlight()");
-  // 次ハイライトする要素のdata-idの番号
-  const { ExHighlight } = sStatus.getState();
-  const next: HTMLElement = document.querySelector(
-    `${selectors.EX.dashboardTranscriptCueContainer}[data-id="${ExHighlight}"]`
-  );
-  // 現在のハイライト要素
-  const current: HTMLElement = document.querySelector<HTMLElement>(
-    `${selectors.EX.dashboardTranscriptCueContainer}${selectors.EX.highlight}`
-  );
-  if (!current) {
-    //   初期化時
-    console.log("---- INITIALIZE -----");
-    next.classList.add(selectors.EX.highlight.slice(1));
-    console.log(next);
-  } else {
-    //   更新時
-    const currentIndex: number = parseInt(current.getAttribute("data-id"));
+    console.log('[controller] updateExTranscriptHighlight()');
+    // 次ハイライトする要素のdata-idの番号
+    const { ExHighlight } = sStatus.getState();
+    const next: HTMLElement = document.querySelector(
+        `${selectors.EX.dashboardTranscriptCueContainer}[data-id="${ExHighlight}"]`
+    );
+    // 現在のハイライト要素
+    const current: HTMLElement = document.querySelector<HTMLElement>(
+        `${selectors.EX.dashboardTranscriptCueContainer}${selectors.EX.highlight}`
+    );
+    if (!current) {
+        //   初期化時
+        console.log('---- INITIALIZE -----');
+        next.classList.add(selectors.EX.highlight.slice(1));
+        console.log(next);
+    } else {
+        //   更新時
+        const currentIndex: number = parseInt(current.getAttribute('data-id'));
 
-    // もしも変わらないなら何もしない
-    if (currentIndex === ExHighlight) {
-      console.log("--- NO UPDATE ---");
-      return;
+        // もしも変わらないなら何もしない
+        if (currentIndex === ExHighlight) {
+            console.log('--- NO UPDATE ---');
+            return;
+        }
+        // 更新ならば、前回のハイライト要素を解除して次の要素をハイライトさせる
+        else {
+            console.log('--- UPDATE ---');
+            current.classList.remove(selectors.EX.highlight.slice(1));
+            next.classList.add(selectors.EX.highlight.slice(1));
+            console.log(next);
+        }
     }
-    // 更新ならば、前回のハイライト要素を解除して次の要素をハイライトさせる
-    else {
-      console.log("--- UPDATE ---");
-      current.classList.remove(selectors.EX.highlight.slice(1));
-      next.classList.add(selectors.EX.highlight.slice(1));
-      console.log(next);
-    }
-  }
 };
 
 /***
@@ -455,62 +455,64 @@ const updateExTranscriptHighlight = (): void => {
  *
  * これに伴って
  * MutationObserverのMutationRecordも複数ある要素のすべてを記録するので
- * 1度だけ行いたい処理を2回以上行わなくてはならない危険性がある
+ * 1度だけ行いたい処理を2回以上行わなってしまう危険性がある
  *
- *  これを避けるためにisItDoneで処理が既に完了しているのかどうかを
+ *  これを避けるために`guard`でループ処理が既に完了しているのかどうかを
  *  確認するようにしている
+ *
+ *
  * ***/
 const setDetectScroll = (): void => {
-  console.log("[controller] setup Autro Scroll System");
+    console.log('[controller] setup Autro Scroll System');
 
-  const moConfig: MutationObserverInit = {
-    attributes: true,
-    childList: false,
-    subtree: false,
-    attributeOldValue: true,
-  };
+    const moConfig: MutationObserverInit = {
+        attributes: true,
+        childList: false,
+        subtree: false,
+        attributeOldValue: true,
+    };
 
-  const moCallback = function (
-    this: MutationObserver_,
-    mr: MutationRecord[]
-  ): void {
-    let guard: boolean = false;
-    mr.forEach((record: MutationRecord) => {
-      if (
-        record.type === "attributes" &&
-        record.attributeName === "class" &&
-        record.oldValue === "" &&
-        !guard
-      ) {
-        console.log("OBSERVED");
-        guard = true;
-        // this._observer.disconnect();
-        // DOM への変更中はdisconnectで無限ループ防止できる ----
-        updateHighlightIndexes();
-        updateExTranscriptHighlight();
-        scrollToHighlight();
-        // ------------------------------------------------------
-        // this._observer.observe(record.target, this._config);
-      }
-    });
-  };
+    const moCallback = function (
+        this: MutationObserver_,
+        mr: MutationRecord[]
+    ): void {
+        let guard: boolean = false;
+        mr.forEach((record: MutationRecord) => {
+            if (
+                record.type === 'attributes' &&
+                record.attributeName === 'class' &&
+                record.oldValue === '' &&
+                !guard
+            ) {
+                console.log('OBSERVED');
+                guard = true;
+                // this._observer.disconnect();
+                // DOM への変更中はdisconnectで無限ループ防止できる ----
+                updateHighlightIndexes();
+                updateExTranscriptHighlight();
+                scrollToHighlight();
+                // ------------------------------------------------------
+                // this._observer.observe(record.target, this._config);
+            }
+        });
+    };
 
-  // 一旦リセットしてから
-  if (transcriptListObserver) {
-    transcriptListObserver.disconnect();
-    transcriptListObserver = null;
-  }
-  //   NodeListOf HTMLSpanElement
-  const transcriptList: NodeListOf<Element> = document.querySelectorAll(
-    selectors.transcript.transcripts
-  );
-  transcriptListObserver = new MutationObserver_(
-    moCallback,
-    moConfig,
-    transcriptList
-  );
-  initializeIndexList();
-  transcriptListObserver.observe();
+    // 一旦リセットしてから
+    if (transcriptListObserver) {
+        transcriptListObserver.disconnect();
+        transcriptListObserver = null;
+    }
+    //   NodeListOf HTMLSpanElement
+    const transcriptList: NodeListOf<Element> = document.querySelectorAll(
+        selectors.transcript.transcripts
+    );
+    transcriptListObserver = new MutationObserver_(
+        moCallback,
+        moConfig,
+        transcriptList
+    );
+    initializeIndexList();
+    transcriptListObserver.observe();
 };
 
 /**
@@ -521,32 +523,32 @@ const setDetectScroll = (): void => {
  *
  * */
 const scrollToHighlight = (): void => {
-  console.log("[controller] scrollToHighlight()");
+    console.log('[controller] scrollToHighlight()');
 
-  // そのたびにいまハイライトしている要素を取得する
-  const { ExHighlight } = sStatus.getState();
-  const current: HTMLElement = document.querySelector<HTMLElement>(
-    `${selectors.EX.dashboardTranscriptCueContainer}[data-id="${ExHighlight}"]`
-  );
-  const panel: HTMLElement = document.querySelector(
-    selectors.EX.dashboardTranscriptPanel
-  );
+    // そのたびにいまハイライトしている要素を取得する
+    const { ExHighlight } = sStatus.getState();
+    const current: HTMLElement = document.querySelector<HTMLElement>(
+        `${selectors.EX.dashboardTranscriptCueContainer}[data-id="${ExHighlight}"]`
+    );
+    const panel: HTMLElement = document.querySelector(
+        selectors.EX.dashboardTranscriptPanel
+    );
 
-  const panelRect: DOMRect = panel.getBoundingClientRect();
-  const currentRect: DOMRect = current.getBoundingClientRect();
+    const panelRect: DOMRect = panel.getBoundingClientRect();
+    const currentRect: DOMRect = current.getBoundingClientRect();
 
-  if (currentRect.y > panelRect.y) {
-    const distance: number = currentRect.y - panelRect.y;
-    panel.scrollTop = distance + panel.scrollTop;
-  } else {
-    if (currentRect.y > 0) {
-      const distance: number = panelRect.y - currentRect.y;
-      panel.scrollTop = panel.scrollTop - distance;
+    if (currentRect.y > panelRect.y) {
+        const distance: number = currentRect.y - panelRect.y;
+        panel.scrollTop = distance + panel.scrollTop;
     } else {
-      const distance = panelRect.y + Math.abs(currentRect.y);
-      panel.scrollTop = panel.scrollTop - distance;
+        if (currentRect.y > 0) {
+            const distance: number = panelRect.y - currentRect.y;
+            panel.scrollTop = panel.scrollTop - distance;
+        } else {
+            const distance = panelRect.y + Math.abs(currentRect.y);
+            panel.scrollTop = panel.scrollTop - distance;
+        }
     }
-  }
 };
 
 //
@@ -561,55 +563,55 @@ const scrollToHighlight = (): void => {
  *
  * */
 const updateSubtitle = (prop, prev): void => {
-  if (prop.subtitles === undefined) return;
+    if (prop.subtitles === undefined) return;
 
-  // 字幕データのアップデート
-  const { position, view, isAutoscrollInitialized } = sStatus.getState();
-  if (position === "sidebar") {
-    renderSidebarTranscript();
-    sidebarTranscriptView.updateContentHeight();
-    view === "middleView"
-      ? sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.middleview)
-      : sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.wideview);
-  }
-  if (position === "noSidebar") {
-    renderBottomTranscript();
-  }
-  if (!isAutoscrollInitialized) {
-    // NOTE: 自動スクロール機能はここで初期化される
-    setDetectScroll();
-    sStatus.setState({ isAutoscrollInitialized: true });
-  }
+    // 字幕データのアップデート
+    const { position, view, isAutoscrollInitialized } = sStatus.getState();
+    if (position === 'sidebar') {
+        renderSidebarTranscript();
+        sidebarTranscriptView.updateContentHeight();
+        view === 'middleView'
+            ? sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.middleview)
+            : sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.wideview);
+    }
+    if (position === 'noSidebar') {
+        renderBottomTranscript();
+    }
+    if (!isAutoscrollInitialized) {
+        // NOTE: 自動スクロール機能はここで初期化される
+        setDetectScroll();
+        sStatus.setState({ isAutoscrollInitialized: true });
+    }
 };
 
 const updatePosition = (prop, prev): void => {
-  const { position } = prop;
-  if (position === undefined) return;
+    const { position } = prop;
+    if (position === undefined) return;
 
-  if (position === "sidebar") renderSidebarTranscript();
-  else if (position === "noSidebar") renderBottomTranscript();
+    if (position === 'sidebar') renderSidebarTranscript();
+    else if (position === 'noSidebar') renderBottomTranscript();
 };
 
 const updateSidebarView = (prop, prev): void => {
-  const { view } = prop;
-  if (view === undefined) return;
+    const { view } = prop;
+    if (view === undefined) return;
 
-  if (view === "middleView")
-    sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.middleview);
-  else if (view === "wideView")
-    sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.wideview);
+    if (view === 'middleView')
+        sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.middleview);
+    else if (view === 'wideView')
+        sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.wideview);
 };
 
 const updateHighlight = (prop, prev): void => {
-  const { highlight } = prop;
-  if (highlight === undefined) return;
-  console.log("[controller] UPDATED Highlight");
+    const { highlight } = prop;
+    if (highlight === undefined) return;
+    console.log('[controller] UPDATED Highlight');
 };
 
 const updateExHighlight = (prop, prev): void => {
-  const { highlight } = prop;
-  if (highlight === undefined) return;
-  console.log("[controller] UPDATED ExHighlight");
+    const { highlight } = prop;
+    if (highlight === undefined) return;
+    console.log('[controller] UPDATED ExHighlight');
 };
 
 /**
@@ -617,38 +619,38 @@ const updateExHighlight = (prop, prev): void => {
  *
  * */
 (function (): void {
-  console.log("[controller] Initializing...");
+    console.log('[controller] Initializing...');
 
-  const oStatus: Observable<iController> = new Observable<iController>();
-  const oSubtitle: Observable<iSubtitles> = new Observable<iSubtitles>();
-  sStatus = new State(statusBase, oStatus);
-  sSubtitles = new State(subtitleBase, oSubtitle);
+    const oStatus: Observable<iController> = new Observable<iController>();
+    const oSubtitle: Observable<iSubtitles> = new Observable<iSubtitles>();
+    sStatus = new State(statusBase, oStatus);
+    sSubtitles = new State(subtitleBase, oSubtitle);
 
-  sSubtitles.observable.register(updateSubtitle);
-  sStatus.observable.register(updatePosition);
-  sStatus.observable.register(updateSidebarView);
-  sStatus.observable.register(updateHighlight);
-  sStatus.observable.register(updateExHighlight);
+    sSubtitles.observable.register(updateSubtitle);
+    sStatus.observable.register(updatePosition);
+    sStatus.observable.register(updateSidebarView);
+    sStatus.observable.register(updateHighlight);
+    sStatus.observable.register(updateExHighlight);
 
-  // 初期のExTranscriptの展開場所に関するステータスを取得する
-  const w: number = document.documentElement.clientWidth;
-  const s: keyof_positionStatus =
-    w > RESIZE_BOUNDARY ? positionStatus.sidebar : positionStatus.noSidebar;
-  sStatus.setState({ position: s });
+    // 初期のExTranscriptの展開場所に関するステータスを取得する
+    const w: number = document.documentElement.clientWidth;
+    const s: keyof_positionStatus =
+        w > RESIZE_BOUNDARY ? positionStatus.sidebar : positionStatus.noSidebar;
+    sStatus.setState({ position: s });
 
-  if (s === positionStatus.sidebar) {
-    sStatus.setState({
-      view:
-        w > SIDEBAR_WIDTH_BOUNDARY
-          ? viewStatusNames.wideView
-          : viewStatusNames.middleView,
-    });
-  }
+    if (s === positionStatus.sidebar) {
+        sStatus.setState({
+            view:
+                w > SIDEBAR_WIDTH_BOUNDARY
+                    ? viewStatusNames.wideView
+                    : viewStatusNames.middleView,
+        });
+    }
 
-  sStatus.setState({ isWindowTooSmall: w < MINIMUM_BOUNDARY ? true : false });
+    sStatus.setState({ isWindowTooSmall: w < MINIMUM_BOUNDARY ? true : false });
 
-  window.removeEventListener("resize", reductionOfwindowResizeHandler);
-  window.addEventListener("resize", reductionOfwindowResizeHandler);
+    window.removeEventListener('resize', reductionOfwindowResizeHandler);
+    window.addEventListener('resize', reductionOfwindowResizeHandler);
 })();
 
 //
