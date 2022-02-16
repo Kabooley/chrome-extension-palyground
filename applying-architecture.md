@@ -2796,7 +2796,98 @@ const updateSubtitle = (prop, prev): void => {
 
 残る課題: 更新
 
+#### APIをみてから改善できる点
+
+- `chrome.tabs.onUpdated`で関係ないURLを無視したいときはfilterを使う
+
+
 
 ##### 自動スクロール機能の実装： ExTranscriptがsidebarだと`scrollToHighlight()`が機能しなくなる件の修正
 
-解決済
+解決
+
+
+##### background scriptのアンロード対策
+
+`background.ts::state`モジュールはローカルストレージに保存しないけれど
+モジュールの変数を変更する
+
+これだとやっぱりアンロードで消えてしまうことが最近分かった
+
+Stateのインスタンスをstateへ渡す
+background.tsのメソッドはstateを通じてStateのインスタンスへ間接的にアクセスする
+Stateはkeyを使って呼び出しに応じてlocalStorageを呼出す
+
+
+```TypeScript
+// background.ts
+
+chrome.runtime.onInstalled.addListener(
+  async (details: chrome.runtime.InstalledDetails): Promise<void> => {
+    console.log(`[background] onInstalled: ${details.reason}`);
+    try {
+      state.unregister();
+      await state.register(new State<iModel>(_key_of_model_state__));
+      await state.getInstance().clearStorage();
+      await state.getInstance().setState(modelBase);
+    } catch (err) {
+      console.error(err.message);
+    }
+  }
+);
+
+
+export const state: iStateModule<iModel> = (function () {
+  let _instance: State<iModel> = null;
+
+  return {
+    register: (m: State<iModel>): void => {
+      _instance = m;
+    },
+    // unregisterする場面では、もはやStateは要らないから
+    // Stateを削除しちゃってもいいと思う
+    unregister: (): void => {
+      _instance = null;
+    },
+    getInstance: (): State<iModel> => {
+      return _instance;
+    },
+  };
+})();
+
+
+// 現状の使い方...
+const s = state.getInstance();
+const { tabId } = await s.getState();
+
+// 必須な工程...
+
+// LOCALSTORAGE GET
+chrome.storage.local.get(KEY, function(data){
+  console.log("data from local storage");
+  // dataを外に出す
+});
+
+// LOCALSTORAGE SET
+await chrome.storage.local.set({KEY: newData});
+
+
+// State set
+// setStateはlocalstorageへ本来すべてのデータを保存しなくていけないところ、
+// 一部のプロパティだけ渡してもすべてのデータを保存できるように上書き操作をしてくれることである
+
+// State get
+// すべてのデータを受け取ってディープコピーして返すだけ...
+
+
+// backgrond.ts
+
+// -- GLOBALS -----
+const KEY_LOCALSTORAGE = "__key__local_storage_";
+
+const state = (function() {
+  // モジュールは変数を保持しないように
+  
+})();
+
+```
