@@ -16,8 +16,16 @@ MVC と DDD の設計思想を取り入れたい
 
 -   [済] sidebar の時の自動スクロール機能関数`controller.ts::scrollToHighlight()`が機能するようにすること
 -   [済] background.ts はいったんアンロードされると state に渡した変数がすべて消えることへの対処
-- Refac: background script で `chrome.tabs.updated.addListener`にfilterを設けることで余計なurlはデフォで無視する仕様にする
+- [済] Refac: background script で `chrome.tabs.updated.addListener`にfilterを設けることで余計なurlはデフォで無視する仕様にする
  参考：https://developer.chrome.com/docs/extensions/reference/events/#filtered
+
+- Udemyの講義ページで、動画じゃないページへアクセスしたときの対応
+    たとえばテキストだけ表示される回があるけど、それの対応
+- 上記に伴って、loading中をExTranscriptへ表示させる
+- 自動スクロール機能で重複する字幕要素を完全に処理しきれていない模様...
+    つまりたぶんだけど、重複しているほうの要素にcssのclassをつけてしまっていて、
+    だけれどもremoveはできていない
+    という可能性...
 
 -   popup で正しい動作をさせる：RUN した後は RUN ボタンを無効にするとか
 -   拡張機能を展開していたタブが閉じられたときの後始末
@@ -2939,6 +2947,8 @@ const state = (function<TYPE>() {
 ```
 #### event filter 実装
 
+結果、実装しようとしたら`chrome.tabs.onUpdated.addListener`にはfilterは設けられなかった...
+
 background.tsの`chrome.tabs.onUpdated.addListener`へfilterを設けることで
 余計な処理を減らす
 
@@ -2949,10 +2959,6 @@ const eventFilter = {
   ]
 }
 ```
-
-`urlMatches` 
-
-> URL（フラグメント識別子なし）が指定された正規表現と一致する場合に一致します。ポート番号がデフォルトのポート番号と一致する場合、URLから削除されます。正規表現はRE2構文を使用します。
 
 #### エラーハンドリング実装
 
