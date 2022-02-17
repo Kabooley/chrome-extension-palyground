@@ -14,17 +14,16 @@ MVC と DDD の設計思想を取り入れたい
 
 頻繁に更新
 
-- [済] sidebarの時の自動スクロール機能関数`controller.ts::scrollToHighlight()`が機能するようにすること
-- NOTE: background.tsはいったんアンロードされるとstateに渡した変数がすべて消えることへの対処
-    これが治らないと急に拡張機能が機能しなくなる...
+-   [済] sidebar の時の自動スクロール機能関数`controller.ts::scrollToHighlight()`が機能するようにすること
+-   [済] background.ts はいったんアンロードされると state に渡した変数がすべて消えることへの対処
+- Refac: background script で `chrome.tabs.updated.addListener`にfilterを設けることで余計なurlはデフォで無視する仕様にする
+ 参考：https://developer.chrome.com/docs/extensions/reference/events/#filtered
 
-- popup で正しい動作をさせる：RUN した後は RUN ボタンを無効にするとか
-- 拡張機能を展開していたタブが閉じられたときの後始末
-- エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
-- デザイン改善: 見た目の話
-- controller.ts の onwWindowResizeHandler をもうちょっとサクサク動かしたい
-
-
+-   popup で正しい動作をさせる：RUN した後は RUN ボタンを無効にするとか
+-   拡張機能を展開していたタブが閉じられたときの後始末
+-   エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
+-   デザイン改善: 見た目の話
+-   controller.ts の onwWindowResizeHandler をもうちょっとサクサク動かしたい
 
 ## DDD 設計思想の導入に関するメモ
 
@@ -280,7 +279,6 @@ Command インスタンスには実際に実行することになる関数を渡
 Command インスタンスを生成する関数はコンストラクタ関数である
 OrderManager インスタンスの execute()にはこのコンストラクタ関数の new オブジェクトを渡す
 つまり実際には OrderManager.execute()には Command のインスタンスを渡している
-
 
 これにより
 
@@ -2774,8 +2772,8 @@ const updateSubtitle = (prop, prev): void => {
   if (prop.subtitles === undefined) return;
 
   // 字幕データのアップデート
-  const { position, view, 
-//   isAutoscrollInitialized 
+  const { position, view,
+//   isAutoscrollInitialized
   } = sStatus.getState();
 
   // ...
@@ -2791,33 +2789,30 @@ const updateSubtitle = (prop, prev): void => {
 
 ```
 
-
 #### 2/16
 
 残る課題: 更新
 
-#### APIをみてから改善できる点
+#### API をみてから改善できる点
 
-- `chrome.tabs.onUpdated`で関係ないURLを無視したいときはfilterを使う
+-   `chrome.tabs.onUpdated`で関係ない URL を無視したいときは filter を使う
 
-
-
-##### 自動スクロール機能の実装： ExTranscriptがsidebarだと`scrollToHighlight()`が機能しなくなる件の修正
+##### 自動スクロール機能の実装： ExTranscript が sidebar だと`scrollToHighlight()`が機能しなくなる件の修正
 
 解決
 
+##### background script のアンロード対策
 
-##### background scriptのアンロード対策
+解決
 
 `background.ts::state`モジュールはローカルストレージに保存しないけれど
 モジュールの変数を変更する
 
-これだとやっぱりアンロードで消えてしまうことが最近分かった
+これだとやっぱりアンロードで消えてしまう
 
-Stateのインスタンスをstateへ渡す
-background.tsのメソッドはstateを通じてStateのインスタンスへ間接的にアクセスする
-Stateはkeyを使って呼び出しに応じてlocalStorageを呼出す
-
+State のインスタンスを state へ渡す
+background.ts のメソッドは state を通じて State のインスタンスへ間接的にアクセスする
+State は key を使って呼び出しに応じて localStorage を呼出す
 
 ```TypeScript
 // background.ts
@@ -2885,9 +2880,79 @@ await chrome.storage.local.set({KEY: newData});
 // -- GLOBALS -----
 const KEY_LOCALSTORAGE = "__key__local_storage_";
 
-const state = (function() {
-  // モジュールは変数を保持しないように
-  
+
+// UPDATED state
+//
+// 変数の保持を一切しないので
+// background scriptのアンロード、リロードに耐えられる
+const state = (function<TYPE>() {
+
+  const _getLocalStorage = async function(key): Promise<TYPE> {
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.get(key, (s: TYPE): void => {
+        if(chrome.runtime.lastError) reject(chrome.runtime.lastError);
+        resolve(s);
+      })
+    })
+  }
+
+  return {
+    // 本来ローカルストレージに保存しておくデータの一部だけでも
+    // 保存することを可能とする
+    // 
+  set: async (prop: {[Property in keyof TYPE]?: TYPE[Property]}): void => {
+    try {
+    const s: TYPE = await _getLocalStorage(KEY_LOCALSTORAGE);
+    const newState = {
+      ...s, ...prop
+    };
+    await chrome.storage.local.set({[KEY_LOCALSTORAGE]: newState});
+
+    }
+    catch(err) {
+      console.error(err.message);
+    }
+  },
+
+  get: async (): Promise<TYPE> => {
+    try {
+    const s: TYPE = await _getLocalStorage(KEY_LOCALSTORAGE);
+    return {...s};
+    }
+    catch(err) {
+      console.error(err.message);
+    }
+  },
+
+  clearAll: (): Promise<void> => {
+    try {
+      await chrome.storage.local.remove(KEY_LOCALSTORAGE);
+    }
+    catch(err) {
+      console.error(err.message);
+    }
+    
+  }
+  };
 })();
 
 ```
+#### event filter 実装
+
+background.tsの`chrome.tabs.onUpdated.addListener`へfilterを設けることで
+余計な処理を減らす
+
+```TypeScript
+const eventFilter = {
+  url: [
+    urlMatches: /https:\/\/www.udemy.com\/course\/*/gm
+  ]
+}
+```
+
+`urlMatches` 
+
+> URL（フラグメント識別子なし）が指定された正規表現と一致する場合に一致します。ポート番号がデフォルトのポート番号と一致する場合、URLから削除されます。正規表現はRE2構文を使用します。
+
+#### エラーハンドリング実装
+

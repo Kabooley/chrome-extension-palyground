@@ -59,9 +59,11 @@ export interface iModel
         iSubtitle {}
 
 export interface iStateModule<TYPE extends object> {
-    register: (m: State<TYPE>) => void;
-    unregister: () => void;
-    getInstance: () => State<TYPE>;
+    set: (prop: {
+        [Property in keyof TYPE]?: TYPE[Property];
+    }) => Promise<void>;
+    get: () => Promise<TYPE>;
+    clearAll: () => Promise<void>;
 }
 
 // modelBaseは新規プロパティの追加も削除もない
