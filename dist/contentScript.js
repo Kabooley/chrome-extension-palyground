@@ -213,7 +213,7 @@ const sendMessageToTabsPromise = (tabId, message) => __awaiter(void 0, void 0, v
             const { complete } = response, rest = __rest(response, ["complete"]);
             complete
                 ? resolve(rest)
-                : reject('Send message to tabs went something wrong');
+                : reject("Send message to tabs went something wrong");
         }));
     }));
 });
@@ -242,8 +242,9 @@ const tabsQuery = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 // # mark以下を切除した文字列を返す
+// なければそのまま引数のurlを返す
 const exciseBelowHash = (url) => {
-    return url.slice(0, url.indexOf('#'));
+    return url.indexOf("#") < 0 ? url : url.slice(0, url.indexOf("#"));
 };
 
 

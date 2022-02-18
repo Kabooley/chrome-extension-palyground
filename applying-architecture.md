@@ -26,7 +26,7 @@ NOTE: 更新は豆に！
 -   上記に伴って、loading 中を ExTranscript へ表示させる
     [ローディング中 view の実装](#ローディング中viewの実装)
 
--   `chrome.tabs.onUpdated.addListener()`のスリム化
+-   [済] `chrome.tabs.onUpdated.addListener()`のスリム化
     　 filter は使えないことは TypeScript の型から確認済
     よけいなローディングに反応しないようにしたい
     [`chrome.tabs.onUpdated.addListener()`のスリム化](<#`chrome.tabs.onUpdated.addListener()`のスリム化>)
@@ -35,6 +35,7 @@ NOTE: 更新は豆に！
     つまりたぶんだけど、重複しているほうの要素に css の class をつけてしまっていて、
     だけれども remove はできていない
     という可能性...
+    [自動スクロール機能修正：ハイライト重複](#自動スクロール機能修正：ハイライト重複)
 
 -   popup で正しい動作をさせる：RUN した後は RUN ボタンを無効にするとか
 -   拡張機能を展開していたタブが閉じられたときの後始末
@@ -3046,6 +3047,147 @@ chrome.tabs.onUpdated.addListener(
 
 #### テキストページへの対処
 
+いまんところの拡張機能の挙動
+
+テキストページなる
+
+`chrome.tabs.onUpdated`が反応し、`handlerOfReset`を呼び出す
+
+`handlerOfReset`内部で`repeatCaptureSubtitles`由来のエラーが発生して処理がストップ
+
+この時のstate
+
+```TypeScript
+// chrome.tabs.onUpdated()で「動画切替」判定により
+// handlerOfReset()が呼び出される
+
+// 呼出し直後...
+const model: iModel = {
+    isCaptureSubtitleInjected: true
+    isContentScriptInjected: true
+    isControllerInjected: true
+    isEnglish: true
+    isExTranscriptStructured: true
+    isSubtitleCaptured: false
+    isSubtitleCapturing: false
+    isTranscriptDisplaying: true
+    subtitles: (68) [{…}, {…},]
+    tabId: 84
+    url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/learn/lecture/15066560"
+}
+
+// 最初のstate変更後
+const model: iModel = {
+isCaptureSubtitleInjected: true
+isContentScriptInjected: true
+isControllerInjected: true
+isEnglish: true
+isExTranscriptStructured: true
+isSubtitleCaptured: false
+isSubtitleCapturing: true
+isTranscriptDisplaying: false
+subtitles: []
+tabId: 84
+url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/learn/lecture/30294840"
+}
+
+// resetEachContentScript()呼出し後
+const model: iModel = {
+isCaptureSubtitleInjected: true
+isContentScriptInjected: true
+isControllerInjected: true
+isEnglish: true
+isExTranscriptStructured: true
+isSubtitleCaptured: false
+isSubtitleCapturing: true
+isTranscriptDisplaying: false
+subtitles: []
+tabId: 84
+url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/learn/lecture/30294840"
+}
+
+// repeatCaptureSubtitles()呼出し、エラー発生時
+const model: iModel = {
+isCaptureSubtitleInjected: true
+isContentScriptInjected: true
+isControllerInjected: true
+isEnglish: true
+isExTranscriptStructured: true
+isSubtitleCaptured: false
+isSubtitleCapturing: true
+isTranscriptDisplaying: false
+subtitles: []
+tabId: 84
+url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/learn/lecture/30294840"
+}
+```
+
+```TypeScript
+// controller.ts
+// status
+  sStatus.setState({ ...statusBase });
+  sSubtitles.setState({ ...subtitleBase });
+//   されたあとに
+  sStatus.setState({ position: s });
+// なので
+// 一旦ExTranscriptはclearされてから
+// 字幕なしでExTranscriptが再レンダリングされた状態
+// つまり字幕データ待ち
+```
+
+やっぱりonUpdatedで検知するしかないね～
+
+テキストページのElement
+
+```html
+
+<!-- sidebar transcript -->
+<div class="curriculum-item-view--absolute-height-limiter--1SMqE">
+    <div class="curriculum-item-view--content--3ABmp" data-purpose="curriculum-item-viewer-content">
+        <section class="lecture-view--container--pL22J" aria-label="セクション9: Design Patterns with Typescript、レクチャー54: IMPORTANT Info About Faker Installation">
+            <div class="text-viewer--container--18Ayx">
+                <div class="text-viewer--scroll-container--1iy0Z"><div class="text-viewer--content--3hoqQ">
+                    <div class="udlite-heading-xxl text-viewer--main-heading--ZbxZA">IMPORTANT Info About Faker Installation</div>
+
+<!-- bottom transcript -->
+<div class="curriculum-item-view--absolute-height-limiter--1SMqE curriculum-item-view--no-sidebar--L4DBG">
+    <div class="curriculum-item-view--content--3ABmp" data-purpose="curriculum-item-viewer-content">
+        <section class="lecture-view--container--pL22J" aria-label="セクション9: Design Patterns with Typescript、レクチャー54: IMPORTANT Info About Faker Installation">
+            <div class="text-viewer--container--18Ayx">
+                <div class="text-viewer--scroll-container--1iy0Z">
+                    <div class="text-viewer--content--3hoqQ">
+                        <div class="udlite-heading-xxl text-viewer--main-heading--ZbxZA">IMPORTANT Info About Faker Installation</div>
+```
+
+テキストページだと次のセレクタが現れる(動画ページだと存在しない)
+`div.text-viewer--container--18Ayx`
+
+ということでこれがあるかどうかをチェックする...
+
+いや、動画ページかどうかをチェックしたいので「あるかどうか」ではなくて
+「ないかどうか」で調べたい
+
+```html
+<div class="video-viewer--container--23VX7">
+    <div class="video-player--container--YDQRW udlite-in-udheavy">
+        <div class="video-player--video-wrapper--1L212 user-activity--user-inactive--2uBeO"><link rel="preload" href="https://mp4-c.udemycdn.com/2019-06-10_15-36-59-0b509e27c74b00234da88b231891c723/2/thumb-sprites.jpg?Expires=1645229876&amp;Signature=AMhBMsGskVG0Jz~aoV-VfHd5Ng4F6FfT3XmVs-qgRFHutm~l1JuInkB9e8w~jO86dU1uyhwNLu-S7GXfbwZtOv91LV5Qr7BboaboIrcHDg7r2LmihPSLqA5CYkzZRiTI8dIFGzQY0ePg4GfYusJMUlQ43jtXp1miacpeXCPuIrSDRrtOWsiJa53AiBYemuKUJ2NPk6d50FGNti9ec2WbgHrxMmtbGF7KBIEXXFs7Pk8xPjat~lfXc7PUHtCO06spYqxS-jRrgobo7AWU0NIOCyBD6xWtEYj-ggvlHmaKKNuBkKo9PBzmLvKgsJP3RIZ2ZZR22zeI~g8eGxv2beTTNA__&amp;Key-Pair-Id=APKAITJV77WS5ZT7262A" as="image">
+```
+
+動画ページ以外は
+`div.video-viewer--container--23VX7`
+をもたない
+
+なのでこのセレクタにマッチする要素がないかを調査すればいい
+
+
 #### ローディング中 view の実装
 
 #### エラーハンドリング実装
+
+#### 自動スクロール機能修正：ハイライト重複
+
+いまんとこ手つかず
+
+なんか起こる時とおこらない時がある？
+なんらかの操作をした後になるのかしら？
+それともバグがたまたまそのUdemyページで起こっていなかっただけかな？
