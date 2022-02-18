@@ -181,7 +181,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "deepCopier": () => (/* binding */ deepCopier),
 /* harmony export */   "sendMessageToTabsPromise": () => (/* binding */ sendMessageToTabsPromise),
 /* harmony export */   "sendMessagePromise": () => (/* binding */ sendMessagePromise),
-/* harmony export */   "tabsQuery": () => (/* binding */ tabsQuery)
+/* harmony export */   "tabsQuery": () => (/* binding */ tabsQuery),
+/* harmony export */   "exciseBelowHash": () => (/* binding */ exciseBelowHash)
 /* harmony export */ });
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -240,6 +241,10 @@ const tabsQuery = () => __awaiter(void 0, void 0, void 0, function* () {
         console.error(err.message);
     }
 });
+// # mark以下を切除した文字列を返す
+const exciseBelowHash = (url) => {
+    return url.slice(0, url.indexOf('#'));
+};
 
 
 /***/ }),

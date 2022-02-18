@@ -10,21 +10,30 @@ MVC と DDD の設計思想を取り入れたい
 
 [1/25:処理についておさらい](#1/25:処理についておさらい)
 
-## 残る課題
+## 課題
 
-頻繁に更新
+NOTE: 更新は豆に！
 
 -   [済] sidebar の時の自動スクロール機能関数`controller.ts::scrollToHighlight()`が機能するようにすること
 -   [済] background.ts はいったんアンロードされると state に渡した変数がすべて消えることへの対処
-- [済] Refac: background script で `chrome.tabs.updated.addListener`にfilterを設けることで余計なurlはデフォで無視する仕様にする
- 参考：https://developer.chrome.com/docs/extensions/reference/events/#filtered
+-   [済] Refac: background script で `chrome.tabs.updated.addListener`に filter を設けることで余計な url はデフォで無視する仕様にする
+    参考：https://developer.chrome.com/docs/extensions/reference/events/#filtered
 
-- Udemyの講義ページで、動画じゃないページへアクセスしたときの対応
+-   Udemy の講義ページで、動画じゃないページへアクセスしたときの対応
     たとえばテキストだけ表示される回があるけど、それの対応
-- 上記に伴って、loading中をExTranscriptへ表示させる
-- 自動スクロール機能で重複する字幕要素を完全に処理しきれていない模様...
-    つまりたぶんだけど、重複しているほうの要素にcssのclassをつけてしまっていて、
-    だけれどもremoveはできていない
+    [テキストページへの対処](#テキストページへの対処)
+
+-   上記に伴って、loading 中を ExTranscript へ表示させる
+    [ローディング中 view の実装](#ローディング中viewの実装)
+
+-   `chrome.tabs.onUpdated.addListener()`のスリム化
+    　 filter は使えないことは TypeScript の型から確認済
+    よけいなローディングに反応しないようにしたい
+    [`chrome.tabs.onUpdated.addListener()`のスリム化](<#`chrome.tabs.onUpdated.addListener()`のスリム化>)
+
+-   自動スクロール機能で重複する字幕要素を完全に処理しきれていない模様...
+    つまりたぶんだけど、重複しているほうの要素に css の class をつけてしまっていて、
+    だけれども remove はできていない
     という可能性...
 
 -   popup で正しい動作をさせる：RUN した後は RUN ボタンを無効にするとか
@@ -2907,7 +2916,7 @@ const state = (function<TYPE>() {
   return {
     // 本来ローカルストレージに保存しておくデータの一部だけでも
     // 保存することを可能とする
-    // 
+    //
   set: async (prop: {[Property in keyof TYPE]?: TYPE[Property]}): void => {
     try {
     const s: TYPE = await _getLocalStorage(KEY_LOCALSTORAGE);
@@ -2939,17 +2948,18 @@ const state = (function<TYPE>() {
     catch(err) {
       console.error(err.message);
     }
-    
+
   }
   };
 })();
 
 ```
+
 #### event filter 実装
 
-結果、実装しようとしたら`chrome.tabs.onUpdated.addListener`にはfilterは設けられなかった...
+結果、実装しようとしたら`chrome.tabs.onUpdated.addListener`には filter は設けられなかった...
 
-background.tsの`chrome.tabs.onUpdated.addListener`へfilterを設けることで
+background.ts の`chrome.tabs.onUpdated.addListener`へ filter を設けることで
 余計な処理を減らす
 
 ```TypeScript
@@ -2960,5 +2970,82 @@ const eventFilter = {
 }
 ```
 
-#### エラーハンドリング実装
+#### `chrome.tabs.onUpdated.addListener()`のスリム化
 
+ほぼ解決済（確認不足）
+
+いまのところ、Udemy 講義ページの dashboard にあるような
+「Q&A」や「コース内容」、「概要」とかのあらゆる`loading`が発生する
+ものを押すといちいち`chrome.tabs.onUpdated.addListener()`が反応してしまい
+再レンダリングが行われている
+
+なので余計な URL には反応しないようにする
+
+原因は URL の末尾`#`以下が比較対象に含まれていたこと
+
+`#`以前だけ比較するようにすればいいかも
+
+```TypeScript
+// background.ts
+
+// NOTE: new added (helpers.tsへ追加)
+const exciseBelowHash = (url: string): string => {
+  return url.slice(0, url.indexOf("#"));
+}
+
+chrome.tabs.onUpdated.addListener(
+    async (
+        tabIdUpdatedOccured: number,
+        changeInfo: chrome.tabs.TabChangeInfo,
+        Tab: chrome.tabs.Tab
+    ): Promise<void> => {
+        console.log(changeInfo);
+        // "https://www.udemy.com/course/*"以外のURLなら無視する
+        const { url, tabId, isExTranscriptStructured } = await state.get();
+
+        // 拡張機能が未展開、changeInfo.statusがloadingでないなら無視する
+        if (changeInfo.status !== 'loading' || !isExTranscriptStructured)
+            return;
+
+        // 拡張機能が展開済だとして、tabIdが展開済のtabId以外に切り替わったなら無視する
+        // return;
+        if (tabIdUpdatedOccured !== tabId) return;
+
+        // 展開中のtabId && chnageInfo.urlがUdemy講義ページ以外のURLならば
+        // 拡張機能OFFの処理へ
+        if (isExTranscriptStructured && tabIdUpdatedOccured === tabId) {
+            // おなじURLでのリロードか？
+            if (changeInfo.url === undefined) {
+                // 拡張機能は何もしない
+                return;
+            } else if (!changeInfo.url.match(urlPattern)) {
+                // Udemy講義ページ以外に移動した
+                // 拡張機能OFF処理へ
+                // TODO: 拡張機能OFF処理の実装
+
+                console.log('[background] TURN OFF this extension');
+            }
+
+            // 展開中のtabIdである && changeInfo.urlが講義ページだけど末尾が変化した(#以下は無視)
+            // 動画が切り替わった判定
+            else if (
+              // NOTE: 変更部分
+                changeInfo.url.match(urlPattern) &&
+                exciseBelowHash(changeInfo.url) !== exciseBelowHash(url)
+            ) {
+                // 動画が切り替わった
+                await handlerOfReset(tabIdUpdatedOccured, changeInfo.url);
+            }
+        }
+    }
+);
+
+// ほか、state.set({url:newUrl})のときに
+// state.set({url:exciseBelowHash(newUrl)})するようにした
+```
+
+#### テキストページへの対処
+
+#### ローディング中 view の実装
+
+#### エラーハンドリング実装

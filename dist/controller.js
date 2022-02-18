@@ -21,7 +21,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "/* これがどこに配置されるのか確認しないと... */\r\n.ex--dashboard-transcript-wrapper {\r\n    z-index: 3;\r\n    position: absolute;\r\n    top: 0;\r\n    width: 100%;\r\n}\r\n\r\n.ex--dashboard-transcript--header {\r\n    display: flex;\r\n    align-items: center;\r\n    justify-content: space-between;\r\n    padding: 0.8rem 0.8rem 0.8rem 1.6rem;\r\n    border: 1 px solid orange;\r\n    /* background-color: #fff; */\r\n\r\n    /* dev */\r\n    background-color: red;\r\n\r\n    box-shadow: 0 0 1px 1px rgb(28 29 31 / 10%), 0 3px 1px 0 rgb(28 29 31 / 10%);\r\n    margin-bottom: 3px;\r\n}\r\n\r\n.ex--dashboard-transcript--transcript-panel {\r\n    max-height: 300px;\r\n    overflow-y: auto;\r\n    /* dev */\r\n    background-color: red;\r\n}\r\n\r\n.ex--dashboard-transcript--autoscroll-wrapper {\r\n    padding: 8px 16px;\r\n    border-left: 1px solid orange;\r\n    border-right: 1px solid orange;\r\n    /* background: #f7f9fa; */\r\n    /* dev */\r\n    background-color: red;\r\n}\r\n\r\n.ex--dashboard-transcript--cue-container {\r\n    padding: 4px 4px;\r\n    margin: 1px;\r\n}\r\n\r\n.--highlight-- {\r\n    background-color: #fff;\r\n}\r\n", "",{"version":3,"sources":["webpack://./src/contentScript/bottomTranscriptView.css"],"names":[],"mappings":"AAAA,2BAA2B;AAC3B;IACI,UAAU;IACV,kBAAkB;IAClB,MAAM;IACN,WAAW;AACf;;AAEA;IACI,aAAa;IACb,mBAAmB;IACnB,8BAA8B;IAC9B,oCAAoC;IACpC,yBAAyB;IACzB,4BAA4B;;IAE5B,QAAQ;IACR,qBAAqB;;IAErB,4EAA4E;IAC5E,kBAAkB;AACtB;;AAEA;IACI,iBAAiB;IACjB,gBAAgB;IAChB,QAAQ;IACR,qBAAqB;AACzB;;AAEA;IACI,iBAAiB;IACjB,6BAA6B;IAC7B,8BAA8B;IAC9B,yBAAyB;IACzB,QAAQ;IACR,qBAAqB;AACzB;;AAEA;IACI,gBAAgB;IAChB,WAAW;AACf;;AAEA;IACI,sBAAsB;AAC1B","sourcesContent":["/* これがどこに配置されるのか確認しないと... */\r\n.ex--dashboard-transcript-wrapper {\r\n    z-index: 3;\r\n    position: absolute;\r\n    top: 0;\r\n    width: 100%;\r\n}\r\n\r\n.ex--dashboard-transcript--header {\r\n    display: flex;\r\n    align-items: center;\r\n    justify-content: space-between;\r\n    padding: 0.8rem 0.8rem 0.8rem 1.6rem;\r\n    border: 1 px solid orange;\r\n    /* background-color: #fff; */\r\n\r\n    /* dev */\r\n    background-color: red;\r\n\r\n    box-shadow: 0 0 1px 1px rgb(28 29 31 / 10%), 0 3px 1px 0 rgb(28 29 31 / 10%);\r\n    margin-bottom: 3px;\r\n}\r\n\r\n.ex--dashboard-transcript--transcript-panel {\r\n    max-height: 300px;\r\n    overflow-y: auto;\r\n    /* dev */\r\n    background-color: red;\r\n}\r\n\r\n.ex--dashboard-transcript--autoscroll-wrapper {\r\n    padding: 8px 16px;\r\n    border-left: 1px solid orange;\r\n    border-right: 1px solid orange;\r\n    /* background: #f7f9fa; */\r\n    /* dev */\r\n    background-color: red;\r\n}\r\n\r\n.ex--dashboard-transcript--cue-container {\r\n    padding: 4px 4px;\r\n    margin: 1px;\r\n}\r\n\r\n.--highlight-- {\r\n    background-color: #fff;\r\n}\r\n"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, "/* これがどこに配置されるのか確認しないと... */\r\n.ex--dashboard-transcript-wrapper {\r\n    z-index: 3;\r\n    position: absolute;\r\n    top: 0;\r\n    width: 100%;\r\n}\r\n\r\n.ex--dashboard-transcript--header {\r\n    display: flex;\r\n    align-items: center;\r\n    justify-content: space-between;\r\n    padding: 0.8rem 0.8rem 0.8rem 1.6rem;\r\n    border: 1 px solid orange;\r\n    /* background-color: #fff; */\r\n\r\n    /* dev */\r\n    background-color: red;\r\n\r\n    box-shadow: 0 0 1px 1px rgb(28 29 31 / 10%), 0 3px 1px 0 rgb(28 29 31 / 10%);\r\n    margin-bottom: 3px;\r\n}\r\n\r\n.ex--dashboard-transcript--transcript-panel {\r\n    /* max-height: 300px; */\r\n    height: 300px;\r\n    overflow-y: auto;\r\n    /* dev */\r\n    background-color: red;\r\n}\r\n\r\n.ex--dashboard-transcript--autoscroll-wrapper {\r\n    padding: 8px 16px;\r\n    border-left: 1px solid orange;\r\n    border-right: 1px solid orange;\r\n    /* background: #f7f9fa; */\r\n    /* dev */\r\n    background-color: red;\r\n}\r\n\r\n.ex--dashboard-transcript--cue-container {\r\n    padding: 4px 4px;\r\n    margin: 1px;\r\n}\r\n\r\n.--highlight-- {\r\n    background-color: #fff;\r\n}\r\n", "",{"version":3,"sources":["webpack://./src/contentScript/bottomTranscriptView.css"],"names":[],"mappings":"AAAA,2BAA2B;AAC3B;IACI,UAAU;IACV,kBAAkB;IAClB,MAAM;IACN,WAAW;AACf;;AAEA;IACI,aAAa;IACb,mBAAmB;IACnB,8BAA8B;IAC9B,oCAAoC;IACpC,yBAAyB;IACzB,4BAA4B;;IAE5B,QAAQ;IACR,qBAAqB;;IAErB,4EAA4E;IAC5E,kBAAkB;AACtB;;AAEA;IACI,uBAAuB;IACvB,aAAa;IACb,gBAAgB;IAChB,QAAQ;IACR,qBAAqB;AACzB;;AAEA;IACI,iBAAiB;IACjB,6BAA6B;IAC7B,8BAA8B;IAC9B,yBAAyB;IACzB,QAAQ;IACR,qBAAqB;AACzB;;AAEA;IACI,gBAAgB;IAChB,WAAW;AACf;;AAEA;IACI,sBAAsB;AAC1B","sourcesContent":["/* これがどこに配置されるのか確認しないと... */\r\n.ex--dashboard-transcript-wrapper {\r\n    z-index: 3;\r\n    position: absolute;\r\n    top: 0;\r\n    width: 100%;\r\n}\r\n\r\n.ex--dashboard-transcript--header {\r\n    display: flex;\r\n    align-items: center;\r\n    justify-content: space-between;\r\n    padding: 0.8rem 0.8rem 0.8rem 1.6rem;\r\n    border: 1 px solid orange;\r\n    /* background-color: #fff; */\r\n\r\n    /* dev */\r\n    background-color: red;\r\n\r\n    box-shadow: 0 0 1px 1px rgb(28 29 31 / 10%), 0 3px 1px 0 rgb(28 29 31 / 10%);\r\n    margin-bottom: 3px;\r\n}\r\n\r\n.ex--dashboard-transcript--transcript-panel {\r\n    /* max-height: 300px; */\r\n    height: 300px;\r\n    overflow-y: auto;\r\n    /* dev */\r\n    background-color: red;\r\n}\r\n\r\n.ex--dashboard-transcript--autoscroll-wrapper {\r\n    padding: 8px 16px;\r\n    border-left: 1px solid orange;\r\n    border-right: 1px solid orange;\r\n    /* background: #f7f9fa; */\r\n    /* dev */\r\n    background-color: red;\r\n}\r\n\r\n.ex--dashboard-transcript--cue-container {\r\n    padding: 4px 4px;\r\n    margin: 1px;\r\n}\r\n\r\n.--highlight-- {\r\n    background-color: #fff;\r\n}\r\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -626,7 +626,7 @@ __webpack_require__.r(__webpack_exports__);
 
 const BottomTranscriptView = function () {
     // insert position for Element.insertAdjaccentHTML()
-    this.insertPosition = "afterbegin";
+    this.insertPosition = 'afterbegin';
     this.insertParentSelector = _utils_selectors__WEBPACK_IMPORTED_MODULE_0__.EX.noSidebarParent;
     this.transcriptSelectors = [
         _utils_selectors__WEBPACK_IMPORTED_MODULE_0__.EX.dashboardTranscriptWrapper,
@@ -642,7 +642,7 @@ span[data-purpose="ex--dashboard-cue-text"]
 
 */
 BottomTranscriptView.prototype.generateSubtitleMarkup = function (subtitles) {
-    var mu = "";
+    var mu = '';
     for (const s of subtitles) {
         const _mu = `
         <div class="${_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.EX.dashboardTranscriptCueContainer.slice(1)}" data-id="${s.index}">
@@ -663,7 +663,7 @@ BottomTranscriptView.prototype.generateMarkup = function (subtitleStrings) {
     <div class="${_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.EX.dashboardTranscriptWrapper.slice(1)}">
         <div class="${_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.EX.dashboardTranscriptHeader.slice(1)}">ExTranscript</div>
         <div class="${_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.EX.dashboardTranscriptPanel.slice(1)}">
-            ${subtitleStrings}
+            ${subtitleStrings === undefined ? '' : subtitleStrings}
         </div>
         <div class="${_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.EX.dashboardTranscriptBottom.slice(1)}">Auto Scroll</div>
     </div>
@@ -683,9 +683,9 @@ BottomTranscriptView.prototype.generateMarkup = function (subtitleStrings) {
 BottomTranscriptView.prototype.render = function (subtitles) {
     //   親要素を`position: relative`にする
     const e = document.querySelector(this.insertParentSelector);
-    e.style.position = "relative";
+    e.style.position = 'relative';
     const p = this.insertPosition;
-    var html = "";
+    var html = '';
     if (subtitles.length > 0) {
         const s = this.generateSubtitleMarkup(subtitles);
         html = this.generateMarkup(s);
@@ -704,16 +704,16 @@ BottomTranscriptView.prototype.clear = function () {
     });
     //   親要素につけていた`position: relative`を解除する
     const parent = document.querySelector(this.insertParentSelector);
-    parent.style.position = "";
+    parent.style.position = '';
 };
 BottomTranscriptView.prototype.renderSpinner = function () {
-    console.log("[BottomTranscriptView] render spinner");
+    console.log('[BottomTranscriptView] render spinner');
 };
 BottomTranscriptView.prototype.renderError = function () {
-    console.log("[BottomTranscriptView] render error");
+    console.log('[BottomTranscriptView] render error');
 };
 BottomTranscriptView.prototype.renderMessage = function () {
-    console.log("[BottomTranscriptView] render message");
+    console.log('[BottomTranscriptView] render message');
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (new BottomTranscriptView());
 /*

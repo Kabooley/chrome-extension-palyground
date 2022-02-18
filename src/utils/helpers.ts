@@ -42,3 +42,8 @@ export const tabsQuery = async (): Promise<chrome.tabs.Tab> => {
         console.error(err.message);
     }
 };
+
+// # mark以下を切除した文字列を返す
+export const exciseBelowHash = (url: string): string => {
+    return url.slice(0, url.indexOf('#'));
+};
