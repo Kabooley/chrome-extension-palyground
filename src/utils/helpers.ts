@@ -48,3 +48,65 @@ export const tabsQuery = async (): Promise<chrome.tabs.Tab> => {
 export const exciseBelowHash = (url: string): string => {
   return url.indexOf("#") < 0 ? url : url.slice(0, url.indexOf("#"));
 };
+
+
+/*********************
+ * 
+ * @param {action} Function: the function that will be executed repeatedly. Function must returns boolean. Function can require parameter.
+ * @param {times} number: Number that how many times repeat.
+ * Default to 10.
+ * @param {interval} number: Microseconds that repeat interval.
+ * Default to 200.
+ * Return if action returns value.
+ * 
+ * 参考：https://stackoverflow.com/questions/61908676/convert-setinterval-to-promise
+ * 
+ * 参考：https://levelup.gitconnected.com/how-to-turn-settimeout-and-setinterval-into-promises-6a4977f0ace3
+ * */ 
+const repeatActionPromise = async (action: (p?: any) => boolean, 
+param?: any, times?: number, interval?: number) : Promise<any> => {
+  return new Promise((resolve, reject) => {
+    let intervalId: NodeJS.Timer;
+    let counter = times !== undefined ? times : 10;
+    const _interval = interval !== undefined ?  interval : 200;
+
+    intervalId = setInterval(async function() {
+      // action のPromiseが解決されたら解決...とすればうまくいくかしら？
+      action().then(res => resolve(res)).catch(err => {
+        counter--;
+      });
+      counter--;
+    }, _interval);
+
+  })
+}
+
+// copy & paste
+// task must return true or false
+const fakeServerCheck = async () => {
+  console.log('check...');
+  return Math.random() > 0.8;
+}
+const asyncInterval = async (callback, ms, triesLeft = 5) => {
+  return new Promise((resolve, reject) => {
+    const interval = setInterval(async () => {
+      if (await callback()) {
+        resolve();
+        clearInterval(interval);
+      } else if (triesLeft <= 1) {
+        reject();
+        clearInterval(interval);
+      }
+      triesLeft--;
+    }, ms);
+  });
+}
+const wrapper = async () => {
+  try {
+    await asyncInterval(fakeServerCheck, 500);
+  } catch (e) {
+    console.log('error handling');
+  }
+  console.log("Done!");
+}
+// wrapper();

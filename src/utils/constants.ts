@@ -46,6 +46,9 @@ export const orderNames = {
     turnOff: 'turnOff',
     // something succeeded
     success: 'success',
+    // NOTE: new added
+    // Is the page moved to text page?
+    isItTextPage: 'isItTextPage'
 } as const;
 
 // Subtitle object interface
@@ -83,6 +86,10 @@ export interface iResponse {
     isExTranscriptDeployed?: boolean;
     // Udemy講義ページでトランスクリプトが表示されているかどうか
     isTranscriptDisplaying?: boolean;
+    
+    // NOTE: new added
+    // Is the page moved to text page?
+    textPage?: 'textPage'
 
     // --- DUPLICATED ----
     // disconnect?: boolean;

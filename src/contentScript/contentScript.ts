@@ -119,6 +119,14 @@ chrome.runtime.onMessage.addListener(
                       });
                     }
                 }
+                // Require to the page is text or not.
+                // 
+                // もしかしたらローディング中で要素がローディング途中の可能性がある
+                // なのでリピート関数へ渡す
+                if(order.includes(orderNames.isItTextPage)){
+                    console.log("Order: is it text page?");
+                    const r: boolean = investTheElementIncluded('div.video-viewer--container--23VX7');
+                }
             }
             return true;
         } catch (err) {
@@ -396,6 +404,21 @@ const moCallback = (mr: MutationRecord[]): void => {
         }
     });
 };
+
+
+// 
+// ---- Other Methods -------------------------------------------
+// 
+
+/********
+ * 
+ * 与えられたselectorからDOMが存在するかしらべて
+ * 真偽値を返す
+ */
+const investTheElementIncluded = (selector: string): boolean => {
+    const e: HTMLElement = document.querySelector<HTMLElement>(selector);
+    return e ? true : false;
+}
 
 /****
  *  Immediately initializes after injected

@@ -126,9 +126,25 @@ chrome.tabs.onUpdated.addListener(
         changeInfo.url.match(urlPattern) &&
         exciseBelowHash(changeInfo.url) !== exciseBelowHash(url)
       ) {
-        // 動画が切り替わった
+
+        // ページが切り替わった
         // TODO: テキストページでないかチェックする
-        await handlerOfReset(tabIdUpdatedOccured, changeInfo.url);
+
+        // 動画ページ以外に切り替わったのか？
+        const res: iResponse = await sendMessageToTabsPromise(tabId, {
+            from: extensionNames.background,
+            to: extensionNames.contentScript,
+            order: [orderNames.isItTextPage]
+        });
+
+        if(res.textPage){
+            // 動画を含まないページへ移動した判定
+            console.log("this is text page");
+        }
+        else {
+            // 動画が切り替わった判定
+            await handlerOfReset(tabIdUpdatedOccured, changeInfo.url);
+        }
       }
     }
   }
