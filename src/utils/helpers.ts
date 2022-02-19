@@ -63,50 +63,51 @@ export const exciseBelowHash = (url: string): string => {
  * 
  * 参考：https://levelup.gitconnected.com/how-to-turn-settimeout-and-setinterval-into-promises-6a4977f0ace3
  * */ 
-const repeatActionPromise = async (action: (p?: any) => boolean, 
-param?: any, times?: number, interval?: number) : Promise<any> => {
-  return new Promise((resolve, reject) => {
-    let intervalId: NodeJS.Timer;
-    let counter = times !== undefined ? times : 10;
-    const _interval = interval !== undefined ?  interval : 200;
+const repeatActionPromise = async (
+    action: () => boolean, 
+    interval?: number, 
+    times?: number,
+    timeoutAsResolve?: boolean
+    ): Promise<boolean> => {
+        return new Promise((resolve, reject) => {
+            let intervalId: NodeJS.Timer;
+            let triesLeft: number = times !== undefined ? times : 10;
+            const _interval = interval !== undefined ? interval : 200;
+            intervalId = setInterval(async function() {
+                if(await action()) {
+                    clearInterval(intervalId);
+                    resolve(true);
+                }
+                else if(triesLeft <= 1 && timeoutAsResolve !== undefined && timeoutAsResolve){
+                    clearInterval(intervalId);
+                    resolve(false);
+                }
+                else if(triesLeft <= 1 && timeoutAsResolve === undefined || !timeoutAsResolve){
+                    clearInterval(intervalId);
+                    reject();
+                }
+                triesLeft--;
+            }, _interval);
+        })
+};
 
-    intervalId = setInterval(async function() {
-      // action のPromiseが解決されたら解決...とすればうまくいくかしら？
-      action().then(res => resolve(res)).catch(err => {
-        counter--;
-      });
-      counter--;
-    }, _interval);
 
-  })
-}
+// USAGE
 
-// copy & paste
-// task must return true or false
-const fakeServerCheck = async () => {
-  console.log('check...');
-  return Math.random() > 0.8;
+// インターバルで実際に実行したい関数
+const investTheElementIncluded = (selector: string): boolean => {
+    const e: HTMLElement = document.querySelector<HTMLElement>(selector);
+    return e ? true : null;
+};
+
+const repeatQuerySelector = async (selector: string): Promise<boolean> => {
+    try {
+        const r: boolean = await repeatActionPromise(
+            function(): boolean {return investTheElementIncluded("some-awesome-selector")}, 
+        );
+        return r;
+    }
+    catch(err) {
+        console.error(`Error: Could not query dom. ${err.message}`)
+    }
 }
-const asyncInterval = async (callback, ms, triesLeft = 5) => {
-  return new Promise((resolve, reject) => {
-    const interval = setInterval(async () => {
-      if (await callback()) {
-        resolve();
-        clearInterval(interval);
-      } else if (triesLeft <= 1) {
-        reject();
-        clearInterval(interval);
-      }
-      triesLeft--;
-    }, ms);
-  });
-}
-const wrapper = async () => {
-  try {
-    await asyncInterval(fakeServerCheck, 500);
-  } catch (e) {
-    console.log('error handling');
-  }
-  console.log("Done!");
-}
-// wrapper();
