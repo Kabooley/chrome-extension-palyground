@@ -30,7 +30,11 @@ import {
     extensionNames,
     orderNames,
 } from '../utils/constants';
-import { sendMessagePromise } from '../utils/helpers';
+import {
+    sendMessagePromise,
+    delay,
+    repeatActionPromise,
+} from '../utils/helpers';
 
 //
 // --- GLOBALS ---------------------------------------------------
@@ -110,22 +114,27 @@ chrome.runtime.onMessage.addListener(
 
                     await handlerOfReset();
                     console.log('sfdadfsadfsafdsadfa');
-                    if(sendResponse){
-                      sendResponse({
-                          from: extensionNames.contentScript,
-                          to: from,
-                          complete: true,
-                          success: true,
-                      });
+                    if (sendResponse) {
+                        sendResponse({
+                            from: extensionNames.contentScript,
+                            to: from,
+                            complete: true,
+                            success: true,
+                        });
                     }
                 }
-                // Require to the page is text or not.
-                // 
-                // もしかしたらローディング中で要素がローディング途中の可能性がある
-                // なのでリピート関数へ渡す
-                if(order.includes(orderNames.isItTextPage)){
-                    console.log("Order: is it text page?");
-                    const r: boolean = investTheElementIncluded('div.video-viewer--container--23VX7');
+                // Require to make sure the page is including movie container or not.
+                if (order.includes(orderNames.isPageIncludingMovie)) {
+                    console.log('Order: is it text page?');
+                    // the page might be loading.
+                    // So little bit delay querying.
+                    const r: boolean = await delay(function () {
+                        return investTheElementIncluded(
+                            selectors.videoContainer
+                        );
+                    }, 200);
+                    console.log(`RESPONSE:${r}`);
+                    sendResponse({ complete: true, isPageIncludingMovie: r });
                 }
             }
             return true;
@@ -234,7 +243,6 @@ const repeatQueryDom = async (selector: string): Promise<HTMLElement> => {
  *
  * */
 const handlerOfControlbar = function (ev: PointerEvent): void {
-
     // Clickイベント中にDOMを取得しておく...
     // イベントバブリングpath
     const path: EventTarget[] = ev.composedPath();
@@ -246,7 +254,7 @@ const handlerOfControlbar = function (ev: PointerEvent): void {
     const theaterToggle: HTMLElement = document.querySelector<HTMLElement>(
         selectors.controlBar.theatre.theatreToggle
     );
-      // クローズド・キャプション・メニュー
+    // クローズド・キャプション・メニュー
     const ccPopupMenu: HTMLElement = document.querySelector<HTMLElement>(
         selectors.controlBar.cc.menuListParent
     );
@@ -275,7 +283,6 @@ const handlerOfControlbar = function (ev: PointerEvent): void {
         }
     }, 200);
 };
-
 
 /**
  * Check Transcript is opened or not.
@@ -405,20 +412,38 @@ const moCallback = (mr: MutationRecord[]): void => {
     });
 };
 
-
-// 
+//
 // ---- Other Methods -------------------------------------------
-// 
+//
 
 /********
- * 
+ *
  * 与えられたselectorからDOMが存在するかしらべて
  * 真偽値を返す
  */
 const investTheElementIncluded = (selector: string): boolean => {
     const e: HTMLElement = document.querySelector<HTMLElement>(selector);
     return e ? true : false;
-}
+};
+
+// /*******
+//  *
+//  *
+//  * */
+// const repeatQuerySelector = async (selector: string): Promise<boolean> => {
+//     try {
+//         return await repeatActionPromise(
+//             function () {
+//                 return investTheElementIncluded(selector);
+//             },
+//             true,
+//             200,
+//             10
+//         );
+//     } catch (err) {
+//         console.error(err.message);
+//     }
+// };
 
 /****
  *  Immediately initializes after injected
@@ -455,9 +480,9 @@ const initialize = async (): Promise<void> => {
     initialize();
 })();
 
-// 
+//
 // --- LEGACY CODE ---------------------------------------------
-// 
+//
 
 // const initialize = async (): Promise<void> => {
 //   console.log("CONTENT SCRIPT INITIALIZING...");

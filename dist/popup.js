@@ -29876,6 +29876,9 @@ const orderNames = {
     turnOff: 'turnOff',
     // something succeeded
     success: 'success',
+    // NOTE: new added
+    // Is the page moved to text page?
+    isPageIncludingMovie: 'isPageIncludingMovie'
 };
 // --- constants for controller.js -------------------------------
 // // To pass to setTimeout
@@ -29993,7 +29996,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "sendMessageToTabsPromise": () => (/* binding */ sendMessageToTabsPromise),
 /* harmony export */   "sendMessagePromise": () => (/* binding */ sendMessagePromise),
 /* harmony export */   "tabsQuery": () => (/* binding */ tabsQuery),
-/* harmony export */   "exciseBelowHash": () => (/* binding */ exciseBelowHash)
+/* harmony export */   "exciseBelowHash": () => (/* binding */ exciseBelowHash),
+/* harmony export */   "repeatActionPromise": () => (/* binding */ repeatActionPromise),
+/* harmony export */   "delay": () => (/* binding */ delay)
 /* harmony export */ });
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -30024,7 +30029,7 @@ const sendMessageToTabsPromise = (tabId, message) => __awaiter(void 0, void 0, v
             const { complete } = response, rest = __rest(response, ["complete"]);
             complete
                 ? resolve(rest)
-                : reject("Send message to tabs went something wrong");
+                : reject('Send message to tabs went something wrong');
         }));
     }));
 });
@@ -30055,7 +30060,90 @@ const tabsQuery = () => __awaiter(void 0, void 0, void 0, function* () {
 // # mark以下を切除した文字列を返す
 // なければそのまま引数のurlを返す
 const exciseBelowHash = (url) => {
-    return url.indexOf("#") < 0 ? url : url.slice(0, url.indexOf("#"));
+    return url.indexOf('#') < 0 ? url : url.slice(0, url.indexOf('#'));
+};
+/*********************
+ * Repeat given async callback function.
+ *
+ * @param {action} Function:
+ * the function that will be executed repeatedly.
+ * NOTE: Function must returns boolean.
+ * @param {timesoutResolve} boolean: true to allow this function to return false.
+ * @param {times} number: Number that how many times repeat.
+ * Default to 10.
+ * @param {interval} number: Microseconds that repeat interval.
+ * Default to 200.
+ * @return {Promise} Promise objects represents boolean. True as matched, false as no-matched.
+ * @throws
+ *
+ * 参考：https://stackoverflow.com/questions/61908676/convert-setinterval-to-promise
+ *
+ * 参考：https://levelup.gitconnected.com/how-to-turn-settimeout-and-setinterval-into-promises-6a4977f0ace3
+ * */
+const repeatActionPromise = (action, timeoutAsResolve = false, interval = 200, times = 10) => __awaiter(void 0, void 0, void 0, function* () {
+    return new Promise((resolve, reject) => {
+        let intervalId;
+        let triesLeft = times;
+        intervalId = setInterval(function () {
+            return __awaiter(this, void 0, void 0, function* () {
+                console.log(`loop tries left...${triesLeft}`);
+                if (yield action()) {
+                    clearInterval(intervalId);
+                    // 正常な終了としてtrueを返す
+                    resolve(true);
+                }
+                else if (triesLeft <= 1 && timeoutAsResolve) {
+                    clearInterval(intervalId);
+                    // 正常な終了でfalseを返す
+                    resolve(false);
+                }
+                else if (triesLeft <= 1 && !timeoutAsResolve) {
+                    clearInterval(intervalId);
+                    // 例外エラーとしてcatchされる
+                    reject('Error: Action callback fuction never returned true and time out.@repeatActionPromise');
+                }
+                triesLeft--;
+            });
+        }, interval);
+    });
+});
+// --- USAGE EXAMPLE --------------------------------------
+// const randomMath = (): boolean => {
+//   return Math.random() * 0.8 > 400 ? true : false;
+// }
+// const repeatQuerySelector = async (): Promise<boolean> => {
+//   try {
+//     // 第二引数をfalseにすると、ループで一度もマッチしなかった場合、例外エラーになる
+//     // なので例外エラーにしたくなくて、falseも受け取りたいときは
+//     // 第二引数をtrueにすること
+//       const r: boolean = await repeatActionPromise(
+//           function(): boolean {return randomMath()}, true
+//       );
+//       return r;
+//   }
+//   catch(err) {
+//     console.log("caught error");
+//       // console.error(`Error: Could not query dom. ${err.message}`)
+//       throw err;
+//   }
+// }
+// (async function() {
+//   const res = await repeatQuerySelector();
+//   console.log("RESULT:");
+//   console.log(res);
+// })();
+/****************
+ * Wrapper of setTimeout with given function.
+ *
+ *
+ * */
+const delay = (action, timer) => {
+    return new Promise((resolve, reject) => {
+        setTimeout(function () {
+            const r = action();
+            resolve(r);
+        }, timer);
+    });
 };
 
 

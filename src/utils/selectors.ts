@@ -9,6 +9,10 @@
 
 // --- Selectors related to Transcript ---------------------------
 
+// Udemy講義ページが動画ページならこのセレクタが一致する
+// テキストページとかなら一致しない
+export const videoContainer = "div.video-viewer--container--23VX7";
+
 export const transcript = {
   // HTMLSpanElement which is Highlight as current subtitle on movie.
   highlight: "span.transcript--highlight-cue--1bEgq",

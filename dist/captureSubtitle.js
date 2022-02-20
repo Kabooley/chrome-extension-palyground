@@ -65,6 +65,9 @@ const orderNames = {
     turnOff: 'turnOff',
     // something succeeded
     success: 'success',
+    // NOTE: new added
+    // Is the page moved to text page?
+    isPageIncludingMovie: 'isPageIncludingMovie'
 };
 // --- constants for controller.js -------------------------------
 // // To pass to setTimeout
@@ -178,6 +181,7 @@ https://typescript-jp.gitbook.io/deep-dive/type-system/literal-types
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "videoContainer": () => (/* binding */ videoContainer),
 /* harmony export */   "transcript": () => (/* binding */ transcript),
 /* harmony export */   "controlBar": () => (/* binding */ controlBar),
 /* harmony export */   "EX": () => (/* binding */ EX)
@@ -191,6 +195,9 @@ __webpack_require__.r(__webpack_exports__);
  *
  * **************************************************/
 // --- Selectors related to Transcript ---------------------------
+// Udemy講義ページが動画ページならこのセレクタが一致する
+// テキストページとかなら一致しない
+const videoContainer = "div.video-viewer--container--23VX7";
 const transcript = {
     // HTMLSpanElement which is Highlight as current subtitle on movie.
     highlight: "span.transcript--highlight-cue--1bEgq",

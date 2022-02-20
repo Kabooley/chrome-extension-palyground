@@ -48,7 +48,7 @@ export const orderNames = {
     success: 'success',
     // NOTE: new added
     // Is the page moved to text page?
-    isItTextPage: 'isItTextPage'
+    isPageIncludingMovie: 'isPageIncludingMovie'
 } as const;
 
 // Subtitle object interface
@@ -88,8 +88,8 @@ export interface iResponse {
     isTranscriptDisplaying?: boolean;
     
     // NOTE: new added
-    // Is the page moved to text page?
-    textPage?: 'textPage'
+    // Is page including movie container?
+    isPageIncludingMovie?: boolean
 
     // --- DUPLICATED ----
     // disconnect?: boolean;

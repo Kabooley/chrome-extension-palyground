@@ -3055,7 +3055,7 @@ chrome.tabs.onUpdated.addListener(
 
 `handlerOfReset`内部で`repeatCaptureSubtitles`由来のエラーが発生して処理がストップ
 
-この時のstate
+この時の state
 
 ```TypeScript
 // chrome.tabs.onUpdated()で「動画切替」判定により
@@ -3135,28 +3135,67 @@ url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/lear
 // つまり字幕データ待ち
 ```
 
-やっぱりonUpdatedで検知するしかないね～
+やっぱり onUpdated で検知するしかないね～
 
-テキストページのElement
+テキストページの Element
 
 ```html
-
 <!-- sidebar transcript -->
 <div class="curriculum-item-view--absolute-height-limiter--1SMqE">
-    <div class="curriculum-item-view--content--3ABmp" data-purpose="curriculum-item-viewer-content">
-        <section class="lecture-view--container--pL22J" aria-label="セクション9: Design Patterns with Typescript、レクチャー54: IMPORTANT Info About Faker Installation">
-            <div class="text-viewer--container--18Ayx">
-                <div class="text-viewer--scroll-container--1iy0Z"><div class="text-viewer--content--3hoqQ">
-                    <div class="udlite-heading-xxl text-viewer--main-heading--ZbxZA">IMPORTANT Info About Faker Installation</div>
-
-<!-- bottom transcript -->
-<div class="curriculum-item-view--absolute-height-limiter--1SMqE curriculum-item-view--no-sidebar--L4DBG">
-    <div class="curriculum-item-view--content--3ABmp" data-purpose="curriculum-item-viewer-content">
-        <section class="lecture-view--container--pL22J" aria-label="セクション9: Design Patterns with Typescript、レクチャー54: IMPORTANT Info About Faker Installation">
+    <div
+        class="curriculum-item-view--content--3ABmp"
+        data-purpose="curriculum-item-viewer-content"
+    >
+        <section
+            class="lecture-view--container--pL22J"
+            aria-label="セクション9: Design Patterns with Typescript、レクチャー54: IMPORTANT Info About Faker Installation"
+        >
             <div class="text-viewer--container--18Ayx">
                 <div class="text-viewer--scroll-container--1iy0Z">
                     <div class="text-viewer--content--3hoqQ">
-                        <div class="udlite-heading-xxl text-viewer--main-heading--ZbxZA">IMPORTANT Info About Faker Installation</div>
+                        <div
+                            class="udlite-heading-xxl text-viewer--main-heading--ZbxZA"
+                        >
+                            IMPORTANT Info About Faker Installation
+                        </div>
+
+                        <!-- bottom transcript -->
+                        <div
+                            class="curriculum-item-view--absolute-height-limiter--1SMqE curriculum-item-view--no-sidebar--L4DBG"
+                        >
+                            <div
+                                class="curriculum-item-view--content--3ABmp"
+                                data-purpose="curriculum-item-viewer-content"
+                            >
+                                <section
+                                    class="lecture-view--container--pL22J"
+                                    aria-label="セクション9: Design Patterns with Typescript、レクチャー54: IMPORTANT Info About Faker Installation"
+                                >
+                                    <div class="text-viewer--container--18Ayx">
+                                        <div
+                                            class="text-viewer--scroll-container--1iy0Z"
+                                        >
+                                            <div
+                                                class="text-viewer--content--3hoqQ"
+                                            >
+                                                <div
+                                                    class="udlite-heading-xxl text-viewer--main-heading--ZbxZA"
+                                                >
+                                                    IMPORTANT Info About Faker
+                                                    Installation
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
 ```
 
 テキストページだと次のセレクタが現れる(動画ページだと存在しない)
@@ -3170,7 +3209,17 @@ url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/lear
 ```html
 <div class="video-viewer--container--23VX7">
     <div class="video-player--container--YDQRW udlite-in-udheavy">
-        <div class="video-player--video-wrapper--1L212 user-activity--user-inactive--2uBeO"><link rel="preload" href="https://mp4-c.udemycdn.com/2019-06-10_15-36-59-0b509e27c74b00234da88b231891c723/2/thumb-sprites.jpg?Expires=1645229876&amp;Signature=AMhBMsGskVG0Jz~aoV-VfHd5Ng4F6FfT3XmVs-qgRFHutm~l1JuInkB9e8w~jO86dU1uyhwNLu-S7GXfbwZtOv91LV5Qr7BboaboIrcHDg7r2LmihPSLqA5CYkzZRiTI8dIFGzQY0ePg4GfYusJMUlQ43jtXp1miacpeXCPuIrSDRrtOWsiJa53AiBYemuKUJ2NPk6d50FGNti9ec2WbgHrxMmtbGF7KBIEXXFs7Pk8xPjat~lfXc7PUHtCO06spYqxS-jRrgobo7AWU0NIOCyBD6xWtEYj-ggvlHmaKKNuBkKo9PBzmLvKgsJP3RIZ2ZZR22zeI~g8eGxv2beTTNA__&amp;Key-Pair-Id=APKAITJV77WS5ZT7262A" as="image">
+        <div
+            class="video-player--video-wrapper--1L212 user-activity--user-inactive--2uBeO"
+        >
+            <link
+                rel="preload"
+                href="https://mp4-c.udemycdn.com/2019-06-10_15-36-59-0b509e27c74b00234da88b231891c723/2/thumb-sprites.jpg?Expires=1645229876&amp;Signature=AMhBMsGskVG0Jz~aoV-VfHd5Ng4F6FfT3XmVs-qgRFHutm~l1JuInkB9e8w~jO86dU1uyhwNLu-S7GXfbwZtOv91LV5Qr7BboaboIrcHDg7r2LmihPSLqA5CYkzZRiTI8dIFGzQY0ePg4GfYusJMUlQ43jtXp1miacpeXCPuIrSDRrtOWsiJa53AiBYemuKUJ2NPk6d50FGNti9ec2WbgHrxMmtbGF7KBIEXXFs7Pk8xPjat~lfXc7PUHtCO06spYqxS-jRrgobo7AWU0NIOCyBD6xWtEYj-ggvlHmaKKNuBkKo9PBzmLvKgsJP3RIZ2ZZR22zeI~g8eGxv2beTTNA__&amp;Key-Pair-Id=APKAITJV77WS5ZT7262A"
+                as="image"
+            />
+        </div>
+    </div>
+</div>
 ```
 
 動画ページ以外は
@@ -3179,6 +3228,25 @@ url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/lear
 
 なのでこのセレクタにマッチする要素がないかを調査すればいい
 
+##### chrome API tips: シングルメッセージはどうしてもすぐに接続キレる
+
+おそらく、次のようなこと...
+
+background script でメッセージを送信する
+content script が受信する
+メッセージ order に非同期関数を実行することが要求されたとする
+非同期関数を async/await で実行する
+background script で runtime.lastError
+
+理由は、single message passing で受信側の非同期関数の実行を要求すると
+非同期関数が async/await 呼出であるにかかわらず
+すぐに処理が次に行ってしまうから！
+
+setTimeout や setInterval を Promise でラップして
+async/await 呼出しても意味がない...
+
+これを解決するのに chrome.port は役に立つか？
+それとも妥協してコールバック地獄にするか？
 
 #### ローディング中 view の実装
 
@@ -3190,4 +3258,4 @@ url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/lear
 
 なんか起こる時とおこらない時がある？
 なんらかの操作をした後になるのかしら？
-それともバグがたまたまそのUdemyページで起こっていなかっただけかな？
+それともバグがたまたまその Udemy ページで起こっていなかっただけかな？
