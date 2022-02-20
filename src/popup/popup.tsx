@@ -5,6 +5,7 @@ import {
   iResponse,
   extensionNames,
   orderNames,
+  urlPattern,
 } from "../utils/constants";
 import { sendMessagePromise } from "../utils/helpers";
 
@@ -15,6 +16,8 @@ const Popup = (): JSX.Element => {
   const [running, setRunning] = useState<boolean>(false);
   // 正常に拡張機能が実行されたらtrue
   const [complete, setComplete] = useState<boolean>(false);
+// NOTE: new added: Saves Tab 
+  const [tabInfo, setTabInfo] = useState<chrome.tabs.Tab>(null);
 
   useEffect(() => {
     console.log("[popup] Set onMessage listener");
@@ -36,33 +39,45 @@ const Popup = (): JSX.Element => {
     // 初回呼出の時だけ実行すればいい
     // 指定のURLと一致するのかbackgroundと通信する
     console.log("[popup] OPENED");
-    sendInquire();
+    // sendInquire();
+    verifyValidPage();
   }, []);
 
   const messageHandler = (): void => {};
 
-  const sendInquire = (): void => {
-    sendMessagePromise({
-      from: extensionNames.popup,
-      to: extensionNames.background,
-      order: [orderNames.inquireUrl],
-    })
-      .then((res: iResponse) => {
-        const { correctUrl } = res;
-        // DEBUG:
-        console.log(`[popup] is valid page?: ${correctUrl}`);
-        setCorrectUrl(correctUrl);
+  const verifyValidPage = (): void => {
+    chrome.windows
+      .getCurrent()
+      .then((res) => {
+        return chrome.tabs.query({ active: true, windowId: res.id });
+      })
+      .then((tabs: chrome.tabs.Tab[]) => {
+        console.log(tabs);
+        const r: RegExpMatchArray = tabs[0].url.match(urlPattern);
+        console.log(`Is this page valid?: ${r && r.length}`);
+        if(r && r.length) {
+            setCorrectUrl(true);
+            setTabInfo(tabs[0]);
+        }
+        else {
+            setCorrectUrl(false);
+        }
       })
       .catch((err) => console.error(err.message));
   };
 
+
+
   const buttonClickHandler = (): void => {
+    if(!tabInfo) throw new Error("Error: tabInfo is null");
     setRunning(true);
     console.log("[popup] RUNNING...");
+
     sendMessagePromise({
       from: extensionNames.popup,
       to: extensionNames.background,
       order: [orderNames.run],
+      tabInfo: tabInfo
     })
       .then((res) => {
         const { success } = res;
@@ -119,3 +134,20 @@ const Popup = (): JSX.Element => {
 const root = document.createElement("div");
 document.body.appendChild(root);
 ReactDOM.render(<Popup />, root);
+
+
+// --- LEGACY -----------------------
+// const sendInquire = (): void => {
+//     sendMessagePromise({
+//       from: extensionNames.popup,
+//       to: extensionNames.background,
+//       order: [orderNames.inquireUrl],
+//     })
+//       .then((res: iResponse) => {
+//         const { correctUrl } = res;
+//         // DEBUG:
+//         console.log(`[popup] is valid page?: ${correctUrl}`);
+//         setCorrectUrl(correctUrl);
+//       })
+//       .catch((err) => console.error(err.message));
+//   };

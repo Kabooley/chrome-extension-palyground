@@ -30029,7 +30029,7 @@ const sendMessageToTabsPromise = (tabId, message) => __awaiter(void 0, void 0, v
             const { complete } = response, rest = __rest(response, ["complete"]);
             complete
                 ? resolve(rest)
-                : reject('Send message to tabs went something wrong');
+                : reject("Send message to tabs went something wrong");
         }));
     }));
 });
@@ -30060,7 +30060,7 @@ const tabsQuery = () => __awaiter(void 0, void 0, void 0, function* () {
 // # mark以下を切除した文字列を返す
 // なければそのまま引数のurlを返す
 const exciseBelowHash = (url) => {
-    return url.indexOf('#') < 0 ? url : url.slice(0, url.indexOf('#'));
+    return url.indexOf("#") < 0 ? url : url.slice(0, url.indexOf("#"));
 };
 /*********************
  * Repeat given async callback function.
@@ -30100,7 +30100,7 @@ const repeatActionPromise = (action, timeoutAsResolve = false, interval = 200, t
                 else if (triesLeft <= 1 && !timeoutAsResolve) {
                     clearInterval(intervalId);
                     // 例外エラーとしてcatchされる
-                    reject('Error: Action callback fuction never returned true and time out.@repeatActionPromise');
+                    reject("Error: Action callback fuction never returned true and time out.@repeatActionPromise");
                 }
                 triesLeft--;
             });
@@ -30227,6 +30227,8 @@ const Popup = () => {
     const [running, setRunning] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     // 正常に拡張機能が実行されたらtrue
     const [complete, setComplete] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    // NOTE: new added: Saves Tab 
+    const [tabInfo, setTabInfo] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         console.log("[popup] Set onMessage listener");
         chrome.runtime.onMessage.addListener(messageHandler);
@@ -30246,30 +30248,40 @@ const Popup = () => {
         // 初回呼出の時だけ実行すればいい
         // 指定のURLと一致するのかbackgroundと通信する
         console.log("[popup] OPENED");
-        sendInquire();
+        // sendInquire();
+        verifyValidPage();
     }, []);
     const messageHandler = () => { };
-    const sendInquire = () => {
-        (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
-            from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
-            to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
-            order: [_utils_constants__WEBPACK_IMPORTED_MODULE_2__.orderNames.inquireUrl],
-        })
+    const verifyValidPage = () => {
+        chrome.windows
+            .getCurrent()
             .then((res) => {
-            const { correctUrl } = res;
-            // DEBUG:
-            console.log(`[popup] is valid page?: ${correctUrl}`);
-            setCorrectUrl(correctUrl);
+            return chrome.tabs.query({ active: true, windowId: res.id });
+        })
+            .then((tabs) => {
+            console.log(tabs);
+            const r = tabs[0].url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_2__.urlPattern);
+            console.log(`Is this page valid?: ${r && r.length}`);
+            if (r && r.length) {
+                setCorrectUrl(true);
+                setTabInfo(tabs[0]);
+            }
+            else {
+                setCorrectUrl(false);
+            }
         })
             .catch((err) => console.error(err.message));
     };
     const buttonClickHandler = () => {
+        if (!tabInfo)
+            throw new Error("Error: tabInfo is null");
         setRunning(true);
         console.log("[popup] RUNNING...");
         (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_2__.orderNames.run],
+            tabInfo: tabInfo
         })
             .then((res) => {
             const { success } = res;
@@ -30311,6 +30323,21 @@ const Popup = () => {
 const root = document.createElement("div");
 document.body.appendChild(root);
 react_dom__WEBPACK_IMPORTED_MODULE_1__.render(react__WEBPACK_IMPORTED_MODULE_0__.createElement(Popup, null), root);
+// --- LEGACY -----------------------
+// const sendInquire = (): void => {
+//     sendMessagePromise({
+//       from: extensionNames.popup,
+//       to: extensionNames.background,
+//       order: [orderNames.inquireUrl],
+//     })
+//       .then((res: iResponse) => {
+//         const { correctUrl } = res;
+//         // DEBUG:
+//         console.log(`[popup] is valid page?: ${correctUrl}`);
+//         setCorrectUrl(correctUrl);
+//       })
+//       .catch((err) => console.error(err.message));
+//   };
 
 })();
 

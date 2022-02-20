@@ -14,34 +14,47 @@ MVC と DDD の設計思想を取り入れたい
 
 NOTE: 更新は豆に！
 
--   [済] sidebar の時の自動スクロール機能関数`controller.ts::scrollToHighlight()`が機能するようにすること
--   [済] background.ts はいったんアンロードされると state に渡した変数がすべて消えることへの対処
--   [済] Refac: background script で `chrome.tabs.updated.addListener`に filter を設けることで余計な url はデフォで無視する仕様にする
+- [済] sidebar の時の自動スクロール機能関数`controller.ts::scrollToHighlight()`が機能するようにすること
+- [済] background.ts はいったんアンロードされると state に渡した変数がすべて消えることへの対処
+- [済] Refac: background script で `chrome.tabs.updated.addListener`に filter を設けることで余計な url はデフォで無視する仕様にする
     参考：https://developer.chrome.com/docs/extensions/reference/events/#filtered
 
--   Udemy の講義ページで、動画じゃないページへアクセスしたときの対応
-    たとえばテキストだけ表示される回があるけど、それの対応
-    [テキストページへの対処](#テキストページへの対処)
-
--   上記に伴って、loading 中を ExTranscript へ表示させる
-    [ローディング中 view の実装](#ローディング中viewの実装)
-
--   [済] `chrome.tabs.onUpdated.addListener()`のスリム化
+- [済] `chrome.tabs.onUpdated.addListener()`のスリム化
     　 filter は使えないことは TypeScript の型から確認済
     よけいなローディングに反応しないようにしたい
     [`chrome.tabs.onUpdated.addListener()`のスリム化](<#`chrome.tabs.onUpdated.addListener()`のスリム化>)
 
--   自動スクロール機能で重複する字幕要素を完全に処理しきれていない模様...
+- [済] Udemy の講義ページで、動画じゃないページへアクセスしたときの対応
+    たとえばテキストだけ表示される回があるけど、それの対 [テキストページへの対処](#テキストページへの対処)
+
+- 上記に伴って、loading 中を ExTranscript へ表示させる
+    [ローディング中 view の実装](#ローディング中viewの実装)
+
+- 複数windowを開いていると、あとから複製したwindowのidを取得してしまう問題
+    [複数windowだとあとから複製したwindow.idを取得してしまう問題](#複数windowだとあとから複製したwindow.idを取得してしまう問題)
+
+- popup で正しい動作をさせる：RUN した後は RUN ボタンを無効にするとか
+- 拡張機能を展開していたタブが閉じられたときの後始末
+- エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
+- デザイン改善: 見た目の話
+
+
+後回しでもいいかも:
+
+- 自動スクロール機能で重複する字幕要素を完全に処理しきれていない模様...
     つまりたぶんだけど、重複しているほうの要素に css の class をつけてしまっていて、
     だけれども remove はできていない
     という可能性...
     [自動スクロール機能修正：ハイライト重複](#自動スクロール機能修正：ハイライト重複)
 
--   popup で正しい動作をさせる：RUN した後は RUN ボタンを無効にするとか
--   拡張機能を展開していたタブが閉じられたときの後始末
--   エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
--   デザイン改善: 見た目の話
--   controller.ts の onwWindowResizeHandler をもうちょっとサクサク動かしたい
+
+- controller.ts の onwWindowResizeHandler をもうちょっとサクサク動かしたい
+
+他:
+
+- chrome extensionはブラウザが閉じたらどうなるのか
+    [ブラウザが閉じたらどうなるのか](#ブラウザが閉じたらどうなるのか)
+- 
 
 ## DDD 設計思想の導入に関するメモ
 
@@ -3047,6 +3060,10 @@ chrome.tabs.onUpdated.addListener(
 
 #### テキストページへの対処
 
+解決済
+
+ページ移動による場合の話。
+
 いまんところの拡張機能の挙動
 
 テキストページなる
@@ -3055,169 +3072,12 @@ chrome.tabs.onUpdated.addListener(
 
 `handlerOfReset`内部で`repeatCaptureSubtitles`由来のエラーが発生して処理がストップ
 
-この時の state
-
-```TypeScript
-// chrome.tabs.onUpdated()で「動画切替」判定により
-// handlerOfReset()が呼び出される
-
-// 呼出し直後...
-const model: iModel = {
-    isCaptureSubtitleInjected: true
-    isContentScriptInjected: true
-    isControllerInjected: true
-    isEnglish: true
-    isExTranscriptStructured: true
-    isSubtitleCaptured: false
-    isSubtitleCapturing: false
-    isTranscriptDisplaying: true
-    subtitles: (68) [{…}, {…},]
-    tabId: 84
-    url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/learn/lecture/15066560"
-}
-
-// 最初のstate変更後
-const model: iModel = {
-isCaptureSubtitleInjected: true
-isContentScriptInjected: true
-isControllerInjected: true
-isEnglish: true
-isExTranscriptStructured: true
-isSubtitleCaptured: false
-isSubtitleCapturing: true
-isTranscriptDisplaying: false
-subtitles: []
-tabId: 84
-url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/learn/lecture/30294840"
-}
-
-// resetEachContentScript()呼出し後
-const model: iModel = {
-isCaptureSubtitleInjected: true
-isContentScriptInjected: true
-isControllerInjected: true
-isEnglish: true
-isExTranscriptStructured: true
-isSubtitleCaptured: false
-isSubtitleCapturing: true
-isTranscriptDisplaying: false
-subtitles: []
-tabId: 84
-url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/learn/lecture/30294840"
-}
-
-// repeatCaptureSubtitles()呼出し、エラー発生時
-const model: iModel = {
-isCaptureSubtitleInjected: true
-isContentScriptInjected: true
-isControllerInjected: true
-isEnglish: true
-isExTranscriptStructured: true
-isSubtitleCaptured: false
-isSubtitleCapturing: true
-isTranscriptDisplaying: false
-subtitles: []
-tabId: 84
-url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/learn/lecture/30294840"
-}
-```
-
-```TypeScript
-// controller.ts
-// status
-  sStatus.setState({ ...statusBase });
-  sSubtitles.setState({ ...subtitleBase });
-//   されたあとに
-  sStatus.setState({ position: s });
-// なので
-// 一旦ExTranscriptはclearされてから
-// 字幕なしでExTranscriptが再レンダリングされた状態
-// つまり字幕データ待ち
-```
-
 やっぱり onUpdated で検知するしかないね～
-
-テキストページの Element
-
-```html
-<!-- sidebar transcript -->
-<div class="curriculum-item-view--absolute-height-limiter--1SMqE">
-    <div
-        class="curriculum-item-view--content--3ABmp"
-        data-purpose="curriculum-item-viewer-content"
-    >
-        <section
-            class="lecture-view--container--pL22J"
-            aria-label="セクション9: Design Patterns with Typescript、レクチャー54: IMPORTANT Info About Faker Installation"
-        >
-            <div class="text-viewer--container--18Ayx">
-                <div class="text-viewer--scroll-container--1iy0Z">
-                    <div class="text-viewer--content--3hoqQ">
-                        <div
-                            class="udlite-heading-xxl text-viewer--main-heading--ZbxZA"
-                        >
-                            IMPORTANT Info About Faker Installation
-                        </div>
-
-                        <!-- bottom transcript -->
-                        <div
-                            class="curriculum-item-view--absolute-height-limiter--1SMqE curriculum-item-view--no-sidebar--L4DBG"
-                        >
-                            <div
-                                class="curriculum-item-view--content--3ABmp"
-                                data-purpose="curriculum-item-viewer-content"
-                            >
-                                <section
-                                    class="lecture-view--container--pL22J"
-                                    aria-label="セクション9: Design Patterns with Typescript、レクチャー54: IMPORTANT Info About Faker Installation"
-                                >
-                                    <div class="text-viewer--container--18Ayx">
-                                        <div
-                                            class="text-viewer--scroll-container--1iy0Z"
-                                        >
-                                            <div
-                                                class="text-viewer--content--3hoqQ"
-                                            >
-                                                <div
-                                                    class="udlite-heading-xxl text-viewer--main-heading--ZbxZA"
-                                                >
-                                                    IMPORTANT Info About Faker
-                                                    Installation
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </section>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-</div>
-```
-
-テキストページだと次のセレクタが現れる(動画ページだと存在しない)
-`div.text-viewer--container--18Ayx`
-
-ということでこれがあるかどうかをチェックする...
-
-いや、動画ページかどうかをチェックしたいので「あるかどうか」ではなくて
-「ないかどうか」で調べたい
 
 ```html
 <div class="video-viewer--container--23VX7">
     <div class="video-player--container--YDQRW udlite-in-udheavy">
-        <div
-            class="video-player--video-wrapper--1L212 user-activity--user-inactive--2uBeO"
-        >
-            <link
-                rel="preload"
-                href="https://mp4-c.udemycdn.com/2019-06-10_15-36-59-0b509e27c74b00234da88b231891c723/2/thumb-sprites.jpg?Expires=1645229876&amp;Signature=AMhBMsGskVG0Jz~aoV-VfHd5Ng4F6FfT3XmVs-qgRFHutm~l1JuInkB9e8w~jO86dU1uyhwNLu-S7GXfbwZtOv91LV5Qr7BboaboIrcHDg7r2LmihPSLqA5CYkzZRiTI8dIFGzQY0ePg4GfYusJMUlQ43jtXp1miacpeXCPuIrSDRrtOWsiJa53AiBYemuKUJ2NPk6d50FGNti9ec2WbgHrxMmtbGF7KBIEXXFs7Pk8xPjat~lfXc7PUHtCO06spYqxS-jRrgobo7AWU0NIOCyBD6xWtEYj-ggvlHmaKKNuBkKo9PBzmLvKgsJP3RIZ2ZZR22zeI~g8eGxv2beTTNA__&amp;Key-Pair-Id=APKAITJV77WS5ZT7262A"
-                as="image"
-            />
-        </div>
+        <!-- .... -->
     </div>
 </div>
 ```
@@ -3228,7 +3088,10 @@ url: "https://www.udemy.com/course/typescript-the-complete-developers-guide/lear
 
 なのでこのセレクタにマッチする要素がないかを調査すればいい
 
-##### chrome API tips: シングルメッセージはどうしてもすぐに接続キレる
+##### chrome API tips: シングルメッセージは受信側が非同期関数を実行すると必ず接続切れる
+
+`chrome.runtime.onMessage.addListener()`で`return true`しても無駄
+
 
 おそらく、次のようなこと...
 
@@ -3259,3 +3122,198 @@ async/await 呼出しても意味がない...
 なんか起こる時とおこらない時がある？
 なんらかの操作をした後になるのかしら？
 それともバグがたまたまその Udemy ページで起こっていなかっただけかな？
+
+### ブラウザが閉じたらどうなるのか
+
+ブラウザが閉じた、または拡張機能を展開していたタブが閉じられたとき
+それを検知できるかどうか
+
+
+1. ブラウザが閉じられたことは検知できるか？
+
+
+参考：https://developer.chrome.com/docs/extensions/mv3/declare_permissions/#background
+
+
+> Chromeを早く起動し、遅くシャットダウンするようにします。これにより、拡張機能の寿命を延ばすことができます。 
+> インストールされている拡張機能に「バックグラウンド」権限がある場合、ユーザーがChromeを起動する前に、ユーザーがコンピューターにログインするとすぐにChromeが（目に見えない形で）実行されます。 
+> 「バックグラウンド」権限により、ユーザーが明示的にChromeを終了するまで、Chromeは（最後のウィンドウが閉じられた後でも）実行を継続します。
+
+つまり拡張機能はONにしている限りブラウザが開いていようがいまいがずっとバックグラウンドにいる
+
+
+参考：
+
+https://stackoverflow.com/questions/3390470/event-onbrowserclose-for-google-chrome-extension
+
+> `chrome.window.onRemoved`は使えない
+
+
+TODO: 要確認
+`chrome.tabs.onRemoved`の`removeInfo.isWindowClosing`で知ることができるかも？
+
+
+
+2. タブが閉じられたことは検知できるか？
+
+参考： https://developer.chrome.com/docs/extensions/reference/tabs/#event-onRemoved
+
+`chrome.tabs.onRemoved`で検知できる
+
+
+```TypeScript
+chrome.tabs.onRemoved.addListener(
+    (
+        _tabId: number,
+        removeInfo: chrome.tabs.TabRemoveInfo
+    ):void => {
+        const { tabId } = await state.get();
+        if(removeInfo.isWindowClosing) {
+            console.log("Window closing!");
+            // 後始末
+        }
+        if(_tabId === tabId) {
+            console.log("tab closed!");
+            // 後始末
+        }
+    }
+)
+```
+
+https://developer.chrome.com/docs/extensions/reference/windows/
+
+> 現在のウィンドウは、現在実行中のコードを含むウィンドウです。これは、最上部のウィンドウまたはフォーカスされたウィンドウとは異なる可能性があることを理解することが重要です。
+
+確かに、ウィンドウからタブを一つ抜き取った後に拡張機能を実行しようとしたところ
+フォーカスしている方ではなくて抜き取ったウィンドウを対象にしていた
+
+
+#### 複数windowだとあとから複製したwindow.idを取得してしまう問題
+
+ブラウザはUdemyの講義ページのタブをフォーカスしている
+ブラウザは複数窓を開いている
+そんなとき、
+
+background scriptでwindow.idを取得するとあとから開いた窓のidを取得してしまう
+
+```TypeScript
+// getCurrent()でもgetLastFocused()でも変わらない！
+    // const w: chrome.windows.Window = await chrome.windows.getLastFocused();
+    const w: chrome.windows.Window = await chrome.windows.getCurrent();
+    const tabs: chrome.tabs.Tab[] = await chrome.tabs.query({
+      active: true,
+      windowId: w.id,
+    });
+    // フォーカスしていないwindow.idを取得してしまっているので
+    // POPUPを開いたタブとは関係ないウィンドウのtabを返してしまう
+    return tabs[0];
+```
+
+これはひどい仕打ちである
+
+POPUPで同じ処理を行うと、popupを開いたタブのwindow.idを取得してくれる事が確認できた
+なのでPOPUPからwindow.idとtabIdを取得することとする
+
+```TypeScript
+// popup.tsx
+
+// before
+  const sendInquire = (): void => {
+    sendMessagePromise({
+      from: extensionNames.popup,
+      to: extensionNames.background,
+      order: [orderNames.inquireUrl],
+    })
+      .then((res: iResponse) => {
+        const { correctUrl } = res;
+        // DEBUG:
+        console.log(`[popup] is valid page?: ${correctUrl}`);
+        setCorrectUrl(correctUrl);
+      })
+      .catch((err) => console.error(err.message));
+  };
+
+// after
+  const verifyValidPage = (): void => {
+    chrome.windows.getCurrent()
+      .then((res) => {
+        return chrome.tabs.query({ active: true, windowId: res.id });
+      })
+      .then((tabs: chrome.tabs.Tab[]) => {
+          console.log(tabs);
+          const r: RegExpMatchArray = tabs[0].url.match(urlPattern);
+          console.log(`Is this page valid?: ${r && r.length}`);
+        setCorrectUrl(r && r.length);
+    })
+      .catch((err) => console.error(err.message));
+  };
+
+// before
+  const buttonClickHandler = (): void => {
+    setRunning(true);
+    console.log("[popup] RUNNING...");
+
+        chrome.windows.getCurrent()
+      .then((res) => {
+        return chrome.tabs.query({ active: true, windowId: res.id });
+      })
+      .then((tabs: chrome.tabs.Tab[]) => {
+          const r: RegExpMatchArray = tabs[0].url.match(urlPattern);
+          console.log(`Is this page valid?: ${r && r.length}`);
+        setCorrectUrl(r && r.length);
+    })
+    sendMessagePromise({
+      from: extensionNames.popup,
+      to: extensionNames.background,
+      order: [orderNames.run],
+    })
+      .then((res) => {
+        const { success } = res;
+        console.log("[popup] Successfully Complete!");
+        setComplete(success);
+        setRunning(false);
+        if (!success) {
+          throw new Error(
+            "Error: something went wrong while extension running"
+          );
+        }
+      })
+      .catch((err) => {
+        setComplete(false);
+        setRunning(false);
+        console.error(err.message);
+        // alert出した方がいいかな？
+      });
+  };
+
+
+// After
+  const buttonClickHandler = (): void => {
+    setRunning(true);
+    console.log("[popup] RUNNING...");
+
+    sendMessagePromise({
+      from: extensionNames.popup,
+      to: extensionNames.background,
+      order: [orderNames.run],
+    })
+      .then((res) => {
+        const { success } = res;
+        console.log("[popup] Successfully Complete!");
+        setComplete(success);
+        setRunning(false);
+        if (!success) {
+          throw new Error(
+            "Error: something went wrong while extension running"
+          );
+        }
+      })
+      .catch((err) => {
+        setComplete(false);
+        setRunning(false);
+        console.error(err.message);
+        // alert出した方がいいかな？
+      });
+  };
+
+```

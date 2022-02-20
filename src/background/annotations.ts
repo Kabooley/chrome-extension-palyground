@@ -41,6 +41,11 @@ export interface iTabId {
     tabId: number;
 }
 
+// NOTE: new added
+export interface iTabInfo {
+    tabInfo: chrome.tabs.Tab;
+}
+
 // web page URL that extension deployed
 export interface iContentUrl {
     url: string;
@@ -56,6 +61,7 @@ export interface iModel
         iPageStatus,
         iContentUrl,
         iTabId,
+        iTabInfo,
         iSubtitle {}
 
 export interface iStateModule<TYPE extends object> {
@@ -85,4 +91,6 @@ export const modelBase: iModel = {
     tabId: null,
     url: null,
     subtitles: null,
+    // NOTE: new added
+    tabInfo: null
 } as const;

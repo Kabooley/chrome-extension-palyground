@@ -91,6 +91,10 @@ export interface iResponse {
     // Is page including movie container?
     isPageIncludingMovie?: boolean
 
+    // NOTE: new added
+    // chrome.tabs.Tab info will be included
+    tabInfo?: chrome.tabs.Tab 
+
     // --- DUPLICATED ----
     // disconnect?: boolean;
     // completed?: boolean;
