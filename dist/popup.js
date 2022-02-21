@@ -30234,7 +30234,7 @@ const Popup = () => {
         chrome.runtime.onMessage.addListener(messageHandler);
         // DEBUG: make sure state is alive
         //
-        console.log(correctUrl, running, complete);
+        console.log(correctUrl, running, complete, tabInfo);
         //
         return () => {
             console.log("[popup] Removed onMessage listener");
@@ -30246,11 +30246,14 @@ const Popup = () => {
         //
         // POPUPは開かれるたびに新しく生成されるので
         // 初回呼出の時だけ実行すればいい
-        // 指定のURLと一致するのかbackgroundと通信する
         console.log("[popup] OPENED");
-        // sendInquire();
         verifyValidPage();
     }, []);
+    // Runs always after rendering
+    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+        console.log("[popup] LOG: current state:");
+        console.log(correctUrl, running, complete, tabInfo);
+    });
     const messageHandler = () => { };
     const verifyValidPage = () => {
         chrome.windows
@@ -30261,7 +30264,7 @@ const Popup = () => {
             .then((tabs) => {
             console.log(tabs);
             const r = tabs[0].url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_2__.urlPattern);
-            console.log(`Is this page valid?: ${r && r.length}`);
+            console.log(`Is this page valid?: ${r && r.length ? true : false}`);
             if (r && r.length) {
                 setCorrectUrl(true);
                 setTabInfo(tabs[0]);
