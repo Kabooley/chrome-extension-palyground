@@ -36,6 +36,9 @@ NOTE: 更新は豆に！
 -   popup で正しい動作をさせる：RUN した後は RUN ボタンを無効にするとか
     [POPUP の View 実装](#POPUPのView実装)
 
+-   message passing で受信側が非同期関数を実行するとき完了を待たずに port が閉じられてしまう問題
+    [onMessage で非同期関数の完了を待たずに接続が切れる問題](#onMessageで非同期関数の完了を待たずに接続が切れる問題)
+
 -   拡張機能を展開していたタブが閉じられたときの後始末
 -   エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
 -   デザイン改善: 見た目の話
@@ -3315,34 +3318,166 @@ POPUP で同じ処理を行うと、popup を開いたタブの window.id を取
 
 #### POPUP の View 実装
 
-その前に！
+**Popup は毎回開くたびに新しくなる(state は保持されない)**
 
-POPUP は一度開いて、RUN を押して、POPUP を閉じると
-`running`他 state は一切保存されていない！
-
-なので保存できるようにしないといかん
+なので常に background script から state を取得することとする
 
 https://stackoverflow.com/questions/9089793/chrome-extension-simple-popup-wont-remain-in-last-state
 
 ```TypeScript
-// popup.tsx
-
-// useStateしているstateの一覧
-interface iState {
-  correctUrl: boolean;
-  running: boolean;
-  complete: boolean;
-  tabInfo: chrome.tabs.Tab
-}
 
 
+  useEffect(() => {
+    // get state from background
+    chrome.runtime.sendMessage({
+      from: extensionNames.poup,
+      to: extensionNames.background,
+      order: [orderNames.sendMessage]
+    }, (response: iResponse) => {
+      Promise.resolve()
+    })
+  }, []);
 
-const setState = (newProp: {
-  [Property in keyof iState]: iState[Property]
-}): void => {
-  const keys: string[] = Object.keys(newProp);
-  keys.forEach(key => {
-
-  })
-}
 ```
+
+#### onMessage で非同期関数の完了を待たずに接続が切れる問題
+
+参考：
+https://stackoverflow.com/questions/53024819/chrome-extension-sendresponse-not-waiting-for-async-function
+
+これの原因はもしかしたら、
+`chrome.runtime.onMessage.addListener()`の戻り値が
+`boolean`じゃなくて`Promise<boolean>`であるからかも...
+
+下記の通り、
+
+`async/await`呼出をしたいためにコールバック関数を async 関数にしている
+
+これによって、
+`chrome.runtime.onMessage.addListener`が`boolean`を返すのではなくて
+`Promise<boolean>`を返している
+
+なので非同期関数は解決したときに.then()で sendResponse()を実行すればうまくいくかも？
+
+```TypeScript
+// contentScript.ts
+
+
+// Before...
+chrome.runtime.onMessage.addListener(
+  async (
+    message: iMessage,
+    sender,
+    sendResponse: (response: iResponse) => void
+  ): Promise<boolean> => {
+    console.log("CONTENT SCRIPT GOT MESSAGE");
+    const { from, order, to } = message;
+    const response: iResponse = {
+      from: extensionNames.contentScript,
+      to: from,
+    };
+    if (to !== extensionNames.contentScript) return;
+
+    try {
+      // ORDERS:
+      if (order && order.length) {
+        // RESET
+        if (order.includes(orderNames.reset)) {
+          console.log("Order: RESET");
+
+          await handlerOfReset();
+          console.log("sfdadfsadfsafdsadfa");
+          if (sendResponse) {
+            sendResponse({
+              from: extensionNames.contentScript,
+              to: from,
+              complete: true,
+              success: true,
+            });
+          }
+        }
+        // ...
+      }
+      return true;
+    } catch (err) {
+      console.error(err.message);
+    }
+  }
+);
+
+// After
+chrome.runtime.onMessage.addListener(
+  // NOTE: remove async and return boolean
+  (
+    message: iMessage,
+    sender,
+    sendResponse: (response: iResponse) => void
+  ): boolean => {
+    console.log("CONTENT SCRIPT GOT MESSAGE");
+    const { from, order, to } = message;
+    const response: iResponse = {
+      from: extensionNames.contentScript,
+      to: from,
+    };
+    if (to !== extensionNames.contentScript) return;
+
+      // ORDERS:
+      if (order && order.length) {
+        // RESET
+        //
+        // NOTE: solve way 1: use promise chain.
+        if (order.includes(orderNames.reset)) {
+          console.log("Order: RESET");
+
+          handlerOfReset()
+          .then(() => {
+            console.log("[contentScript] Reset resolved");
+          if (sendResponse) {
+            sendResponse({
+              from: extensionNames.contentScript,
+              to: from,
+              complete: true,
+              success: true,
+            });
+          }
+          })
+          .catch(err => {
+            console.error(err);
+          })
+        }
+        //
+        // NOTE: solve way 2:
+        // use IIFE
+        if (order.includes(orderNames.reset)) {
+          console.log("Order: RESET");
+          (async () => {
+            try {
+              await handlerOfReset();
+              if (sendResponse) {
+                sendResponse({
+                  from: extensionNames.contentScript,
+                  to: from,
+                  complete: true,
+                  success: true,
+                });
+              }
+            }
+            catch(err) {console.error(err)}
+          })();
+        }
+        // ...
+      }
+      // NOTE: MUST RETURN TRUE so that sendResponse returned asynchronously.
+      // DO NOT return Promise<boolean>
+      return true;
+});
+
+```
+
+要検証: background script からの reset 要請を確認する
+
+確認。やっぱり原因は上記のとおりであり修正したら治った!
+
+成功ならば、
+`orderNames.isPageIncludingMovie`のオーダーも
+リピート機能を非同期処理できるか確認する
