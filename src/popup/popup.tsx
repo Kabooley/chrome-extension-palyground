@@ -17,6 +17,7 @@ import {
     urlPattern,
 } from '../utils/constants';
 import { sendMessagePromise } from '../utils/helpers';
+import './popup.css';
 
 const Popup = (): JSX.Element => {
     // popupが開かれたときのURLが、拡張機能が有効になるべきURLなのか
@@ -146,18 +147,3 @@ const root = document.createElement('div');
 document.body.appendChild(root);
 ReactDOM.render(<Popup />, root);
 
-// --- LEGACY -----------------------
-// const sendInquire = (): void => {
-//     sendMessagePromise({
-//       from: extensionNames.popup,
-//       to: extensionNames.background,
-//       order: [orderNames.inquireUrl],
-//     })
-//       .then((res: iResponse) => {
-//         const { correctUrl } = res;
-//         // DEBUG:
-//         console.log(`[popup] is valid page?: ${correctUrl}`);
-//         setCorrectUrl(correctUrl);
-//       })
-//       .catch((err) => console.error(err.message));
-//   };
