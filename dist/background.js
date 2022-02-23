@@ -29,11 +29,11 @@ const modelBase = {
     isControllerInjected: false,
     isSubtitleCapturing: false,
     isSubtitleCaptured: false,
-    // NOTE: ExTranscriptがONかどうか
+    // ExTranscriptがONかどうか
     // RUNした後かどうか、でもある
     // 表示、非表示は関係ない
     isExTranscriptStructured: false,
-    // NOTE: 本家トランスクリプトが表示されているかどうか
+    // 本家トランスクリプトが表示されているかどうか
     // ONかどうかではなく、表示されているかどうか
     // これが非表示なら、ExTranscriptも非表示にする
     isTranscriptDisplaying: false,
@@ -41,7 +41,6 @@ const modelBase = {
     tabId: null,
     url: null,
     subtitles: null,
-    // NOTE: new added
     tabInfo: null
 };
 
@@ -579,7 +578,7 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
             // 動画ページじゃない判定してくる...
             // これの対処
             // DEBUG:
-            // 
+            //
             console.log(res);
             res.isPageIncludingMovie
                 ? // 次の動画に移った
@@ -651,12 +650,17 @@ const handlerOfPopupMessage = (message, sender, sendResponse) => __awaiter(void 
     try {
         const { order } = message, rest = __rest(message, ["order"]);
         if (order && order.length) {
-            //   // Popupが開かれるたびにURLが正しいか判定する
-            //   if (order.includes(orderNames.inquireUrl)) {
-            //     console.log("[background] Validate URL");
-            //     const isValidPage: boolean = await handlerOfVerifyValidPage();
-            //     sendResponse({ correctUrl: isValidPage, complete: true });
-            //   }
+            // popupからstateが要求された
+            if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendStatus)) {
+                const { isSubtitleCapturing, isExTranscriptStructured } = yield state.get();
+                sendResponse({
+                    complete: true,
+                    state: {
+                        isSubtitleCapturing: isSubtitleCapturing,
+                        isExTranscriptStructured: isExTranscriptStructured,
+                    },
+                });
+            }
             // 拡張機能の実行命令
             if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.run)) {
                 console.log('[background] RUN');

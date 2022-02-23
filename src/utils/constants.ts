@@ -4,6 +4,8 @@
  *
  * ************************************************/
 
+import { iModel } from '../background/annotations';
+
 export const _key_of_model_state__ = '_key_of_model_state__@&%8=8';
 
 export const urlPattern: RegExp = /https:\/\/www.udemy.com\/course\/*/gm;
@@ -94,6 +96,10 @@ export interface iResponse {
     // NOTE: new added
     // chrome.tabs.Tab info will be included
     tabInfo?: chrome.tabs.Tab 
+
+    // NOTE: new added
+    // state popup requires.
+    state?: {[Property in keyof iModel]?: iModel[Property]}
 
     // --- DUPLICATED ----
     // disconnect?: boolean;

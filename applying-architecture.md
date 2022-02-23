@@ -36,7 +36,7 @@ NOTE: 更新は豆に！
 -   popup で正しい動作をさせる：RUN した後は RUN ボタンを無効にするとか
     [POPUP の View 実装](#POPUPのView実装)
 
--   message passing で受信側が非同期関数を実行するとき完了を待たずに port が閉じられてしまう問題
+- [済] message passing で受信側が非同期関数を実行するとき完了を待たずに port が閉じられてしまう問題
     [onMessage で非同期関数の完了を待たずに接続が切れる問題](#onMessageで非同期関数の完了を待たずに接続が切れる問題)
 
 -   拡張機能を展開していたタブが閉じられたときの後始末
@@ -3324,23 +3324,13 @@ POPUP で同じ処理を行うと、popup を開いたタブの window.id を取
 
 https://stackoverflow.com/questions/9089793/chrome-extension-simple-popup-wont-remain-in-last-state
 
-```TypeScript
+background scriptから取得するようにした
 
 
-  useEffect(() => {
-    // get state from background
-    chrome.runtime.sendMessage({
-      from: extensionNames.poup,
-      to: extensionNames.background,
-      order: [orderNames.sendMessage]
-    }, (response: iResponse) => {
-      Promise.resolve()
-    })
-  }, []);
-
-```
 
 #### onMessage で非同期関数の完了を待たずに接続が切れる問題
+
+解決済！
 
 参考：
 https://stackoverflow.com/questions/53024819/chrome-extension-sendresponse-not-waiting-for-async-function
@@ -3473,11 +3463,4 @@ chrome.runtime.onMessage.addListener(
 });
 
 ```
-
-要検証: background script からの reset 要請を確認する
-
-確認。やっぱり原因は上記のとおりであり修正したら治った!
-
-成功ならば、
-`orderNames.isPageIncludingMovie`のオーダーも
-リピート機能を非同期処理できるか確認する
+やっぱり原因は上記のとおりであり修正したら治った!

@@ -79,11 +79,11 @@ export const modelBase: iModel = {
     isControllerInjected: false,
     isSubtitleCapturing: false,
     isSubtitleCaptured: false,
-    // NOTE: ExTranscriptがONかどうか
+    // ExTranscriptがONかどうか
     // RUNした後かどうか、でもある
     // 表示、非表示は関係ない
     isExTranscriptStructured: false,
-    // NOTE: 本家トランスクリプトが表示されているかどうか
+    // 本家トランスクリプトが表示されているかどうか
     // ONかどうかではなく、表示されているかどうか
     // これが非表示なら、ExTranscriptも非表示にする
     isTranscriptDisplaying: false,
@@ -91,6 +91,5 @@ export const modelBase: iModel = {
     tabId: null,
     url: null,
     subtitles: null,
-    // NOTE: new added
     tabInfo: null
 } as const;

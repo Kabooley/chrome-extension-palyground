@@ -552,92 +552,22 @@ let controlbar;
 //
 // --- chrome API Listeners -------------------------------------
 //
-/*
-    onMessage listener
-    ______________________________________________
-    background.jsからのメッセージを受信して応対する
-
-    非同期sendResponse()を許可している(return trueしている)
-
-    order:
-        sendStatus
-        sendSectionTitle
-*/
-//
-// DEBUG: remove async function for
-//
-// chrome.runtime.onMessage.addListener(
-//   async (
-//     message: iMessage,
-//     sender,
-//     sendResponse: (response: iResponse) => void
-//   ): Promise<boolean> => {
-//     console.log("CONTENT SCRIPT GOT MESSAGE");
-//     const { from, order, to } = message;
-//     const response: iResponse = {
-//       from: extensionNames.contentScript,
-//       to: from,
-//     };
-//     if (to !== extensionNames.contentScript) return;
-//     try {
-//       // ORDERS:
-//       if (order && order.length) {
-//         // SEND STATUS
-//         if (order.includes(orderNames.sendStatus)) {
-//           console.log("Order: SEND STATUS");
-//           const isEnglish: boolean = isSubtitleEnglish();
-//           // トランスクリプトボタンがコントロールバー上にある
-//           // かつ
-//           // トランスクリプトが表示されてる
-//           let isOpen: boolean = false;
-//           const toggle: HTMLElement = document.querySelector<HTMLElement>(
-//             selectors.controlBar.transcript.toggleButton
-//           );
-//           if (!toggle) isOpen = false;
-//           else isOpen = isTranscriptOpen();
-//           response.language = isEnglish;
-//           response.isTranscriptDisplaying = isOpen;
-//           response.complete = true;
-//           // DEBUG:
-//           //
-//           // LOG response
-//           console.log("-----------------------------------");
-//           console.log("LOG: response object before send");
-//           console.log(response);
-//           console.log("-----------------------------------");
-//           sendResponse(response);
-//         }
-//         // RESET
-//         // NOTE: resetオーダーに関しては、
-//         // sendResponse()が送信されていない場合があるので
-//         // 完了報告要らず
-//         if (order.includes(orderNames.reset)) {
-//           console.log("Order: RESET");
-//           await handlerOfReset();
-//           console.log("sfdadfsadfsafdsadfa");
-//           if (sendResponse) {
-//             sendResponse({
-//               from: extensionNames.contentScript,
-//               to: from,
-//               complete: true,
-//               success: true,
-//             });
-//           }
-//         }
-//         // Require to make sure the page is including movie container or not.
-//         if (order.includes(orderNames.isPageIncludingMovie)) {
-//           console.log("Order: is it text page?");
-//           const r: boolean = investTheElementIncluded(selectors.videoContainer);
-//           console.log(`RESPONSE:${r}`);
-//           sendResponse({ complete: true, isPageIncludingMovie: r });
-//         }
-//       }
-//       return true;
-//     } catch (err) {
-//       console.error(err.message);
-//     }
-//   }
-// );
+/*********
+ * @message {iMessage} message
+ * @param {function} sendResponse:
+ * Invoke this function to response. The function is required.
+ *
+ *
+ *
+ * @return {boolean} :
+ * `return true` to wait for sendResponse() solved asynchronously.
+ * DO NOT return Promise<boolean>.
+ * It never works.
+ *
+ * Any asynchronous function must be solved with Promise Chain.
+ * (Or use IIFE to be able to use async/await)
+ * And every order should be responsed by invoking sendResponse with `{complete: true}`.
+ * */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('CONTENT SCRIPT GOT MESSAGE');
     const { from, order, to } = message;
@@ -696,10 +626,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         // Require to make sure the page is including movie container or not.
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.isPageIncludingMovie)) {
-            console.log('Order: is it text page?');
-            const r = investTheElementIncluded(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.videoContainer);
-            console.log(`RESPONSE:${r}`);
-            sendResponse({ complete: true, isPageIncludingMovie: r });
+            console.log('Order: is this page including movie container?');
+            repeatQuerySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.videoContainer)
+                .then((r) => {
+                console.log(`result: ${r}`);
+                sendResponse({
+                    complete: true,
+                    isPageIncludingMovie: r,
+                });
+            })
+                .catch((err) => {
+                console.error(err);
+            });
         }
     }
     return true;
@@ -938,24 +876,20 @@ const investTheElementIncluded = (selector) => {
     const e = document.querySelector(selector);
     return e ? true : false;
 };
-// /*******
-//  *
-//  *
-//  * */
-// const repeatQuerySelector = async (selector: string): Promise<boolean> => {
-//     try {
-//         return await repeatActionPromise(
-//             function () {
-//                 return investTheElementIncluded(selector);
-//             },
-//             true,
-//             200,
-//             10
-//         );
-//     } catch (err) {
-//         console.error(err.message);
-//     }
-// };
+/*******
+ *
+ *
+ * */
+const repeatQuerySelector = (selector) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        return yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_2__.repeatActionPromise)(function () {
+            return investTheElementIncluded(selector);
+        }, true, 200, 10);
+    }
+    catch (err) {
+        console.error(err.message);
+    }
+});
 /****
  *  Immediately initializes after injected
  *

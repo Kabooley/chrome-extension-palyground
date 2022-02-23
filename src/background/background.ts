@@ -142,7 +142,7 @@ chrome.tabs.onUpdated.addListener(
                 // 動画ページじゃない判定してくる...
                 // これの対処
                 // DEBUG:
-                // 
+                //
                 console.log(res);
 
                 res.isPageIncludingMovie
@@ -186,7 +186,7 @@ chrome.runtime.onMessage.addListener(
         message: iMessage,
         sender: chrome.runtime.MessageSender,
         sendResponse: (response?: iResponse) => void
-    ) => {
+    ): boolean => {
         if (message.to !== extensionNames.background) return;
         sortMessage(message, sender, sendResponse);
 
@@ -240,12 +240,18 @@ const handlerOfPopupMessage = async (
     try {
         const { order, ...rest } = message;
         if (order && order.length) {
-            //   // Popupが開かれるたびにURLが正しいか判定する
-            //   if (order.includes(orderNames.inquireUrl)) {
-            //     console.log("[background] Validate URL");
-            //     const isValidPage: boolean = await handlerOfVerifyValidPage();
-            //     sendResponse({ correctUrl: isValidPage, complete: true });
-            //   }
+            // popupからstateが要求された
+            if (order.includes(orderNames.sendStatus)) {
+                const { isSubtitleCapturing, isExTranscriptStructured } =
+                    await state.get();
+                sendResponse({
+                    complete: true,
+                    state: {
+                        isSubtitleCapturing: isSubtitleCapturing,
+                        isExTranscriptStructured: isExTranscriptStructured,
+                    },
+                });
+            }
 
             // 拡張機能の実行命令
             if (order.includes(orderNames.run)) {

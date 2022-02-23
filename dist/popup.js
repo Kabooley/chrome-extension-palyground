@@ -30216,6 +30216,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
 /* harmony import */ var _utils_constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/constants */ "./src/utils/constants.ts");
 /* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
+/*******************************************************
+ *  POPUP
+ * _____________________________________________________
+ *
+ *  NOTE:  state never retain its value!!
+ * Popup refreshes itself everytime opened same as html page reloaded.
+ * So state must be stored background script and
+ * everytime opened, popup must require background script to send state.
+ ****************************************************** */
 
 
 
@@ -30227,33 +30236,32 @@ const Popup = () => {
     const [running, setRunning] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     // 正常に拡張機能が実行されたらtrue
     const [complete, setComplete] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    // NOTE: new added: Saves Tab 
+    // Saves Tab いらないかも...
     const [tabInfo, setTabInfo] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        console.log("[popup] Set onMessage listener");
+        chrome.runtime.onMessage.removeListener(messageHandler);
         chrome.runtime.onMessage.addListener(messageHandler);
-        // DEBUG: make sure state is alive
-        //
-        console.log(correctUrl, running, complete, tabInfo);
-        //
         return () => {
-            console.log("[popup] Removed onMessage listener");
             chrome.runtime.onMessage.removeListener(messageHandler);
         };
     }, []);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         // NOTE: DON'T USE AWAIT inside of useEffect().
-        //
-        // POPUPは開かれるたびに新しく生成されるので
-        // 初回呼出の時だけ実行すればいい
-        console.log("[popup] OPENED");
+        console.log('[popup] OPENED');
         verifyValidPage();
     }, []);
-    // Runs always after rendering
+    // Get current state from background script.
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        console.log("[popup] LOG: current state:");
-        console.log(correctUrl, running, complete, tabInfo);
-    });
+        (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
+            from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
+            to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
+            order: [_utils_constants__WEBPACK_IMPORTED_MODULE_2__.orderNames.sendStatus],
+        }).then((res) => {
+            const { isSubtitleCapturing, isExTranscriptStructured } = res.state;
+            setRunning(isSubtitleCapturing);
+            setComplete(isExTranscriptStructured);
+        });
+    }, []);
     const messageHandler = () => { };
     const verifyValidPage = () => {
         chrome.windows
@@ -30277,22 +30285,22 @@ const Popup = () => {
     };
     const buttonClickHandler = () => {
         if (!tabInfo)
-            throw new Error("Error: tabInfo is null");
+            throw new Error('Error: tabInfo is null');
         setRunning(true);
-        console.log("[popup] RUNNING...");
+        console.log('[popup] RUNNING...');
         (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_2__.orderNames.run],
-            tabInfo: tabInfo
+            tabInfo: tabInfo,
         })
             .then((res) => {
             const { success } = res;
-            console.log("[popup] Successfully Complete!");
+            console.log('[popup] Successfully Complete!');
             setComplete(success);
             setRunning(false);
             if (!success) {
-                throw new Error("Error: something went wrong while extension running");
+                throw new Error('Error: something went wrong while extension running');
             }
         })
             .catch((err) => {
@@ -30323,7 +30331,7 @@ const Popup = () => {
         generateRunning(),
         generateComplete()));
 };
-const root = document.createElement("div");
+const root = document.createElement('div');
 document.body.appendChild(root);
 react_dom__WEBPACK_IMPORTED_MODULE_1__.render(react__WEBPACK_IMPORTED_MODULE_0__.createElement(Popup, null), root);
 // --- LEGACY -----------------------
