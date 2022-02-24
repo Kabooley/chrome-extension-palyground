@@ -135,10 +135,26 @@ const Popup = (): JSX.Element => {
     };
     return (
         <div className="container">
-            POPUP
-            {correctUrl ? generateCorrect() : generateIncorrect()}
-            {generateRunning()}
-            {generateComplete()}
+            <div className="header">
+                <div className="container-image">
+                    <img
+                        className="image-icon"
+                        src="udemy-re-transcript-512.svg"
+                    />
+                </div>
+                <div className="extension-title-container">
+                    <span>Udemy Re</span>
+                    <br />
+                    <span> Transcript</span>
+                </div>
+            </div>
+            <div className="middle">
+                {generateRunning()}
+                {generateComplete()}
+            </div>
+            <div className="footer">
+                {correctUrl ? generateCorrect() : generateIncorrect()}
+            </div>
         </div>
     );
 };
@@ -146,4 +162,3 @@ const Popup = (): JSX.Element => {
 const root = document.createElement('div');
 document.body.appendChild(root);
 ReactDOM.render(<Popup />, root);
-

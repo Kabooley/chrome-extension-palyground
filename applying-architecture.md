@@ -3472,3 +3472,24 @@ chrome.runtime.onMessage.addListener(
 参考：
 https://uxplanet.org/chrome-extension-popups-design-inspiration-b38de2cbd589
 
+https://stackoverflow.com/questions/20424425/recommended-size-of-icon-for-google-chrome-extension#:~:text=You%20should%20always%20provide%20a,favicon%20for%20an%20extension's%20pages.
+
+
+svgを自作した:
+`./src/statics/udmey-re-transcript.svg`
+
+アイコンのデザインを上部左に
+拡張機能の名前を上部右に
+拡張機能実行スライドボタンを下部に
+メッセージを中間に
+なデザインで行きましょうか
+
+アイコンが表示されない問題...
+
+- アイコンは128*128のアイコンを提供しないといけない
+- 48*48、16*16も提供しないといけない
+- アイコンはPNG出ないといけない
+
+ということで修正したら表示された
+
+`img src=""`でsvgを表示させればいい

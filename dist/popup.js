@@ -21,7 +21,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "* {\r\n}\r\n\r\nbody {\r\n  background-color: #f5f5f5;\r\n  width: 160px;\r\n  height: 212px;\r\n  font-family: \"Roboto\";\r\n}\r\n", "",{"version":3,"sources":["webpack://./src/popup/popup.css"],"names":[],"mappings":"AAAA;AACA;;AAEA;EACE,yBAAyB;EACzB,YAAY;EACZ,aAAa;EACb,qBAAqB;AACvB","sourcesContent":["* {\r\n}\r\n\r\nbody {\r\n  background-color: #f5f5f5;\r\n  width: 160px;\r\n  height: 212px;\r\n  font-family: \"Roboto\";\r\n}\r\n"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, "/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n\r\nbody {\r\n    font-family: 'Roboto';\r\n    width: 400px;\r\n}\r\n\r\n.container {\r\n    display: flex;\r\n    flex-direction: column;\r\n}\r\n\r\n.header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    width: auto;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n    width: 128px;\r\n    height: auto;\r\n    background: black;\r\n}\r\n\r\n.extension-title-container {\r\n    background-color: #000;\r\n    height: 118px;\r\n    flex: 2;\r\n    padding-left: 40px;\r\n    padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n    color: #fff;\r\n    font-size: 36px;\r\n}\r\n\r\n.middle {\r\n    height: 24px;\r\n}\r\n\r\n.footer {\r\n    height: 24px;\r\n}\r\n", "",{"version":3,"sources":["webpack://./src/popup/popup.css"],"names":[],"mappings":"AAAA;;;;;uCAKuC;;AAEvC;IACI,SAAS;IACT,UAAU;AACd;;AAEA;IACI,qBAAqB;IACrB,YAAY;AAChB;;AAEA;IACI,aAAa;IACb,sBAAsB;AAC1B;;AAEA;IACI,aAAa;IACb,mBAAmB;IACnB,WAAW;AACf;;AAEA;AACA;;AAEA;IACI,YAAY;IACZ,YAAY;IACZ,iBAAiB;AACrB;;AAEA;IACI,sBAAsB;IACtB,aAAa;IACb,OAAO;IACP,kBAAkB;IAClB,iBAAiB;AACrB;;AAEA;IACI,WAAW;IACX,eAAe;AACnB;;AAEA;IACI,YAAY;AAChB;;AAEA;IACI,YAAY;AAChB","sourcesContent":["/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n\r\nbody {\r\n    font-family: 'Roboto';\r\n    width: 400px;\r\n}\r\n\r\n.container {\r\n    display: flex;\r\n    flex-direction: column;\r\n}\r\n\r\n.header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    width: auto;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n    width: 128px;\r\n    height: auto;\r\n    background: black;\r\n}\r\n\r\n.extension-title-container {\r\n    background-color: #000;\r\n    height: 118px;\r\n    flex: 2;\r\n    padding-left: 40px;\r\n    padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n    color: #fff;\r\n    font-size: 36px;\r\n}\r\n\r\n.middle {\r\n    height: 24px;\r\n}\r\n\r\n.footer {\r\n    height: 24px;\r\n}\r\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -30868,10 +30868,17 @@ const Popup = () => {
         return complete ? react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, " Complete!") : null;
     };
     return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "container" },
-        "POPUP",
-        correctUrl ? generateCorrect() : generateIncorrect(),
-        generateRunning(),
-        generateComplete()));
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "header" },
+            react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "container-image" },
+                react__WEBPACK_IMPORTED_MODULE_0__.createElement("img", { className: "image-icon", src: "udemy-re-transcript-512.svg" })),
+            react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "extension-title-container" },
+                react__WEBPACK_IMPORTED_MODULE_0__.createElement("span", null, "Udemy Re"),
+                react__WEBPACK_IMPORTED_MODULE_0__.createElement("br", null),
+                react__WEBPACK_IMPORTED_MODULE_0__.createElement("span", null, " Transcript"))),
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "middle" },
+            generateRunning(),
+            generateComplete()),
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "footer" }, correctUrl ? generateCorrect() : generateIncorrect())));
 };
 const root = document.createElement('div');
 document.body.appendChild(root);
