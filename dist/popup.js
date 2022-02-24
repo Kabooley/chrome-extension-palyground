@@ -2,6 +2,32 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./node_modules/css-loader/dist/cjs.js!./src/popup/Switch.css":
+/*!********************************************************************!*\
+  !*** ./node_modules/css-loader/dist/cjs.js!./src/popup/Switch.css ***!
+  \********************************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../node_modules/css-loader/dist/runtime/sourceMaps.js */ "./node_modules/css-loader/dist/runtime/sourceMaps.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__);
+// Imports
+
+
+var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
+// Module
+___CSS_LOADER_EXPORT___.push([module.id, ".react-switch-checkbox {\r\n  height: 0;\r\n  width: 0;\r\n  visibility: hidden;\r\n}\r\n\r\n.react-switch-label {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  cursor: pointer;\r\n  width: 100px;\r\n  height: 50px;\r\n  background: grey;\r\n  border-radius: 100px;\r\n  position: relative;\r\n  transition: background-color 0.2s;\r\n}\r\n\r\n.react-switch-label .react-switch-button {\r\n  content: \"\";\r\n  position: absolute;\r\n  top: 2px;\r\n  left: 2px;\r\n  width: 45px;\r\n  height: 45px;\r\n  border-radius: 45px;\r\n  transition: 0.2s;\r\n  background: #fff;\r\n  box-shadow: 0 0 2px 0 rgba(10, 10, 10, 0.29);\r\n}\r\n\r\n.react-switch-checkbox:checked + .react-switch-label .react-switch-button {\r\n  left: calc(100% - 2px);\r\n  transform: translateX(-100%);\r\n}\r\n\r\n.react-switch-label:active .react-switch-button {\r\n  width: 60px;\r\n}\r\n", "",{"version":3,"sources":["webpack://./src/popup/Switch.css"],"names":[],"mappings":"AAAA;EACE,SAAS;EACT,QAAQ;EACR,kBAAkB;AACpB;;AAEA;EACE,aAAa;EACb,mBAAmB;EACnB,8BAA8B;EAC9B,eAAe;EACf,YAAY;EACZ,YAAY;EACZ,gBAAgB;EAChB,oBAAoB;EACpB,kBAAkB;EAClB,iCAAiC;AACnC;;AAEA;EACE,WAAW;EACX,kBAAkB;EAClB,QAAQ;EACR,SAAS;EACT,WAAW;EACX,YAAY;EACZ,mBAAmB;EACnB,gBAAgB;EAChB,gBAAgB;EAChB,4CAA4C;AAC9C;;AAEA;EACE,sBAAsB;EACtB,4BAA4B;AAC9B;;AAEA;EACE,WAAW;AACb","sourcesContent":[".react-switch-checkbox {\r\n  height: 0;\r\n  width: 0;\r\n  visibility: hidden;\r\n}\r\n\r\n.react-switch-label {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  cursor: pointer;\r\n  width: 100px;\r\n  height: 50px;\r\n  background: grey;\r\n  border-radius: 100px;\r\n  position: relative;\r\n  transition: background-color 0.2s;\r\n}\r\n\r\n.react-switch-label .react-switch-button {\r\n  content: \"\";\r\n  position: absolute;\r\n  top: 2px;\r\n  left: 2px;\r\n  width: 45px;\r\n  height: 45px;\r\n  border-radius: 45px;\r\n  transition: 0.2s;\r\n  background: #fff;\r\n  box-shadow: 0 0 2px 0 rgba(10, 10, 10, 0.29);\r\n}\r\n\r\n.react-switch-checkbox:checked + .react-switch-label .react-switch-button {\r\n  left: calc(100% - 2px);\r\n  transform: translateX(-100%);\r\n}\r\n\r\n.react-switch-label:active .react-switch-button {\r\n  width: 60px;\r\n}\r\n"],"sourceRoot":""}]);
+// Exports
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
+
+
+/***/ }),
+
 /***/ "./node_modules/css-loader/dist/cjs.js!./src/popup/popup.css":
 /*!*******************************************************************!*\
   !*** ./node_modules/css-loader/dist/cjs.js!./src/popup/popup.css ***!
@@ -21,7 +47,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n\r\nbody {\r\n    font-family: 'Roboto';\r\n    width: 400px;\r\n}\r\n\r\n.container {\r\n    display: flex;\r\n    flex-direction: column;\r\n}\r\n\r\n.header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    width: auto;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n    width: 128px;\r\n    height: auto;\r\n    background: black;\r\n}\r\n\r\n.extension-title-container {\r\n    background-color: #000;\r\n    height: 118px;\r\n    flex: 2;\r\n    padding-left: 40px;\r\n    padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n    color: #fff;\r\n    font-size: 36px;\r\n}\r\n\r\n.middle {\r\n    height: 24px;\r\n}\r\n\r\n.footer {\r\n    height: 24px;\r\n}\r\n", "",{"version":3,"sources":["webpack://./src/popup/popup.css"],"names":[],"mappings":"AAAA;;;;;uCAKuC;;AAEvC;IACI,SAAS;IACT,UAAU;AACd;;AAEA;IACI,qBAAqB;IACrB,YAAY;AAChB;;AAEA;IACI,aAAa;IACb,sBAAsB;AAC1B;;AAEA;IACI,aAAa;IACb,mBAAmB;IACnB,WAAW;AACf;;AAEA;AACA;;AAEA;IACI,YAAY;IACZ,YAAY;IACZ,iBAAiB;AACrB;;AAEA;IACI,sBAAsB;IACtB,aAAa;IACb,OAAO;IACP,kBAAkB;IAClB,iBAAiB;AACrB;;AAEA;IACI,WAAW;IACX,eAAe;AACnB;;AAEA;IACI,YAAY;AAChB;;AAEA;IACI,YAAY;AAChB","sourcesContent":["/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n\r\nbody {\r\n    font-family: 'Roboto';\r\n    width: 400px;\r\n}\r\n\r\n.container {\r\n    display: flex;\r\n    flex-direction: column;\r\n}\r\n\r\n.header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    width: auto;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n    width: 128px;\r\n    height: auto;\r\n    background: black;\r\n}\r\n\r\n.extension-title-container {\r\n    background-color: #000;\r\n    height: 118px;\r\n    flex: 2;\r\n    padding-left: 40px;\r\n    padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n    color: #fff;\r\n    font-size: 36px;\r\n}\r\n\r\n.middle {\r\n    height: 24px;\r\n}\r\n\r\n.footer {\r\n    height: 24px;\r\n}\r\n"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, "/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\nbody {\r\n  font-family: \"Roboto\";\r\n  width: 400px;\r\n}\r\n\r\n.container {\r\n  display: flex;\r\n  flex-direction: column;\r\n}\r\n\r\n.header {\r\n  display: flex;\r\n  flex-direction: row;\r\n  width: auto;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n  width: 128px;\r\n  height: auto;\r\n  background: black;\r\n  padding-left: 20px;\r\n}\r\n\r\n.extension-title-container {\r\n  background-color: #000;\r\n  height: 118px;\r\n  flex: 2;\r\n  padding-left: 30px;\r\n  padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n  color: #fff;\r\n  font-size: 36px;\r\n}\r\n\r\n.middle {\r\n  height: 24px;\r\n}\r\n\r\n.footer {\r\n  display: flex;\r\n  flex-direction: row;\r\n  background-color: #280794;\r\n  height: auto;\r\n}\r\n", "",{"version":3,"sources":["webpack://./src/popup/popup.css"],"names":[],"mappings":"AAAA;;;;;uCAKuC;;AAEvC;EACE,SAAS;EACT,UAAU;AACZ;;AAEA;EACE,qBAAqB;EACrB,YAAY;AACd;;AAEA;EACE,aAAa;EACb,sBAAsB;AACxB;;AAEA;EACE,aAAa;EACb,mBAAmB;EACnB,WAAW;AACb;;AAEA;AACA;;AAEA;EACE,YAAY;EACZ,YAAY;EACZ,iBAAiB;EACjB,kBAAkB;AACpB;;AAEA;EACE,sBAAsB;EACtB,aAAa;EACb,OAAO;EACP,kBAAkB;EAClB,iBAAiB;AACnB;;AAEA;EACE,WAAW;EACX,eAAe;AACjB;;AAEA;EACE,YAAY;AACd;;AAEA;EACE,aAAa;EACb,mBAAmB;EACnB,yBAAyB;EACzB,YAAY;AACd","sourcesContent":["/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\nbody {\r\n  font-family: \"Roboto\";\r\n  width: 400px;\r\n}\r\n\r\n.container {\r\n  display: flex;\r\n  flex-direction: column;\r\n}\r\n\r\n.header {\r\n  display: flex;\r\n  flex-direction: row;\r\n  width: auto;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n  width: 128px;\r\n  height: auto;\r\n  background: black;\r\n  padding-left: 20px;\r\n}\r\n\r\n.extension-title-container {\r\n  background-color: #000;\r\n  height: 118px;\r\n  flex: 2;\r\n  padding-left: 30px;\r\n  padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n  color: #fff;\r\n  font-size: 36px;\r\n}\r\n\r\n.middle {\r\n  height: 24px;\r\n}\r\n\r\n.footer {\r\n  display: flex;\r\n  flex-direction: row;\r\n  background-color: #280794;\r\n  height: auto;\r\n}\r\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -29981,6 +30007,60 @@ if (false) {} else {
 
 /***/ }),
 
+/***/ "./src/popup/Switch.css":
+/*!******************************!*\
+  !*** ./src/popup/Switch.css ***!
+  \******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/styleDomAPI.js */ "./node_modules/style-loader/dist/runtime/styleDomAPI.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/insertBySelector.js */ "./node_modules/style-loader/dist/runtime/insertBySelector.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js */ "./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/insertStyleElement.js */ "./node_modules/style-loader/dist/runtime/insertStyleElement.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/styleTagTransform.js */ "./node_modules/style-loader/dist/runtime/styleTagTransform.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _node_modules_css_loader_dist_cjs_js_Switch_css__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! !!../../node_modules/css-loader/dist/cjs.js!./Switch.css */ "./node_modules/css-loader/dist/cjs.js!./src/popup/Switch.css");
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+
+var options = {};
+
+options.styleTagTransform = (_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default());
+options.setAttributes = (_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default());
+
+      options.insert = _node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default().bind(null, "head");
+    
+options.domAPI = (_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default());
+options.insertStyleElement = (_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default());
+
+var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_Switch_css__WEBPACK_IMPORTED_MODULE_6__["default"], options);
+
+
+
+
+       /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_Switch_css__WEBPACK_IMPORTED_MODULE_6__["default"] && _node_modules_css_loader_dist_cjs_js_Switch_css__WEBPACK_IMPORTED_MODULE_6__["default"].locals ? _node_modules_css_loader_dist_cjs_js_Switch_css__WEBPACK_IMPORTED_MODULE_6__["default"].locals : undefined);
+
+
+/***/ }),
+
 /***/ "./src/popup/popup.css":
 /*!*****************************!*\
   !*** ./src/popup/popup.css ***!
@@ -30338,6 +30418,40 @@ function styleTagTransform(css, styleElement) {
 }
 
 module.exports = styleTagTransform;
+
+/***/ }),
+
+/***/ "./src/popup/switch.tsx":
+/*!******************************!*\
+  !*** ./src/popup/switch.tsx ***!
+  \******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var _Switch_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Switch.css */ "./src/popup/Switch.css");
+/*************************************
+ * Siwtch component
+ * ___________________________________
+ *
+ * cf.
+ * https://upmostly.com/tutorials/build-a-react-switch-toggle-component
+ *
+ *
+ * ***********************************/
+
+
+const Switch = ({ isOn, handlerOfToggle }) => {
+    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null,
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement("input", { checked: isOn, onChange: handlerOfToggle, className: "react-switch-checkbox", id: `react-switch-new`, type: "checkbox" }),
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement("label", { className: "react-switch-label", htmlFor: `react-switch-new` },
+            react__WEBPACK_IMPORTED_MODULE_0__.createElement("span", { className: `react-switch-button` }))));
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Switch);
+
 
 /***/ }),
 
@@ -30757,6 +30871,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/constants */ "./src/utils/constants.ts");
 /* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
 /* harmony import */ var _popup_css__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./popup.css */ "./src/popup/popup.css");
+/* harmony import */ var _switch__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./switch */ "./src/popup/switch.tsx");
 /*******************************************************
  *  POPUP
  * _____________________________________________________
@@ -30771,25 +30886,28 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 const Popup = () => {
     // popupが開かれたときのURLが、拡張機能が有効になるべきURLなのか
     const [correctUrl, setCorrectUrl] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     // RUNボタンが押されて、結果待ちの状態ならばtrue それ以外はfalse
-    const [running, setRunning] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const [building, setBuilding] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     // 正常に拡張機能が実行されたらtrue
     const [complete, setComplete] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     // Saves Tab いらないかも...
     const [tabInfo, setTabInfo] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
-    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        chrome.runtime.onMessage.removeListener(messageHandler);
-        chrome.runtime.onMessage.addListener(messageHandler);
-        return () => {
-            chrome.runtime.onMessage.removeListener(messageHandler);
-        };
-    }, []);
+    //   NOTE: new added. スライダーをONにしたらtrue
+    const [turningOn, setTurningOn] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    //   useEffect(() => {
+    //     chrome.runtime.onMessage.removeListener(messageHandler);
+    //     chrome.runtime.onMessage.addListener(messageHandler);
+    //     return () => {
+    //       chrome.runtime.onMessage.removeListener(messageHandler);
+    //     };
+    //   }, []);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         // NOTE: DON'T USE AWAIT inside of useEffect().
-        console.log('[popup] OPENED');
+        console.log("[popup] OPENED");
         verifyValidPage();
     }, []);
     // Get current state from background script.
@@ -30800,11 +30918,11 @@ const Popup = () => {
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_2__.orderNames.sendStatus],
         }).then((res) => {
             const { isSubtitleCapturing, isExTranscriptStructured } = res.state;
-            setRunning(isSubtitleCapturing);
+            setBuilding(isSubtitleCapturing);
             setComplete(isExTranscriptStructured);
         });
     }, []);
-    const messageHandler = () => { };
+    //   const messageHandler = (): void => {};
     const verifyValidPage = () => {
         chrome.windows
             .getCurrent()
@@ -30825,11 +30943,39 @@ const Popup = () => {
         })
             .catch((err) => console.error(err.message));
     };
-    const buttonClickHandler = () => {
+    //   const buttonClickHandler = (): void => {
+    //     if (!tabInfo) throw new Error("Error: tabInfo is null");
+    //     setBuilding(true);
+    //     console.log("[popup] RUNNING...");
+    //     sendMessagePromise({
+    //       from: extensionNames.popup,
+    //       to: extensionNames.background,
+    //       order: [orderNames.run],
+    //       tabInfo: tabInfo,
+    //     })
+    //       .then((res) => {
+    //         const { success } = res;
+    //         console.log("[popup] Successfully Complete!");
+    //         setComplete(success);
+    //         setBuilding(false);
+    //         if (!success) {
+    //           throw new Error(
+    //             "Error: something went wrong while extension building"
+    //           );
+    //         }
+    //       })
+    //       .catch((err) => {
+    //         setComplete(false);
+    //         setBuilding(false);
+    //         console.error(err.message);
+    //         // alert出した方がいいかな？
+    //       });
+    //   };
+    const handlerOfRun = () => {
         if (!tabInfo)
-            throw new Error('Error: tabInfo is null');
-        setRunning(true);
-        console.log('[popup] RUNNING...');
+            throw new Error("Error: tabInfo is null");
+        setBuilding(true);
+        console.log("[popup] Rebuilding...");
         (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
@@ -30838,32 +30984,45 @@ const Popup = () => {
         })
             .then((res) => {
             const { success } = res;
-            console.log('[popup] Successfully Complete!');
+            console.log("[popup] Rebuilding Successfully Complete!");
             setComplete(success);
-            setRunning(false);
+            setBuilding(false);
             if (!success) {
-                throw new Error('Error: something went wrong while extension running');
+                throw new Error("Error: something went wrong while extension building");
             }
         })
             .catch((err) => {
             setComplete(false);
-            setRunning(false);
+            setBuilding(false);
+            setTurningOn(false);
             console.error(err.message);
             // alert出した方がいいかな？
         });
     };
+    const handlerOfToggle = () => {
+        turningOn
+            ? (function () {
+                console.log("[popup] Turning off...");
+                setTurningOn(false);
+                //   TODO: invoke and implement handler of turn off
+            })()
+            : (function () {
+                console.log("[popup] Turning on...");
+                setTurningOn(true);
+                handlerOfRun();
+            })();
+    };
     const generateCorrect = () => {
-        console.log(running);
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null,
-            "This is correct page",
-            react__WEBPACK_IMPORTED_MODULE_0__.createElement("button", { onClick: buttonClickHandler, disabled: running }, "RUN")));
+        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "footer" },
+            react__WEBPACK_IMPORTED_MODULE_0__.createElement(_switch__WEBPACK_IMPORTED_MODULE_5__["default"], { isOn: turningOn, handlerOfToggle: handlerOfToggle })));
     };
-    const generateIncorrect = () => {
-        return react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, "This is INCORRECT page");
-    };
+    //   const generateIncorrect = (): JSX.Element => {
+    //     return <div>This is INCORRECT page</div>;
+    //   };
     const generateRunning = () => {
-        return running ? react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, " RUNNING...") : null;
+        return building ? react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, " Rebuilding... ") : null;
     };
+    //   5秒だけ表示するようにする
     const generateComplete = () => {
         return complete ? react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, " Complete!") : null;
     };
@@ -30878,9 +31037,9 @@ const Popup = () => {
         react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "middle" },
             generateRunning(),
             generateComplete()),
-        react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "footer" }, correctUrl ? generateCorrect() : generateIncorrect())));
+        correctUrl ? generateCorrect() : null));
 };
-const root = document.createElement('div');
+const root = document.createElement("div");
 document.body.appendChild(root);
 react_dom__WEBPACK_IMPORTED_MODULE_1__.render(react__WEBPACK_IMPORTED_MODULE_0__.createElement(Popup, null), root);
 
