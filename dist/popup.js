@@ -21,7 +21,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, ".react-switch-checkbox {\r\n  height: 0;\r\n  width: 0;\r\n  visibility: hidden;\r\n}\r\n\r\n.react-switch-label {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  cursor: pointer;\r\n  width: 100px;\r\n  height: 50px;\r\n  background: grey;\r\n  border-radius: 100px;\r\n  position: relative;\r\n  transition: background-color 0.2s;\r\n}\r\n\r\n.react-switch-label .react-switch-button {\r\n  content: \"\";\r\n  position: absolute;\r\n  top: 2px;\r\n  left: 2px;\r\n  width: 45px;\r\n  height: 45px;\r\n  border-radius: 45px;\r\n  transition: 0.2s;\r\n  background: #fff;\r\n  box-shadow: 0 0 2px 0 rgba(10, 10, 10, 0.29);\r\n}\r\n\r\n.react-switch-checkbox:checked + .react-switch-label .react-switch-button {\r\n  left: calc(100% - 2px);\r\n  transform: translateX(-100%);\r\n}\r\n\r\n.react-switch-label:active .react-switch-button {\r\n  width: 60px;\r\n}\r\n", "",{"version":3,"sources":["webpack://./src/popup/Switch.css"],"names":[],"mappings":"AAAA;EACE,SAAS;EACT,QAAQ;EACR,kBAAkB;AACpB;;AAEA;EACE,aAAa;EACb,mBAAmB;EACnB,8BAA8B;EAC9B,eAAe;EACf,YAAY;EACZ,YAAY;EACZ,gBAAgB;EAChB,oBAAoB;EACpB,kBAAkB;EAClB,iCAAiC;AACnC;;AAEA;EACE,WAAW;EACX,kBAAkB;EAClB,QAAQ;EACR,SAAS;EACT,WAAW;EACX,YAAY;EACZ,mBAAmB;EACnB,gBAAgB;EAChB,gBAAgB;EAChB,4CAA4C;AAC9C;;AAEA;EACE,sBAAsB;EACtB,4BAA4B;AAC9B;;AAEA;EACE,WAAW;AACb","sourcesContent":[".react-switch-checkbox {\r\n  height: 0;\r\n  width: 0;\r\n  visibility: hidden;\r\n}\r\n\r\n.react-switch-label {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  cursor: pointer;\r\n  width: 100px;\r\n  height: 50px;\r\n  background: grey;\r\n  border-radius: 100px;\r\n  position: relative;\r\n  transition: background-color 0.2s;\r\n}\r\n\r\n.react-switch-label .react-switch-button {\r\n  content: \"\";\r\n  position: absolute;\r\n  top: 2px;\r\n  left: 2px;\r\n  width: 45px;\r\n  height: 45px;\r\n  border-radius: 45px;\r\n  transition: 0.2s;\r\n  background: #fff;\r\n  box-shadow: 0 0 2px 0 rgba(10, 10, 10, 0.29);\r\n}\r\n\r\n.react-switch-checkbox:checked + .react-switch-label .react-switch-button {\r\n  left: calc(100% - 2px);\r\n  transform: translateX(-100%);\r\n}\r\n\r\n.react-switch-label:active .react-switch-button {\r\n  width: 60px;\r\n}\r\n"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, ".react-switch-checkbox {\r\n    height: 0;\r\n    width: 0;\r\n    visibility: hidden;\r\n}\r\n\r\n.react-switch-label {\r\n    display: flex;\r\n    align-items: center;\r\n    justify-content: space-between;\r\n    cursor: pointer;\r\n    width: 100px;\r\n    height: 50px;\r\n    background: grey;\r\n    border-radius: 100px;\r\n    position: relative;\r\n    transition: background-color 0.2s;\r\n}\r\n\r\n.react-switch-label .react-switch-button {\r\n    content: '';\r\n    position: absolute;\r\n    top: 2px;\r\n    left: 2px;\r\n    width: 45px;\r\n    height: 45px;\r\n    border-radius: 45px;\r\n    transition: 0.2s;\r\n    background: #fff;\r\n    box-shadow: 0 0 2px 0 rgba(10, 10, 10, 0.29);\r\n}\r\n\r\n.react-switch-checkbox:checked + .react-switch-label .react-switch-button {\r\n    left: calc(100% - 2px);\r\n    transform: translateX(-100%);\r\n}\r\n\r\n.react-switch-label:active .react-switch-button {\r\n    width: 60px;\r\n}\r\n\r\n.react-switch-label.slider-on {\r\n    background-color: #5e00cc;\r\n}\r\n", "",{"version":3,"sources":["webpack://./src/popup/Switch.css"],"names":[],"mappings":"AAAA;IACI,SAAS;IACT,QAAQ;IACR,kBAAkB;AACtB;;AAEA;IACI,aAAa;IACb,mBAAmB;IACnB,8BAA8B;IAC9B,eAAe;IACf,YAAY;IACZ,YAAY;IACZ,gBAAgB;IAChB,oBAAoB;IACpB,kBAAkB;IAClB,iCAAiC;AACrC;;AAEA;IACI,WAAW;IACX,kBAAkB;IAClB,QAAQ;IACR,SAAS;IACT,WAAW;IACX,YAAY;IACZ,mBAAmB;IACnB,gBAAgB;IAChB,gBAAgB;IAChB,4CAA4C;AAChD;;AAEA;IACI,sBAAsB;IACtB,4BAA4B;AAChC;;AAEA;IACI,WAAW;AACf;;AAEA;IACI,yBAAyB;AAC7B","sourcesContent":[".react-switch-checkbox {\r\n    height: 0;\r\n    width: 0;\r\n    visibility: hidden;\r\n}\r\n\r\n.react-switch-label {\r\n    display: flex;\r\n    align-items: center;\r\n    justify-content: space-between;\r\n    cursor: pointer;\r\n    width: 100px;\r\n    height: 50px;\r\n    background: grey;\r\n    border-radius: 100px;\r\n    position: relative;\r\n    transition: background-color 0.2s;\r\n}\r\n\r\n.react-switch-label .react-switch-button {\r\n    content: '';\r\n    position: absolute;\r\n    top: 2px;\r\n    left: 2px;\r\n    width: 45px;\r\n    height: 45px;\r\n    border-radius: 45px;\r\n    transition: 0.2s;\r\n    background: #fff;\r\n    box-shadow: 0 0 2px 0 rgba(10, 10, 10, 0.29);\r\n}\r\n\r\n.react-switch-checkbox:checked + .react-switch-label .react-switch-button {\r\n    left: calc(100% - 2px);\r\n    transform: translateX(-100%);\r\n}\r\n\r\n.react-switch-label:active .react-switch-button {\r\n    width: 60px;\r\n}\r\n\r\n.react-switch-label.slider-on {\r\n    background-color: #5e00cc;\r\n}\r\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -30444,10 +30444,14 @@ __webpack_require__.r(__webpack_exports__);
  * ***********************************/
 
 
-const Switch = ({ isOn, handlerOfToggle }) => {
+const Switch = ({ isOn, handlerOfToggle, disable }) => {
+    const labelClassName = isOn
+        ? `react-switch-label slider-on`
+        : "react-switch-label";
+    console.log(labelClassName);
     return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null,
-        react__WEBPACK_IMPORTED_MODULE_0__.createElement("input", { checked: isOn, onChange: handlerOfToggle, className: "react-switch-checkbox", id: `react-switch-new`, type: "checkbox" }),
-        react__WEBPACK_IMPORTED_MODULE_0__.createElement("label", { className: "react-switch-label", htmlFor: `react-switch-new` },
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement("input", { checked: isOn, onChange: handlerOfToggle, className: "react-switch-checkbox", id: `react-switch-new`, type: "checkbox", disabled: disable }),
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement("label", { className: labelClassName, htmlFor: `react-switch-new` },
             react__WEBPACK_IMPORTED_MODULE_0__.createElement("span", { className: `react-switch-button` }))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Switch);
@@ -30893,11 +30897,13 @@ const Popup = () => {
     // RUNボタンが押されて、結果待ちの状態ならばtrue それ以外はfalse
     const [building, setBuilding] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     // 正常に拡張機能が実行されたらtrue
-    const [complete, setComplete] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const [built, setBuilt] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     // Saves Tab いらないかも...
     const [tabInfo, setTabInfo] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
     //   NOTE: new added. スライダーをONにしたらtrue
     const [turningOn, setTurningOn] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    //   NOTE: new added. スライダーを動かしたら、処理が完了するまでtrue
+    const [disableSlider, setDisableSlider] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     //   useEffect(() => {
     //     chrome.runtime.onMessage.removeListener(messageHandler);
     //     chrome.runtime.onMessage.addListener(messageHandler);
@@ -30907,7 +30913,7 @@ const Popup = () => {
     //   }, []);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         // NOTE: DON'T USE AWAIT inside of useEffect().
-        console.log("[popup] OPENED");
+        console.log('[popup] OPENED');
         verifyValidPage();
     }, []);
     // Get current state from background script.
@@ -30919,7 +30925,7 @@ const Popup = () => {
         }).then((res) => {
             const { isSubtitleCapturing, isExTranscriptStructured } = res.state;
             setBuilding(isSubtitleCapturing);
-            setComplete(isExTranscriptStructured);
+            setBuilt(isExTranscriptStructured);
         });
     }, []);
     //   const messageHandler = (): void => {};
@@ -30956,7 +30962,7 @@ const Popup = () => {
     //       .then((res) => {
     //         const { success } = res;
     //         console.log("[popup] Successfully Complete!");
-    //         setComplete(success);
+    //         setBuilt(success);
     //         setBuilding(false);
     //         if (!success) {
     //           throw new Error(
@@ -30965,7 +30971,7 @@ const Popup = () => {
     //         }
     //       })
     //       .catch((err) => {
-    //         setComplete(false);
+    //         setBuilt(false);
     //         setBuilding(false);
     //         console.error(err.message);
     //         // alert出した方がいいかな？
@@ -30973,9 +30979,9 @@ const Popup = () => {
     //   };
     const handlerOfRun = () => {
         if (!tabInfo)
-            throw new Error("Error: tabInfo is null");
+            throw new Error('Error: tabInfo is null');
         setBuilding(true);
-        console.log("[popup] Rebuilding...");
+        console.log('[popup] Rebuilding...');
         (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
@@ -30984,17 +30990,19 @@ const Popup = () => {
         })
             .then((res) => {
             const { success } = res;
-            console.log("[popup] Rebuilding Successfully Complete!");
-            setComplete(success);
+            console.log('[popup] Rebuilding Successfully Complete!');
+            setBuilt(success);
             setBuilding(false);
+            setDisableSlider(false);
             if (!success) {
-                throw new Error("Error: something went wrong while extension building");
+                throw new Error('Error: something went wrong while extension building');
             }
         })
             .catch((err) => {
-            setComplete(false);
+            setBuilt(false);
             setBuilding(false);
             setTurningOn(false);
+            setDisableSlider(false);
             console.error(err.message);
             // alert出した方がいいかな？
         });
@@ -31002,19 +31010,21 @@ const Popup = () => {
     const handlerOfToggle = () => {
         turningOn
             ? (function () {
-                console.log("[popup] Turning off...");
+                console.log('[popup] Turning off...');
                 setTurningOn(false);
+                //   setDisableSlider(true);
                 //   TODO: invoke and implement handler of turn off
             })()
             : (function () {
-                console.log("[popup] Turning on...");
+                console.log('[popup] Turning on...');
                 setTurningOn(true);
+                setDisableSlider(true);
                 handlerOfRun();
             })();
     };
-    const generateCorrect = () => {
+    const generateFooter = () => {
         return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "footer" },
-            react__WEBPACK_IMPORTED_MODULE_0__.createElement(_switch__WEBPACK_IMPORTED_MODULE_5__["default"], { isOn: turningOn, handlerOfToggle: handlerOfToggle })));
+            react__WEBPACK_IMPORTED_MODULE_0__.createElement(_switch__WEBPACK_IMPORTED_MODULE_5__["default"], { isOn: turningOn, handlerOfToggle: handlerOfToggle, disable: disableSlider })));
     };
     //   const generateIncorrect = (): JSX.Element => {
     //     return <div>This is INCORRECT page</div>;
@@ -31024,7 +31034,7 @@ const Popup = () => {
     };
     //   5秒だけ表示するようにする
     const generateComplete = () => {
-        return complete ? react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, " Complete!") : null;
+        return built ? react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, " Complete!") : null;
     };
     return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "container" },
         react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "header" },
@@ -31037,9 +31047,9 @@ const Popup = () => {
         react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "middle" },
             generateRunning(),
             generateComplete()),
-        correctUrl ? generateCorrect() : null));
+        correctUrl ? generateFooter() : null));
 };
-const root = document.createElement("div");
+const root = document.createElement('div');
 document.body.appendChild(root);
 react_dom__WEBPACK_IMPORTED_MODULE_1__.render(react__WEBPACK_IMPORTED_MODULE_0__.createElement(Popup, null), root);
 

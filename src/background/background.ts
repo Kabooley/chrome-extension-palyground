@@ -25,7 +25,6 @@ import {
     exciseBelowHash,
 } from '../utils/helpers';
 import { iModel, modelBase, iStateModule } from './annotations';
-// import State from '../utils/background/State';
 
 //
 // --- GLOBALS -----------------------------------------------

@@ -14,6 +14,47 @@ MVC と DDD の設計思想を取り入れたい
 
 NOTE: 更新は豆に！
 
+- 拡張機能のOFF機能の実装
+  [実装：拡張機能OFF](#実装：拡張機能OFF)
+
+- 拡張機能を展開中に展開しているタブをリロードしたときの挙動の実装
+  いまんところ、拡張機能はOFFになっているのか？
+  POPUPはそのまま表示が変わらない
+
+-   loading 中を ExTranscript へ表示させる
+    [ローディング中 view の実装](#ローディング中viewの実装)
+
+
+-   拡張機能を展開していたタブが閉じられたときの後始末
+-   エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
+
+-   デザイン改善: 見た目の話
+    [デザイン改善:popup](#デザイン改善:popup)
+    拡張機能OFF機能を実装したら再度進行する
+
+
+後回しでもいいかも:
+
+-   [また問題が起こったら対処] 自動スクロール機能で重複する字幕要素を完全に処理しきれていない模様...
+    つまりたぶんだけど、重複しているほうの要素に css の class をつけてしまっていて、
+    だけれども remove はできていない
+    という可能性...
+    [自動スクロール機能修正：ハイライト重複](#自動スクロール機能修正：ハイライト重複)
+
+-   controller.ts の onwWindowResizeHandler をもうちょっとサクサク動かしたい
+
+
+-   [また問題が起こったら対処] 複数 window を開いていると、あとから複製した window の id を取得してしまう問題
+    [複数 window だとあとから複製した window.id を取得してしまう問題](#複数windowだとあとから複製したwindow.idを取得してしまう問題)
+
+
+他:
+
+-   chrome extension はブラウザが閉じたらどうなるのか
+    [ブラウザが閉じたらどうなるのか](#ブラウザが閉じたらどうなるのか)
+
+済：
+
 -   [済] sidebar の時の自動スクロール機能関数`controller.ts::scrollToHighlight()`が機能するようにすること
 -   [済] background.ts はいったんアンロードされると state に渡した変数がすべて消えることへの対処
 -   [済] Refac: background script で `chrome.tabs.updated.addListener`に filter を設けることで余計な url はデフォで無視する仕様にする
@@ -27,38 +68,9 @@ NOTE: 更新は豆に！
 -   [済] Udemy の講義ページで、動画じゃないページへアクセスしたときの対応
     たとえばテキストだけ表示される回があるけど、それの対 [テキストページへの対処](#テキストページへの対処)
 
--   上記に伴って、loading 中を ExTranscript へ表示させる
-    [ローディング中 view の実装](#ローディング中viewの実装)
-
--   [また問題が起こったら対処] 複数 window を開いていると、あとから複製した window の id を取得してしまう問題
-    [複数 window だとあとから複製した window.id を取得してしまう問題](#複数windowだとあとから複製したwindow.idを取得してしまう問題)
-
--   popup で正しい動作をさせる：RUN した後は RUN ボタンを無効にするとか
-    [POPUP の View 実装](#POPUPのView実装)
-
 - [済] message passing で受信側が非同期関数を実行するとき完了を待たずに port が閉じられてしまう問題
     [onMessage で非同期関数の完了を待たずに接続が切れる問題](#onMessageで非同期関数の完了を待たずに接続が切れる問題)
 
--   拡張機能を展開していたタブが閉じられたときの後始末
--   エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
--   デザイン改善: 見た目の話
-    [デザイン改善:popup](#デザイン改善:popup)
-
-後回しでもいいかも:
-
--   [また問題が起こったら対処] 自動スクロール機能で重複する字幕要素を完全に処理しきれていない模様...
-    つまりたぶんだけど、重複しているほうの要素に css の class をつけてしまっていて、
-    だけれども remove はできていない
-    という可能性...
-    [自動スクロール機能修正：ハイライト重複](#自動スクロール機能修正：ハイライト重複)
-
--   controller.ts の onwWindowResizeHandler をもうちょっとサクサク動かしたい
-
-他:
-
--   chrome extension はブラウザが閉じたらどうなるのか
-    [ブラウザが閉じたらどうなるのか](#ブラウザが閉じたらどうなるのか)
--
 
 ## DDD 設計思想の導入に関するメモ
 
@@ -3469,6 +3481,8 @@ chrome.runtime.onMessage.addListener(
 
 #### デザイン改善:popup
 
+進捗：sliderを設けた、ある程度のデザインは決まった、拡張機能OFF機能を実装し終わったらまた手を付ける
+
 参考：
 https://uxplanet.org/chrome-extension-popups-design-inspiration-b38de2cbd589
 
@@ -3478,18 +3492,175 @@ https://stackoverflow.com/questions/20424425/recommended-size-of-icon-for-google
 svgを自作した:
 `./src/statics/udmey-re-transcript.svg`
 
-アイコンのデザインを上部左に
-拡張機能の名前を上部右に
-拡張機能実行スライドボタンを下部に
-メッセージを中間に
-なデザインで行きましょうか
+デザイン：
+ヘッダー、アイコン左、タイトル右
+中間、メッセージ表示部分(展開中とか、展開完了とか、ここでは使えませんとか)
+中間右、slider表示部分(無効なURLでは表示しない)
 
-アイコンが表示されない問題...
+
+sliderボタンについて
+
+- sliderを右にすると拡張機能が実行される
+- 左にすると拡張機能をOFFにする（未実装機能）
+- sliderを動かして処理が完了するまではsliderを無効にしたい（未実装）
+
+##### chrome API Tips: iconが表示されないときは
+
+次を確認して
+
 
 - アイコンは128*128のアイコンを提供しないといけない
 - 48*48、16*16も提供しないといけない
 - アイコンはPNG出ないといけない
 
-ということで修正したら表示された
 
-`img src=""`でsvgを表示させればいい
+#### 実装：拡張機能OFF
+
+まず知っておくこと：
+
+- background scriptは拡張機能がONであるかぎり、ブラウザを閉じていても生きている(PCを起動したら起動される)
+
+- 拡張機能を展開したタブが生きている限り、injectしたcontent scritpはそのままである
+  なので再度同じタブでrunされたときに、既にcontent scriptがinjectされていることを前提に動かないといかん
+  TODO: handlerOfRunの修正: content scritpが既にinject済である場合を考慮する
+
+
+OFFのトリガー：
+
+- case1:展開中のタブでPOPUPのスライダーをOFFにする(タブはそのまま)
+- case2:展開中のタブを閉じる
+- case3:展開中のタブを含むwindowが閉じられる
+
+
+case1ですること：
+
+
+```TypeScript
+// トリガー検知
+// popupのスライダーハンドラ
+// background scriptのメッセージハンドラ
+// handlerOfPopupMessage
+
+// iModel
+
+export const modelBase: iModel = {
+    // NOTE: OFFにしても各content scriptはtrueのまま
+    isContentScriptInjected: true,
+    isCaptureSubtitleInjected: true,
+    isControllerInjected: true,
+    isSubtitleCapturing: false,
+    // NOTE: falseにする
+    isSubtitleCaptured: true,
+    // NOTE: falseにする
+    isExTranscriptStructured: true,
+    // NOTE: falseにする
+    isTranscriptDisplaying: /* it depends */,
+    // NOTE: falseにする
+    isEnglish: /* whatever */,
+    // NOTE: nullにする
+    tabId: /* any number */,
+    // NOTE: 初期値にする
+    url: /* https://... */,
+    // NOTE: 初期値にする
+    subtitles: /* stored */,
+    tabInfo: /* whatever */
+} as const;
+
+
+// contentScript.ts
+// リスナをremoveする
+// handlerOfReset()の前半部分を実行すればいいだけ
+controlbar.removeEventListener('click', handlerOfControlbar);
+moControlbar.disconnect(controlbar, config);
+
+
+// captureSubtitle.ts
+// 何もしなくていい
+
+// controller.ts
+// handlerOfTurnOff()を実行すればいいだけ
+
+// NOTE: 再度RUNしたときのためにhandlerOfRunを修正する必要がある
+```
+
+
+case2, 3ですること：
+
+```TypeScript
+// 検知部分
+chrome.tabs.onRemoved.addListener();
+
+// iModel
+// 初期値にリセットする
+
+// 各content script
+// case1と同じ
+
+// NOTE: local stroageのクリア
+```
+
+
+
+```TypeScript
+// backgorund.ts
+
+/*******************
+ * 
+ * @param {tabId} number:
+ * @param {case} string: 
+ *  Represents the case of turn-off extension.
+ *  "by-slider", "closed".
+ *  case1 turn off by slider off on POPUP
+ *  case2 triggered by closing the tab extension deployed.
+ *  case3 triggered by closing window.
+ * */ 
+const handlerOfTurnOff = async(tabId: number, case: string): Promise<void> => {
+  try {
+    await sendMessageToTabsPromise(tab, {
+      from: extensionName.background,
+      to: extensionName.contentScript,
+      order: [orderNames.turnOff]
+    });
+
+    await sendMessageToTabsPromise(tab, {
+      from: extensionName.background,
+      to: extensionName.controller,
+      order: [orderNames.turnOff]
+    });
+
+  switch(case) {
+    case "by-slider": 
+      
+    await state.set({
+      // NOTE: OFFにしても各content scriptはtrueのまま
+      isContentScriptInjected: true,
+      isCaptureSubtitleInjected: true,
+      isControllerInjected: true,
+      isSubtitleCapturing: false,
+      // NOTE: falseにする
+      isSubtitleCaptured: false,
+      // NOTE: falseにする
+      isExTranscriptStructured: false,
+      // NOTE: falseにする
+      isTranscriptDisplaying: false,
+      // NOTE: 初期値にする
+      isEnglish: /*  */,
+      // NOTE: 初期値にする
+      tabId: /* any number */,
+      // NOTE: 初期値にする
+      url: /* https://... */,
+      // NOTE: 初期値にする
+      subtitles: /* stored */,
+      tabInfo: /* whatever */
+    });
+    break;
+    case "closed": 
+    break;
+  }
+    
+  }
+  catch(err) {
+
+  }
+}
+```

@@ -481,7 +481,6 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 
 
 
-// import State from '../utils/background/State';
 //
 // --- GLOBALS -----------------------------------------------
 //
