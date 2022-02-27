@@ -553,9 +553,8 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
             return;
         else if (!changeInfo.url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.urlPattern)) {
             // Udemy講義ページ以外に移動した
-            // 拡張機能OFF処理へ
-            // TODO: 後始末の実装
-            console.log("[background] TURN OFF this extension");
+            console.log("[background] the page moved to invalid url");
+            yield state.set(_annotations__WEBPACK_IMPORTED_MODULE_2__.modelBase);
         }
         // 展開中のtabIdである && changeInfo.urlが講義ページである
         // その上でURLが変化した
@@ -588,26 +587,18 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
 }));
 /**************
  *
+ * When tab or window closed,
+ * restore background script state as its initial state.
  *
+ * NOTE: Of course there is no content script
+ * No need to "turn off" content script.
  * */
 chrome.tabs.onRemoved.addListener((_tabId, removeInfo) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { tabId } = yield state.get();
         if (_tabId !== tabId)
             return;
-        if (removeInfo.isWindowClosing) {
-            console.log("Window closed!");
-            // 後始末
-            // NOTE: 将来的にはそのwinodwに含まれるすべての展開中拡張機能をOFFにする処理が必要になる
-            yield turnOffEachContentScripts(tabId);
-            yield state.set(_annotations__WEBPACK_IMPORTED_MODULE_2__.modelBase);
-        }
-        if (_tabId === tabId) {
-            console.log("tab closed!");
-            // 後始末
-            yield turnOffEachContentScripts(tabId);
-            yield state.set(_annotations__WEBPACK_IMPORTED_MODULE_2__.modelBase);
-        }
+        yield state.set(_annotations__WEBPACK_IMPORTED_MODULE_2__.modelBase);
     }
     catch (err) {
         console.error(err);
@@ -654,6 +645,7 @@ const sortMessage = (message, sender, sendResponse) => {
 /**
  * Handler of message from POPUP
  *______________________________________________________
+
  * */
 const handlerOfPopupMessage = (message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("[background] Message from Popup");

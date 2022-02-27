@@ -109,10 +109,8 @@ chrome.tabs.onUpdated.addListener(
       if (changeInfo.url === undefined) return;
       else if (!changeInfo.url.match(urlPattern)) {
         // Udemy講義ページ以外に移動した
-        // 拡張機能OFF処理へ
-        // TODO: 後始末の実装
-
-        console.log("[background] TURN OFF this extension");
+        console.log("[background] the page moved to invalid url");
+        await state.set(modelBase);
       }
 
       // 展開中のtabIdである && changeInfo.urlが講義ページである
@@ -153,7 +151,11 @@ chrome.tabs.onUpdated.addListener(
 
 /**************
  *
+ * When tab or window closed,
+ * restore background script state as its initial state.
  *
+ * NOTE: Of course there is no content script
+ * No need to "turn off" content script.
  * */
 chrome.tabs.onRemoved.addListener(
   async (
@@ -162,20 +164,8 @@ chrome.tabs.onRemoved.addListener(
   ): Promise<void> => {
     try {
       const { tabId } = await state.get();
-      if(_tabId !== tabId) return;
-      if (removeInfo.isWindowClosing) {
-        console.log("Window closed!");
-        // 後始末
-        // NOTE: 将来的にはそのwinodwに含まれるすべての展開中拡張機能をOFFにする処理が必要になる
-        await turnOffEachContentScripts(tabId);
-        await state.set(modelBase);
-      }
-      if (_tabId === tabId) {
-        console.log("tab closed!");
-        // 後始末
-        await turnOffEachContentScripts(tabId);
-        await state.set(modelBase);
-      }
+      if (_tabId !== tabId) return;
+      await state.set(modelBase);
     } catch (err) {
       console.error(err);
     }
@@ -236,6 +226,7 @@ const sortMessage = (
 /**
  * Handler of message from POPUP
  *______________________________________________________
+
  * */
 const handlerOfPopupMessage = async (
   message: iMessage,
@@ -288,12 +279,12 @@ const handlerOfPopupMessage = async (
           isCaptureSubtitleInjected: isCaptureSubtitleInjected,
           isControllerInjected: isControllerInjected,
         });
-        sendResponse({complete: true, success: true});
+        sendResponse({ complete: true, success: true });
       }
     }
   } catch (err) {
     console.error(err);
-    sendResponse({complete: true, success: false, failureReason: err});
+    sendResponse({ complete: true, success: false, failureReason: err });
   }
 };
 
@@ -641,13 +632,12 @@ const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
         files: ["contentScript.js"],
       });
       await state.set({ isContentScriptInjected: true });
-    }
-    else {
-        const r: iResponse = await sendMessageToTabsPromise(tabId, {
-            from: extensionNames.background,
-            to: extensionNames.contentScript,
-            order: [orderNames.reset],
-        })
+    } else {
+      const r: iResponse = await sendMessageToTabsPromise(tabId, {
+        from: extensionNames.background,
+        to: extensionNames.contentScript,
+        order: [orderNames.reset],
+      });
     }
 
     // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...実装する技術がない...
@@ -694,14 +684,14 @@ const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
         files: ["controller.js"],
       });
       await state.set({ isControllerInjected: true });
-    }
-    else {
-        const r: iResponse = await sendMessageToTabsPromise(tabId, {
-            from: extensionNames.background,
-            to: extensionNames.controller,
-            order: [orderNames.reset],
-          });
-          if(!r.success) throw new Error(`Error: Failed to reset controller.${r.failureReason}`)
+    } else {
+      const r: iResponse = await sendMessageToTabsPromise(tabId, {
+        from: extensionNames.background,
+        to: extensionNames.controller,
+        order: [orderNames.reset],
+      });
+      if (!r.success)
+        throw new Error(`Error: Failed to reset controller.${r.failureReason}`);
     }
 
     const s: iModel = await state.get();

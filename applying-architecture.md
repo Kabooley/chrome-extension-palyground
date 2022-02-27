@@ -26,8 +26,6 @@ MVC と DDD の設計思想を取り入れたい
 
   もしくはタブ情報を「持たない」とか？
 
-- 拡張機能のOFF機能の実装
-  [実装：拡張機能OFF](#実装：拡張機能OFF)
 
 - 拡張機能を展開中に展開しているタブをリロードしたときの挙動の実装
   いまんところ、拡張機能はOFFになっているのか？
@@ -37,12 +35,10 @@ MVC と DDD の設計思想を取り入れたい
     [ローディング中 view の実装](#ローディング中viewの実装)
 
 
--   拡張機能を展開していたタブが閉じられたときの後始末
 -   エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
 
 -   デザイン改善: 見た目の話
     [デザイン改善:popup](#デザイン改善:popup)
-    拡張機能OFF機能を実装したら再度進行する
 
 
 後回しでもいいかも:
@@ -67,6 +63,9 @@ MVC と DDD の設計思想を取り入れたい
 
 済：
 
+
+- [済] [展開中のタブが別のURLへ移動したときの対応](#展開中のタブが別のURLへ移動したときの対応)
+- [済] [実装：拡張機能OFF](#実装：拡張機能OFF)
 -   [済] sidebar の時の自動スクロール機能関数`controller.ts::scrollToHighlight()`が機能するようにすること
 -   [済] background.ts はいったんアンロードされると state に渡した変数がすべて消えることへの対処
 -   [済] Refac: background script で `chrome.tabs.updated.addListener`に filter を設けることで余計な url はデフォで無視する仕様にする
@@ -3682,6 +3681,9 @@ sliderボタンについて
 
 #### 実装：拡張機能OFF
 
+済
+
+
 まず知っておくこと：
 
 - background scriptは拡張機能がONであるかぎり、ブラウザを閉じていても生きている(PCを起動したら起動される)
@@ -4025,10 +4027,19 @@ chrome.tabs.onRemoved.addListener(
 ```
 
 
+#### 展開中のタブが別のURLへ移動したときの対応
+
+これはたぶんchrome.tabs.onRemovedと同じことなので...
+
+同じ処理をして解決した
+
+
 #### 修正：window-idとtabIdからなるIDでstateを区別する
+
+
+[chrome-extension-API:Window](#chrome-extension-API:Window)より
 
 今フォーカスしているウィンドウのアクティブタブ（表示中タブ）を取得する方法はわかった
 
-[chrome-extension-API:Window](#chrome-extension-API:Window)より
 
 
