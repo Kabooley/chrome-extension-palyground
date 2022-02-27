@@ -8,11 +8,23 @@ MVC と DDD の設計思想を取り入れたい
 
 ## 目次
 
+[課題](#課題)
 [1/25:処理についておさらい](#1/25:処理についておさらい)
+[chrome-extension-API](#chrome-extension-API)
 
 ## 課題
 
-NOTE: 更新は豆に！
+更新は豆に！
+
+- どのタブIDでどのwindowなのかは区別しないといかんかも
+  たとえば複数タブで展開するときに、おそらく今のままだと
+  一つのタブの情報しか扱えない
+  なので複数のタブで拡張機能を展開したときに先に展開開始した情報を
+  両方のたぶに展開することになるかも
+  [修正：window-idとtabIdからなるIDでstateを区別する](#修正：window-idとtabIdからなるIDでstateを区別する)
+  [chrome-extension-API:Window](#chrome-extension-API:Window)
+
+  もしくはタブ情報を「持たない」とか？
 
 - 拡張機能のOFF機能の実装
   [実装：拡張機能OFF](#実装：拡張機能OFF)
@@ -70,6 +82,160 @@ NOTE: 更新は豆に！
 
 - [済] message passing で受信側が非同期関数を実行するとき完了を待たずに port が閉じられてしまう問題
     [onMessage で非同期関数の完了を待たずに接続が切れる問題](#onMessageで非同期関数の完了を待たずに接続が切れる問題)
+
+
+## chrome-extension-API
+
+必要に応じてAPIを確認する
+
+
+### chrome.windows
+
+
+結論：
+
+`tabs.query`で今フォーカスしているウィンドウのアクティブなタブを取得するにはwindowIdを絶対指定するな
+
+`option: {active: true, currentWindow: true, lastFocusedWindow: true}`を指定しよう
+
+
+https://developer.chrome.com/docs/extensions/reference/windows/
+
+
+> ブラウザウィンドウにインタラクトできるAPI
+> このAPIでウィンドウを作成、変更、再調整できる
+
+The *current window*:
+
+*current winodw*というのは、よく
+chrome apiの関数の引数としてwindowIdが要求されるときにデフォルトで与えられる「現在のwindow情報」である
+
+**「現在のwinodw情報」というのは必ずしもいまフォーカスしているウィンドウではないし、または一番上にあるウィンドウをではない**
+
+しかも状況による!!
+
+
+ではどうやって判定すればいいのか？下記の調査を行った
+
+```JavaScript
+/**********************************************
+ *
+ * NOTE: 調査1 chrome.windows.onFocusChangedの挙動確認
+ * 
+ * onFocusChanged.addListener()内では、
+ * getLastFocusedとgetCurrentは両方とも同じwindowを指す
+ *
+ * ブラウザのウィンドウを２つにして、bakcgroundインスペクターを1つ開いた
+ * ブラウザのウィンドウをフォーカスすると必ずwindow.focused === trueになる
+ * インスペクターをフォーカスするとwindow.focused === falseになる
+ * 各windowのidは異なる
+ * インスペクターのwindowIDはなぜか後から開いたブラウザウィンドウのIDと同じになる
+ * （インスペクターは本番では関係ないからどうでもいいけれど...）
+ *
+ * その後、さらにウィンドウを増やすと、そのwindowIdは他と異なることは分かった
+ *
+ *
+ *
+ * NOTE: 調査２ POPUPが開かれたwindowのtabを特定できるか？
+ * 
+ * できる
+ * 
+ * 状況：
+ * 別のwindowをフォーカスしているときに、
+ * それとは別のwindowで表示されたpopupをクリックしてonMessageを発火させてみた
+ * 
+ * 
+ * NOTE: 教訓
+ * 
+ * 1. tabs.queryはwindowIdをoptionに含めるべきでない
+ * 
+ * どの窓でonMessageをが実行されても、
+ * chrome.windowsメソッドで取得できるwindowIdはなぜか必ず
+ * 最後に開いたwindowIdで変わらなかった
+ * 
+ * これはめちゃくちゃ困るので
+ * tabs.queryとかする時はwindows.windowIdを指定すべきでない
+ * 
+ * 2. tabs.queryで「今フォーカスしている窓」のアクティブなタブを指定するなら下記の通りに
+ * option: {active: true, currentWindow: true, lastFocusedWindow: true}
+ * これで必ず「今フォーカスしている窓」のタブ情報を取得できる
+ * 
+ * */
+
+chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.order === 'survey window') {
+        console.log('---- survey window ----');
+        console.log('Query tabs by some option cases:');
+        // NOTE: 調査２のメモ
+        // 
+        // {active: true}
+        // いま開かれているすべてのwindowのアクティブなタブ（表示中のタブ）である
+        // なので複窓のとき、各窓の表示中のタブの情報を取得する
+        chrome.tabs.query({ active: true }, function (tabs) {
+            console.log('option: {active: true}');
+            console.log(tabs);
+        });
+        // 
+        // {currentWindow: true}
+        // 状況のPOPUPを表示させていた（つまり最後にフォーカスした）ウィンドウの
+        // すべてのタブ情報を配列で取得した
+        chrome.tabs.query({ currentWindow: true }, function (tabs) {
+            console.log('option: {currentWindow: true}');
+            console.log(tabs);
+        });
+        // 
+        // { lastFocusedWindow: true }
+        // {currentWindow: true}と同様
+        chrome.tabs.query({ lastFocusedWindow: true }, function (tabs) {
+            console.log('option: {lastFocusedWindow: true}');
+            console.log(tabs);
+        });
+        // 
+        // { active: true, currentWindow: true, lastFocusedWindow: true }
+        // POPUPを開いていたタブだけを取得できた！
+        chrome.tabs.query(
+            { active: true, currentWindow: true, lastFocusedWindow: true },
+            function (tabs) {
+                console.log(
+                    'option: {active: true, currentWindow: true, lastFocusedWindow: true}'
+                );
+                console.log(tabs);
+            }
+        );
+
+        // 
+        // NOTE: chrome.windowsメソッドで取得したのは最後にフォーカスした窓の前にフォーカスしていた窓であった!!
+        // 
+        // 下記のメソッドで取得できるwindowIdは実際にフォーカスしていた
+        // windowIdではなくてその直前のwindowIdであった
+        // 
+        chrome.windows.getLastFocused({}, (w) => {
+            console.log(`window last focused by getLastFocused()`);
+            console.log(w.id);
+        });
+        chrome.windows.getCurrent({}, (w) => {
+            console.log(`getCurrent with no options`);
+            console.log(w.id);
+        });
+    }
+});
+
+// chrome.windows.onFocusChanged.addListener((windowId) => {
+//     console.log(`window focuse changed: ${windowId}`);
+//     chrome.windows.getLastFocused({}, (w) => {
+//         console.log(`window last focused by getLastFocused()`);
+//         console.log(w.id);
+//     });
+//     chrome.windows.getCurrent({}, (w) => {
+//         console.log(`getCurrent with no options`);
+//         console.log(w.id);
+//     });
+// });
+
+```
+
+これで必ずbackground scriptで
+今フォーカスしているウィンドウのアクティブなタブを取得できる
 
 
 ## DDD 設計思想の導入に関するメモ
@@ -3664,3 +3830,205 @@ const handlerOfTurnOff = async(tabId: number, case: string): Promise<void> => {
   }
 }
 ```
+
+```TypeScript
+
+// background.ts
+
+// 0. Fix handlerOfRun for case that content script already injected.
+// NOTE: どのtabIdで、どのwindowかは今のところ対応しないとする
+const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
+    try {
+
+        const { url, id, windowId } = tabInfo;
+        const { isContentScriptInject, isCaptureSubtitleInjected, isControllerInjected } = await state.get();
+
+        // Save valid url and current tab that extension popup opened.
+        await state.set({
+            url: exciseBelowHash(url),
+            tabId: id,
+            tabInfo: tabInfo,
+        });
+
+        //<phase 2> inject contentScript.js
+        const { tabId } = await state.get();
+        if(!isContentScriptInjected) {
+          await chrome.scripting.executeScript({
+              target: { tabId: tabId },
+              files: ['contentScript.js'],
+          });
+          await state.set({ isContentScriptInjected: true });
+        }
+
+        // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...実装する技術がない...
+        const { language, isTranscriptDisplaying } =
+            await sendMessageToTabsPromise(tabId, {
+                from: extensionNames.background,
+                to: extensionNames.contentScript,
+                order: [orderNames.sendStatus],
+            });
+        // 結果がどうあれ現状の状態を保存する
+        await state.set({
+            isEnglish: language,
+            isTranscriptDisplaying: isTranscriptDisplaying,
+        });
+        // 字幕が英語じゃない、またはトランスクリプトがONでないならば
+        // キャンセル
+        if (!language || !isTranscriptDisplaying) {
+            // TODO: 失敗またはキャンセルの方法未定義...
+            // ひとまずfalseを返している
+            return false;
+        }
+
+        // <phase 3> inject captureSubtitle.js
+        // 字幕データを取得する
+        if(!isCaptureSubtitleInjected) {
+          await chrome.scripting.executeScript({
+              target: { tabId: tabId },
+              files: ['captureSubtitle.js'],
+          });
+          await state.set({ isCaptureSubtitleInjected: true });
+        }
+
+        // 字幕取得できるまで10回は繰り返す関数で取得する
+        const subtitles: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
+
+        // const { subtitles } = await sendMessageToTabsPromise(tabId, {
+        //     from: extensionNames.background,
+        //     to: extensionNames.captureSubtitle,
+        //     order: [orderNames.sendSubtitles],
+        // });
+
+        await state.set({ subtitles: subtitles });
+
+        // <phase 4> inject controller.js
+        if(!isControllerInjected) {
+          await chrome.scripting.executeScript({
+              target: { tabId: tabId },
+              files: ['controller.js'],
+          });
+          await state.set({ isControllerInjected: true });
+        }
+
+        const s: iModel = await state.get();
+        await sendMessageToTabsPromise(tabId, {
+            from: extensionNames.background,
+            to: extensionNames.controller,
+            subtitles: s.subtitles,
+        });
+
+        await state.set({ isExTranscriptStructured: true });
+        // ...ここまででエラーがなければ成功
+        return true;
+    } catch (err) {
+        console.error(err.message);
+    }
+};
+
+
+// 1. Triiggered by slider button
+
+const handlerOfPopupMessage = async (
+    message: iMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response?: iResponse) => void
+): Promise<void> => {
+  // ...
+  if(order.includes(orderNames.turnOff)) {
+    console.log("[background] TURN OFF ordered.");
+    // phase1. reset injected content script
+    await turnOffEachContentScripts(tabId: number);
+    const { 
+      isContentScriptInjected,
+      isCaptureSubtitleInjected,
+      isControllerInjected } = await state.get();
+      // content scriptのinject状況だけ反映させてstateを初期値に戻す
+    await state.set({
+      ...modelBase
+      isContentScriptInjected: isContentScriptInjected,
+      isCaptureSubtitleInjected: isCaptureSubtitleInjected,
+      isControllerInjected: isControllerInjected,
+    });
+  }
+  // ...
+}
+
+// NOTE: new added
+const turnOffEachContentScripts = async (tabId: number): Promise<void> => {
+    try {
+        console.log('[background] Turning off each content scripts');
+
+        const contentScript = sendMessageToTabsPromise(tabId, {
+            from: extensionNames.background,
+            to: extensionNames.contentScript,
+            order: [orderNames.turnOff],
+        });
+
+        const controller = sendMessageToTabsPromise(tabId, {
+            from: extensionNames.background,
+            to: extensionNames.controller,
+            order: [orderNames.turnOff],
+        });
+
+        const r: iResponse[] = await Promise.all([contentScript, controller]);
+
+        const failureReasons: string = r
+            .filter((_) => {
+                if (!_.success) {
+                    return _.failureReason;
+                }
+            })
+            .join(' ');
+
+        if (failureReasons) {
+            throw new Error(
+                `Error: failed to turn off content script. ${failureReasons}`
+            );
+        }
+
+        console.log('[background] Done turning off each content scripts');
+    } catch (err) {
+        console.error(err.message);
+    }
+}
+
+
+// 2. Triggered by close tab
+
+chrome.tabs.onRemoved.addListener(
+    async (
+        _tabId: number,
+        removeInfo: chrome.tabs.TabRemoveInfo
+    ): Promise<void> => {
+      try {
+        const { tabId } = await state.get();
+        if (removeInfo.isWindowClosing) {
+            console.log('Window closed!');
+            // 後始末
+            // NOTE: 将来的にはそのwinodwに含まれるすべての展開中拡張機能をOFFにする処理が必要になる
+            await turnOffEachContentScripts(tabId);
+            await state.set(modelBase);
+        }
+        if (_tabId === tabId) {
+            console.log('tab closed!');
+            // 後始末
+            await turnOffEachContentScripts(tabId);
+            await state.set(modelBase);
+        }
+      }
+      catch(err) {
+        console.error(err);
+      }
+    }
+);
+
+```
+
+
+#### 修正：window-idとtabIdからなるIDでstateを区別する
+
+今フォーカスしているウィンドウのアクティブタブ（表示中タブ）を取得する方法はわかった
+
+[chrome-extension-API:Window](#chrome-extension-API:Window)より
+
+

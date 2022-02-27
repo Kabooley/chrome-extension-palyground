@@ -33,7 +33,6 @@ import { iModel, modelBase, iStateModule } from './annotations';
 const INTERVAL_TIME = 500;
 const KEY_LOCALSTORAGE = '__key__of_local_storage_';
 
-chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {});
 
 //
 // --- Chrome API Listeners ---------------------------------
@@ -262,6 +261,25 @@ const handlerOfPopupMessage = async (
                     sendResponse({ complete: true, success: true });
                 }
             }
+
+            // POPUP上のOFF操作による拡張機能のOFF命令
+            if(order.includes(orderNames.turnOff)) {
+                console.log("[background] TURN OFF ordered.");
+                const { tabId } = await state.get();
+                // turn off injected content script
+                await turnOffEachContentScripts(tabId);
+                const { 
+                  isContentScriptInjected,
+                  isCaptureSubtitleInjected,
+                  isControllerInjected } = await state.get();
+                  // content scriptのinject状況だけ反映させてstateを初期値に戻す
+                await state.set({
+                  ...modelBase,
+                  isContentScriptInjected: isContentScriptInjected,
+                  isCaptureSubtitleInjected: isCaptureSubtitleInjected,
+                  isControllerInjected: isControllerInjected,
+                });
+              }
         }
     } catch (err) {
         console.error(err.message);
@@ -498,19 +516,101 @@ const handlerOfControllerMessage = async (
 //   }
 // };
 
+// const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
+//     try {
+//         // const tabs: chrome.tabs.Tab = await tabsQuery();
+//         // const { url, id } = tabs;
+//         // // <phase 1> is URL correct?
+//         // // 拡張機能を展開するurlとtabIdを保存するため
+//         // if (!handlerOfVerifyValidPage(url)) {
+//         //   // TODO: 失敗またはキャンセルの方法未定義...
+//         //   // ひとまずfalseを返している
+//         //   return false;
+//         // }
+
+//         const { url, id, windowId } = tabInfo;
+
+//         // Save valid url and current tab that extension popup opened.
+//         await state.set({
+//             url: exciseBelowHash(url),
+//             tabId: id,
+//             tabInfo: tabInfo,
+//         });
+
+//         //<phase 2> inject contentScript.js
+//         const { tabId } = await state.get();
+//         await chrome.scripting.executeScript({
+//             target: { tabId: tabId },
+//             files: ['contentScript.js'],
+//         });
+//         await state.set({ isContentScriptInjected: true });
+
+//         // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...実装する技術がない...
+//         const { language, isTranscriptDisplaying } =
+//             await sendMessageToTabsPromise(tabId, {
+//                 from: extensionNames.background,
+//                 to: extensionNames.contentScript,
+//                 order: [orderNames.sendStatus],
+//             });
+//         // 結果がどうあれ現状の状態を保存する
+//         await state.set({
+//             isEnglish: language,
+//             isTranscriptDisplaying: isTranscriptDisplaying,
+//         });
+//         // 字幕が英語じゃない、またはトランスクリプトがONでないならば
+//         // キャンセル
+//         if (!language || !isTranscriptDisplaying) {
+//             // TODO: 失敗またはキャンセルの方法未定義...
+//             // ひとまずfalseを返している
+//             return false;
+//         }
+
+//         // <phase 3> inject captureSubtitle.js
+//         // 字幕データを取得する
+//         await chrome.scripting.executeScript({
+//             target: { tabId: tabId },
+//             files: ['captureSubtitle.js'],
+//         });
+//         await state.set({ isCaptureSubtitleInjected: true });
+
+//         // 字幕取得できるまで10回は繰り返す関数で取得する
+//         const subtitles: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
+
+//         // const { subtitles } = await sendMessageToTabsPromise(tabId, {
+//         //     from: extensionNames.background,
+//         //     to: extensionNames.captureSubtitle,
+//         //     order: [orderNames.sendSubtitles],
+//         // });
+
+//         await state.set({ subtitles: subtitles });
+
+//         // <phase 4> inject controller.js
+//         await chrome.scripting.executeScript({
+//             target: { tabId: tabId },
+//             files: ['controller.js'],
+//         });
+//         await state.set({ isControllerInjected: true });
+
+//         const s: iModel = await state.get();
+//         await sendMessageToTabsPromise(tabId, {
+//             from: extensionNames.background,
+//             to: extensionNames.controller,
+//             subtitles: s.subtitles,
+//         });
+
+//         await state.set({ isExTranscriptStructured: true });
+//         // ...ここまででエラーがなければ成功
+//         return true;
+//     } catch (err) {
+//         console.error(err.message);
+//     }
+// };
+
 const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
     try {
-        // const tabs: chrome.tabs.Tab = await tabsQuery();
-        // const { url, id } = tabs;
-        // // <phase 1> is URL correct?
-        // // 拡張機能を展開するurlとtabIdを保存するため
-        // if (!handlerOfVerifyValidPage(url)) {
-        //   // TODO: 失敗またはキャンセルの方法未定義...
-        //   // ひとまずfalseを返している
-        //   return false;
-        // }
 
-        const { url, id, windowId } = tabInfo;
+        const { url, id } = tabInfo;
+        const { isContentScriptInjected, isCaptureSubtitleInjected, isControllerInjected } = await state.get();
 
         // Save valid url and current tab that extension popup opened.
         await state.set({
@@ -521,11 +621,13 @@ const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
 
         //<phase 2> inject contentScript.js
         const { tabId } = await state.get();
-        await chrome.scripting.executeScript({
-            target: { tabId: tabId },
-            files: ['contentScript.js'],
-        });
-        await state.set({ isContentScriptInjected: true });
+        if(!isContentScriptInjected) {
+          await chrome.scripting.executeScript({
+              target: { tabId: tabId },
+              files: ['contentScript.js'],
+          });
+          await state.set({ isContentScriptInjected: true });
+        }
 
         // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...実装する技術がない...
         const { language, isTranscriptDisplaying } =
@@ -549,29 +651,27 @@ const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
 
         // <phase 3> inject captureSubtitle.js
         // 字幕データを取得する
-        await chrome.scripting.executeScript({
-            target: { tabId: tabId },
-            files: ['captureSubtitle.js'],
-        });
-        await state.set({ isCaptureSubtitleInjected: true });
+        if(!isCaptureSubtitleInjected) {
+          await chrome.scripting.executeScript({
+              target: { tabId: tabId },
+              files: ['captureSubtitle.js'],
+          });
+          await state.set({ isCaptureSubtitleInjected: true });
+        }
 
         // 字幕取得できるまで10回は繰り返す関数で取得する
         const subtitles: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
 
-        // const { subtitles } = await sendMessageToTabsPromise(tabId, {
-        //     from: extensionNames.background,
-        //     to: extensionNames.captureSubtitle,
-        //     order: [orderNames.sendSubtitles],
-        // });
-
         await state.set({ subtitles: subtitles });
 
         // <phase 4> inject controller.js
-        await chrome.scripting.executeScript({
-            target: { tabId: tabId },
-            files: ['controller.js'],
-        });
-        await state.set({ isControllerInjected: true });
+        if(!isControllerInjected) {
+          await chrome.scripting.executeScript({
+              target: { tabId: tabId },
+              files: ['controller.js'],
+          });
+          await state.set({ isControllerInjected: true });
+        }
 
         const s: iModel = await state.get();
         await sendMessageToTabsPromise(tabId, {
@@ -587,6 +687,8 @@ const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
         console.error(err.message);
     }
 };
+
+
 
 /**
  * handler of RESET
@@ -735,7 +837,7 @@ const resetEachContentScript = async (tabId: number): Promise<void> => {
         const r: iResponse[] = await Promise.all([contentScript, controller]);
 
         const failureReasons: string = r
-            .map((_) => {
+            .filter((_) => {
                 if (!_.success) {
                     return _.failureReason;
                 }
@@ -753,6 +855,50 @@ const resetEachContentScript = async (tabId: number): Promise<void> => {
         console.error(err.message);
     }
 };
+
+/**********
+ * 
+ * 各content scriptを拡張機能OFFに合わせ初期化する
+ * 
+ * */ 
+const turnOffEachContentScripts = async (tabId: number): Promise<void> => {
+    try {
+        console.log('[background] Turning off each content scripts');
+
+        const contentScript = sendMessageToTabsPromise(tabId, {
+            from: extensionNames.background,
+            to: extensionNames.contentScript,
+            order: [orderNames.turnOff],
+        });
+
+        const controller = sendMessageToTabsPromise(tabId, {
+            from: extensionNames.background,
+            to: extensionNames.controller,
+            order: [orderNames.turnOff],
+        });
+
+        const r: iResponse[] = await Promise.all([contentScript, controller]);
+
+        const failureReasons: string = r
+            .filter((_) => {
+                if (!_.success) {
+                    return _.failureReason;
+                }
+            })
+            .join(' ');
+
+        if (failureReasons) {
+            throw new Error(
+                `Error: failed to turn off content script. ${failureReasons}`
+            );
+        }
+
+        console.log('[background] Done turning off each content scripts');
+    } catch (err) {
+        console.error(err.message);
+    }
+}
+
 
 //
 // --- Other Methods ----------------------------------------

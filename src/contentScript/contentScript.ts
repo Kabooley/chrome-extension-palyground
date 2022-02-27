@@ -143,6 +143,15 @@ chrome.runtime.onMessage.addListener(
                         console.error(err);
                     });
             }
+
+            if (order.includes(orderNames.turnOff)) {
+                console.log('Order: Turn off');
+                moControlbar.disconnect();
+                controlbar.removeEventListener('click', handlerOfControlbar);
+                // moControlbarとcontrolbarはnullにしておく必要があるかな？
+                // その後のorderによるなぁ
+                sendResponse({complete: true});
+            }
         }
         return true;
     }
