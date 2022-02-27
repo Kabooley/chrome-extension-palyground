@@ -547,8 +547,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 // --- GLOBALS ---------------------------------------------------
 //
 const INTERVAL_TIME = 500;
-let moControlbar;
-let controlbar;
+let moControlbar = null;
+let controlbar = null;
 //
 // --- chrome API Listeners -------------------------------------
 //
@@ -569,7 +569,7 @@ let controlbar;
  * And every order should be responsed by invoking sendResponse with `{complete: true}`.
  * */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('CONTENT SCRIPT GOT MESSAGE');
+    console.log("CONTENT SCRIPT GOT MESSAGE");
     const { from, order, to } = message;
     const response = {
         from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
@@ -581,7 +581,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (order && order.length) {
         // SEND STATUS
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.sendStatus)) {
-            console.log('Order: SEND STATUS');
+            console.log("Order: SEND STATUS");
             const isEnglish = isSubtitleEnglish();
             // トランスクリプトボタンがコントロールバー上にある
             // かつ
@@ -595,24 +595,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             response.language = isEnglish;
             response.isTranscriptDisplaying = isOpen;
             response.complete = true;
-            // DEBUG:
-            //
-            // LOG response
-            console.log('-----------------------------------');
-            console.log('LOG: response object before send');
-            console.log(response);
-            console.log('-----------------------------------');
             sendResponse(response);
         }
         // RESET
-        // NOTE: resetオーダーに関しては、
-        // sendResponse()が送信されていない場合があるので
-        // 完了報告要らず
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.reset)) {
-            console.log('Order: RESET');
+            console.log("Order: RESET");
             handlerOfReset()
                 .then(() => {
-                console.log('[contentScript] Reset resolved');
+                console.log("[contentScript] Reset resolved");
                 sendResponse({
                     from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
                     to: from,
@@ -626,7 +616,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         // Require to make sure the page is including movie container or not.
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.isPageIncludingMovie)) {
-            console.log('Order: is this page including movie container?');
+            console.log("Order: is this page including movie container?");
             repeatQuerySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.videoContainer)
                 .then((r) => {
                 console.log(`result: ${r}`);
@@ -639,6 +629,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 console.error(err);
             });
         }
+        // TURN OFF
+        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.turnOff)) {
+            console.log("Order: Turn off");
+            moControlbar.disconnect();
+            controlbar.removeEventListener("click", handlerOfControlbar);
+            // moControlbarとcontrolbarはnullにしておく必要があるかな？
+            // その後のorderによるなぁ
+            sendResponse({ complete: true });
+        }
     }
     return true;
 });
@@ -647,19 +646,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  * @param order {object}
  * */
 const sendToBackground = (order) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('SENDING MESSAGE TO BACKGROUND');
+    console.log("SENDING MESSAGE TO BACKGROUND");
     const { isOpened, isEnglish } = order;
     const message = {
         from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
         to: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.background,
     };
     if (isOpened !== undefined) {
-        message['isTranscriptDisplaying'] = isOpened;
+        message["isTranscriptDisplaying"] = isOpened;
     }
     if (isEnglish !== undefined) {
-        message['language'] = isEnglish;
+        message["language"] = isEnglish;
     }
-    console.log('DEBUG: make sure message object');
+    console.log("DEBUG: make sure message object");
     console.log(message);
     try {
         yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_2__.sendMessagePromise)(message);
@@ -682,16 +681,7 @@ const sendToBackground = (order) => __awaiter(void 0, void 0, void 0, function* 
  * */
 const handlerOfReset = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // いったんMutationObserverを停止してから...
-        moControlbar.disconnect();
-        // controlbarのDOMを再取得
-        controlbar.removeEventListener('click', handlerOfControlbar);
-        controlbar = yield repeatQueryDom(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.controlbar);
-        if (!controlbar)
-            throw new Error('Error: Failed to get controlbar DOM');
-        controlbar.addEventListener('click', handlerOfControlbar);
-        // 再度、更新済のDOMに対してMutationObserverを設置する
-        moControlbar.observe(controlbar, config);
+        yield initialize();
     }
     catch (err) {
         console.error(err.message);
@@ -709,16 +699,16 @@ const repeatQueryDom = (selector) => __awaiter(void 0, void 0, void 0, function*
         let counter = 10;
         intervalId = setInterval(function () {
             if (counter <= 0) {
-                // Failed to query dom
+                // Failed
                 console.log("[repeatQueryDom] Time out! It's over 10 times");
                 clearInterval(intervalId);
                 reject(null);
             }
-            console.log('[repeatQueryDom] query dom');
+            console.log("[repeatQueryDom] query dom");
             const e = document.querySelector(selector);
             if (e) {
                 // Succeed
-                console.log('[repeatQueryDom] Succeeed to query dom!');
+                console.log("[repeatQueryDom] Succeeed to query dom!");
                 clearInterval(intervalId);
                 resolve(e);
             }
@@ -775,7 +765,7 @@ const handlerOfControlbar = function (ev) {
  * */
 const isTranscriptOpen = () => {
     const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
-    return toggleButton.getAttribute('aria-expanded') === 'true' ? true : false;
+    return toggleButton.getAttribute("aria-expanded") === "true" ? true : false;
 };
 /**
  * Check Subtitle language is English or not.
@@ -792,17 +782,17 @@ const isSubtitleEnglish = () => {
     let i = null;
     const els = Array.from(checkButtons);
     for (const btn of els) {
-        if (btn.getAttribute('aria-checked') === 'true') {
+        if (btn.getAttribute("aria-checked") === "true") {
             i = counter;
             break;
         }
         counter++;
     }
     if (i === null) {
-        throw new Error('Error: [isSubtitleEnglish()] Something went wrong but No language is selected');
+        throw new Error("Error: [isSubtitleEnglish()] Something went wrong but No language is selected");
     }
     const currentLanguage = Array.from(menuList)[i].innerText;
-    if (currentLanguage.includes('English') || currentLanguage.includes('英語'))
+    if (currentLanguage.includes("English") || currentLanguage.includes("英語"))
         return true;
     else
         return false;
@@ -840,24 +830,24 @@ const config = {
 const moCallback = (mr) => {
     let guard = false;
     mr.forEach((record) => {
-        if (record.type === 'childList' && !guard) {
+        if (record.type === "childList" && !guard) {
             // NOTE: MutationRecord[0]だけしらべればいいので1週目だけでループを止める
             // じゃぁforEach()を使うなという話ではあるけど...
             guard = true;
             // Added Nodes
             record.addedNodes.forEach((node) => {
-                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute('data-purpose');
-                if (dataPurpose && dataPurpose === 'transcript-toggle') {
-                    console.log('[contentScript] Added Transcript Toggle Button');
+                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute("data-purpose");
+                if (dataPurpose && dataPurpose === "transcript-toggle") {
+                    console.log("[contentScript] Added Transcript Toggle Button");
                     sendToBackground({ isOpened: isTranscriptOpen() });
                 }
             });
             // Removed Nodes
             record.removedNodes.forEach((node) => {
                 // これで取得できた！！！
-                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute('data-purpose');
-                if (dataPurpose && dataPurpose === 'transcript-toggle') {
-                    console.log('[contentScript] Removed Transcript Toggle Button');
+                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute("data-purpose");
+                if (dataPurpose && dataPurpose === "transcript-toggle") {
+                    console.log("[contentScript] Removed Transcript Toggle Button");
                     sendToBackground({ isOpened: false });
                 }
             });
@@ -897,17 +887,24 @@ const repeatQuerySelector = (selector) => __awaiter(void 0, void 0, void 0, func
  *  set up MutationObserver of controlbar.
  * */
 const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('CONTENT SCRIPT INITIALIZING...');
+    console.log("CONTENT SCRIPT INITIALIZING...");
     try {
-        // --- Set up listeners ---
-        // click event on cotrolbar
-        controlbar = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.controlbar);
-        controlbar.removeEventListener('click', handlerOfControlbar);
-        controlbar.addEventListener('click', handlerOfControlbar);
-        // --- Set up MutationObserver for controlbar ---
+        // いったんMutationObserverを停止してから...
+        if (moControlbar)
+            moControlbar.disconnect();
+        moControlbar = null;
         moControlbar = new MutationObserver(moCallback);
+        // controlbarのDOMを再取得
+        if (controlbar)
+            controlbar.removeEventListener("click", handlerOfControlbar);
+        controlbar = null;
+        controlbar = yield repeatQueryDom(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.controlbar);
+        if (!controlbar)
+            throw new Error("Error: Failed to get controlbar DOM");
+        controlbar.addEventListener("click", handlerOfControlbar);
+        // 再度、更新済のDOMに対してMutationObserverを設置する
         moControlbar.observe(controlbar, config);
-        console.log('content script initialize has been done');
+        console.log("content script initialize has been done");
     }
     catch (err) {
         console.error(err.message);
