@@ -9,6 +9,7 @@ MVC と DDD の設計思想を取り入れたい
 ## 目次
 
 [課題](#課題)
+[成果記録](#成果記録)
 [1/25:処理についておさらい](#1/25:処理についておさらい)
 [chrome-extension-API](#chrome-extension-API)
 
@@ -16,34 +17,32 @@ MVC と DDD の設計思想を取り入れたい
 
 更新は豆に！
 
-- どのタブIDでどのwindowなのかは区別しないといかんかも
-  たとえば複数タブで展開するときに、おそらく今のままだと
-  一つのタブの情報しか扱えない
-  なので複数のタブで拡張機能を展開したときに先に展開開始した情報を
-  両方のたぶに展開することになるかも
-  [修正：window-idとtabIdからなるIDでstateを区別する](#修正：window-idとtabIdからなるIDでstateを区別する)
-  [chrome-extension-API:Window](#chrome-extension-API:Window)
+-   どのタブ ID でどの window なのかは区別しないといかんかも
+    たとえば複数タブで展開するときに、おそらく今のままだと
+    一つのタブの情報しか扱えない
+    なので複数のタブで拡張機能を展開したときに先に展開開始した情報を
+    両方のたぶに展開することになるかも
+    [修正：window-id と tabId からなる ID で state を区別する](#修正：window-idとtabIdからなるIDでstateを区別する)
+    [chrome-extension-API:Window](#chrome-extension-API:Window)
 
-  もしくはタブ情報を「持たない」とか？
+    もしくはタブ情報を「持たない」とか？
 
-- 拡張機能のOFF機能の実装
-  [実装：拡張機能OFF](#実装：拡張機能OFF)
+-   拡張機能の OFF 機能の実装
+    [実装：拡張機能 OFF](#実装：拡張機能OFF)
 
-- 拡張機能を展開中に展開しているタブをリロードしたときの挙動の実装
-  いまんところ、拡張機能はOFFになっているのか？
-  POPUPはそのまま表示が変わらない
+-   拡張機能を展開中に展開しているタブをリロードしたときの挙動の実装
+    いまんところ、拡張機能は OFF になっているのか？
+    POPUP はそのまま表示が変わらない
 
 -   loading 中を ExTranscript へ表示させる
     [ローディング中 view の実装](#ローディング中viewの実装)
-
 
 -   拡張機能を展開していたタブが閉じられたときの後始末
 -   エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
 
 -   デザイン改善: 見た目の話
     [デザイン改善:popup](#デザイン改善:popup)
-    拡張機能OFF機能を実装したら再度進行する
-
+    拡張機能 OFF 機能を実装したら再度進行する
 
 後回しでもいいかも:
 
@@ -55,10 +54,8 @@ MVC と DDD の設計思想を取り入れたい
 
 -   controller.ts の onwWindowResizeHandler をもうちょっとサクサク動かしたい
 
-
 -   [また問題が起こったら対処] 複数 window を開いていると、あとから複製した window の id を取得してしまう問題
     [複数 window だとあとから複製した window.id を取得してしまう問題](#複数windowだとあとから複製したwindow.idを取得してしまう問題)
-
 
 他:
 
@@ -80,40 +77,178 @@ MVC と DDD の設計思想を取り入れたい
 -   [済] Udemy の講義ページで、動画じゃないページへアクセスしたときの対応
     たとえばテキストだけ表示される回があるけど、それの対 [テキストページへの対処](#テキストページへの対処)
 
-- [済] message passing で受信側が非同期関数を実行するとき完了を待たずに port が閉じられてしまう問題
+-   [済] message passing で受信側が非同期関数を実行するとき完了を待たずに port が閉じられてしまう問題
     [onMessage で非同期関数の完了を待たずに接続が切れる問題](#onMessageで非同期関数の完了を待たずに接続が切れる問題)
+
+## 成果記録
+
+#### service workerへの理解
+
+https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/
+
+https://developers.google.com/web/fundamentals/primers/service-workers/
+
+> service workerは、ブラウザがWebページとは別にバックグラウンドで実行するスクリプトであり、Webページやユーザーの操作を必要としない機能への扉を開きます
+
+
+#### background scriptで変数を保存するなら必ず`chrome.storage`で保存すること
+
+
+
+#### `chrome.tabs.query`で windowId を option で指定するな
+
+`tabs.query`で今フォーカスしているウィンドウのアクティブなタブを取得したいとき、
+windowId を絶対指定するな(めったな状況でない限り)
+
+なぜなのか
+
+`chrome.windows.getCurrentId()`、または`chrome.windows.getLastFocused()`は、
+必ずと言っていいほど、
+最後に生成されたウィンドウの ID を取得するからである
+
+なので
+
+
+
+`tabs.query`で今フォーカスしているウィンドウのアクティブなタブを取得したいときは、
+
+次のオプションを渡すとよい
+
+```TypeScript
+{
+  active: true,           // 表示中のタブを指定する
+  lastFocusedWindow: true,   // 最後にフォーカスしたwindowを指定できる
+  currentWindow: true     // 現在のwindowを指定できる
+}
+```
+
+`lastFocusedWindow`と`currentWindow`はどちらかだけでもいい
+
+#### message-passing で sendResponse()を非同期に完了させたいならば chrome.runtime.onMessage.addListener()のコールバックは必ず true を返すこと
+
+というのは公式に書いてあるので当然かもしれませんが
+
+TypeScript 的にいうと、
+
+`chrome.runtime.onMessage.addListener()`のコールバックは
+
+`(): boolean => { return true }`でないと効果を発揮しないよということ
+
+`async (): Promise<boolean> => {return true;}`では無効である
+
+ついつい`async/await`を使いたいからと言って
+async 関数を渡してしまうと非同期処理が無視されて
+`sendResponse()`が非同期に返されるのを待たずに
+送信先が存在しませんという旨の`runtime.lastError`が起きます
+
+となると
+
+`chrome.runtime.onMessage.addListener()`のコールバックは
+
+次の通りに書くべきです
+
+```TypeScript
+interface iMessage {
+  // message-passingでやり取りするオブジェクトの型
+}
+
+chrome.runtime.onMessage.addListener(
+    (
+        message: iMessage,
+        sender,
+        sendResponse: (response: iResponse) => void
+    ): boolean => {
+        const { order } = message;
+        const response: iResponse = {
+            from: extensionNames.contentScript,
+            to: from,
+        };
+        if (to !== extensionNames.contentScript) return;
+
+        if (order && order.length) {
+            // 1. Promise chainを用いる
+            if (order.includes(orders.reset)) {
+                handlerOfReset()
+                    .then(() => {
+                        sendResponse({
+                          ...response
+                            complete: true,
+                            success: true,
+                        });
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                    });
+            }
+            // 2. IIFEでasync関数を囲う
+            if (order.includes(orderNames.isPageIncludingMovie)) {
+              (async function() {
+
+              })()
+                console.log('Order: is this page including movie container?');
+                repeatQuerySelector(selectors.videoContainer)
+                    .then((r: boolean) => {
+                        console.log(`result: ${r}`);
+                        sendResponse({
+                            complete: true,
+                            isPageIncludingMovie: r,
+                        });
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                    });
+            }
+
+            if (order.includes(orderNames.turnOff)) {
+                console.log('Order: Turn off');
+                moControlbar.disconnect();
+                controlbar.removeEventListener('click', handlerOfControlbar);
+                // moControlbarとcontrolbarはnullにしておく必要があるかな？
+                // その後のorderによるなぁ
+                sendResponse({complete: true});
+            }
+        }
+        return true;
+    }
+);
+
+```
+
+#### popupのstateはbackground scriptで管理すること
+
+popupは開かれるたびに、webページのリロード同様に、毎回リフレッシュされる
+
+なので例えばPOPUPをReactで生成しているようなとき
+一旦POPUP表示を消して再表示するとき
+stateの値は保存されない
+
 
 
 ## chrome-extension-API
 
-必要に応じてAPIを確認する
-
+必要に応じて API を確認する
 
 ### chrome.windows
 
-
 結論：
 
-`tabs.query`で今フォーカスしているウィンドウのアクティブなタブを取得するにはwindowIdを絶対指定するな
+`tabs.query`で今フォーカスしているウィンドウのアクティブなタブを取得するには windowId を絶対指定するな
 
 `option: {active: true, currentWindow: true, lastFocusedWindow: true}`を指定しよう
 
-
 https://developer.chrome.com/docs/extensions/reference/windows/
 
+> ブラウザウィンドウにインタラクトできる API
+> この API でウィンドウを作成、変更、再調整できる
 
-> ブラウザウィンドウにインタラクトできるAPI
-> このAPIでウィンドウを作成、変更、再調整できる
-
-The *current window*:
+The _current window_:
 
 *current winodw*というのは、よく
-chrome apiの関数の引数としてwindowIdが要求されるときにデフォルトで与えられる「現在のwindow情報」である
+chrome api の関数の引数として windowId が要求されるときにデフォルトで与えられる「現在の window 情報」である
 
-**「現在のwinodw情報」というのは必ずしもいまフォーカスしているウィンドウではないし、または一番上にあるウィンドウをではない**
+**「現在の winodw 情報」というのは必ずしもいまフォーカスしているウィンドウではないし、または一番上にあるウィンドウをではない**
 
 しかも状況による!!
-
 
 ではどうやって判定すればいいのか？下記の調査を行った
 
@@ -121,7 +256,7 @@ chrome apiの関数の引数としてwindowIdが要求されるときにデフ�
 /**********************************************
  *
  * NOTE: 調査1 chrome.windows.onFocusChangedの挙動確認
- * 
+ *
  * onFocusChanged.addListener()内では、
  * getLastFocusedとgetCurrentは両方とも同じwindowを指す
  *
@@ -137,29 +272,29 @@ chrome apiの関数の引数としてwindowIdが要求されるときにデフ�
  *
  *
  * NOTE: 調査２ POPUPが開かれたwindowのtabを特定できるか？
- * 
+ *
  * できる
- * 
+ *
  * 状況：
  * 別のwindowをフォーカスしているときに、
  * それとは別のwindowで表示されたpopupをクリックしてonMessageを発火させてみた
- * 
- * 
+ *
+ *
  * NOTE: 教訓
- * 
+ *
  * 1. tabs.queryはwindowIdをoptionに含めるべきでない
- * 
+ *
  * どの窓でonMessageをが実行されても、
  * chrome.windowsメソッドで取得できるwindowIdはなぜか必ず
  * 最後に開いたwindowIdで変わらなかった
- * 
+ *
  * これはめちゃくちゃ困るので
  * tabs.queryとかする時はwindows.windowIdを指定すべきでない
- * 
+ *
  * 2. tabs.queryで「今フォーカスしている窓」のアクティブなタブを指定するなら下記の通りに
  * option: {active: true, currentWindow: true, lastFocusedWindow: true}
  * これで必ず「今フォーカスしている窓」のタブ情報を取得できる
- * 
+ *
  * */
 
 chrome.runtime.onMessage.addListener((msg) => {
@@ -167,7 +302,7 @@ chrome.runtime.onMessage.addListener((msg) => {
         console.log('---- survey window ----');
         console.log('Query tabs by some option cases:');
         // NOTE: 調査２のメモ
-        // 
+        //
         // {active: true}
         // いま開かれているすべてのwindowのアクティブなタブ（表示中のタブ）である
         // なので複窓のとき、各窓の表示中のタブの情報を取得する
@@ -175,7 +310,7 @@ chrome.runtime.onMessage.addListener((msg) => {
             console.log('option: {active: true}');
             console.log(tabs);
         });
-        // 
+        //
         // {currentWindow: true}
         // 状況のPOPUPを表示させていた（つまり最後にフォーカスした）ウィンドウの
         // すべてのタブ情報を配列で取得した
@@ -183,14 +318,14 @@ chrome.runtime.onMessage.addListener((msg) => {
             console.log('option: {currentWindow: true}');
             console.log(tabs);
         });
-        // 
+        //
         // { lastFocusedWindow: true }
         // {currentWindow: true}と同様
         chrome.tabs.query({ lastFocusedWindow: true }, function (tabs) {
             console.log('option: {lastFocusedWindow: true}');
             console.log(tabs);
         });
-        // 
+        //
         // { active: true, currentWindow: true, lastFocusedWindow: true }
         // POPUPを開いていたタブだけを取得できた！
         chrome.tabs.query(
@@ -203,12 +338,12 @@ chrome.runtime.onMessage.addListener((msg) => {
             }
         );
 
-        // 
+        //
         // NOTE: chrome.windowsメソッドで取得したのは最後にフォーカスした窓の前にフォーカスしていた窓であった!!
-        // 
+        //
         // 下記のメソッドで取得できるwindowIdは実際にフォーカスしていた
         // windowIdではなくてその直前のwindowIdであった
-        // 
+        //
         chrome.windows.getLastFocused({}, (w) => {
             console.log(`window last focused by getLastFocused()`);
             console.log(w.id);
@@ -234,9 +369,8 @@ chrome.runtime.onMessage.addListener((msg) => {
 
 ```
 
-これで必ずbackground scriptで
+これで必ず background script で
 今フォーカスしているウィンドウのアクティブなタブを取得できる
-
 
 ## DDD 設計思想の導入に関するメモ
 
@@ -3503,9 +3637,7 @@ POPUP で同じ処理を行うと、popup を開いたタブの window.id を取
 
 https://stackoverflow.com/questions/9089793/chrome-extension-simple-popup-wont-remain-in-last-state
 
-background scriptから取得するようにした
-
-
+background script から取得するようにした
 
 #### onMessage で非同期関数の完了を待たずに接続が切れる問題
 
@@ -3642,64 +3774,57 @@ chrome.runtime.onMessage.addListener(
 });
 
 ```
-やっぱり原因は上記のとおりであり修正したら治った!
 
+やっぱり原因は上記のとおりであり修正したら治った!
 
 #### デザイン改善:popup
 
-進捗：sliderを設けた、ある程度のデザインは決まった、拡張機能OFF機能を実装し終わったらまた手を付ける
+進捗：slider を設けた、ある程度のデザインは決まった、拡張機能 OFF 機能を実装し終わったらまた手を付ける
 
 参考：
 https://uxplanet.org/chrome-extension-popups-design-inspiration-b38de2cbd589
 
 https://stackoverflow.com/questions/20424425/recommended-size-of-icon-for-google-chrome-extension#:~:text=You%20should%20always%20provide%20a,favicon%20for%20an%20extension's%20pages.
 
-
-svgを自作した:
+svg を自作した:
 `./src/statics/udmey-re-transcript.svg`
 
 デザイン：
 ヘッダー、アイコン左、タイトル右
 中間、メッセージ表示部分(展開中とか、展開完了とか、ここでは使えませんとか)
-中間右、slider表示部分(無効なURLでは表示しない)
+中間右、slider 表示部分(無効な URL では表示しない)
 
+slider ボタンについて
 
-sliderボタンについて
+-   slider を右にすると拡張機能が実行される
+-   左にすると拡張機能を OFF にする（未実装機能）
+-   slider を動かして処理が完了するまでは slider を無効にしたい（未実装）
 
-- sliderを右にすると拡張機能が実行される
-- 左にすると拡張機能をOFFにする（未実装機能）
-- sliderを動かして処理が完了するまではsliderを無効にしたい（未実装）
-
-##### chrome API Tips: iconが表示されないときは
+##### chrome API Tips: icon が表示されないときは
 
 次を確認して
 
+-   アイコンは 128\*128 のアイコンを提供しないといけない
+-   48*48、16*16 も提供しないといけない
+-   アイコンは PNG 出ないといけない
 
-- アイコンは128*128のアイコンを提供しないといけない
-- 48*48、16*16も提供しないといけない
-- アイコンはPNG出ないといけない
-
-
-#### 実装：拡張機能OFF
+#### 実装：拡張機能 OFF
 
 まず知っておくこと：
 
-- background scriptは拡張機能がONであるかぎり、ブラウザを閉じていても生きている(PCを起動したら起動される)
+-   background script は拡張機能が ON であるかぎり、ブラウザを閉じていても生きている(PC を起動したら起動される)
 
-- 拡張機能を展開したタブが生きている限り、injectしたcontent scritpはそのままである
-  なので再度同じタブでrunされたときに、既にcontent scriptがinjectされていることを前提に動かないといかん
-  TODO: handlerOfRunの修正: content scritpが既にinject済である場合を考慮する
+-   拡張機能を展開したタブが生きている限り、inject した content scritp はそのままである
+    なので再度同じタブで run されたときに、既に content script が inject されていることを前提に動かないといかん
+    TODO: handlerOfRun の修正: content scritp が既に inject 済である場合を考慮する
 
+OFF のトリガー：
 
-OFFのトリガー：
+-   case1:展開中のタブで POPUP のスライダーを OFF にする(タブはそのまま)
+-   case2:展開中のタブを閉じる
+-   case3:展開中のタブを含む window が閉じられる
 
-- case1:展開中のタブでPOPUPのスライダーをOFFにする(タブはそのまま)
-- case2:展開中のタブを閉じる
-- case3:展開中のタブを含むwindowが閉じられる
-
-
-case1ですること：
-
+case1 ですること：
 
 ```TypeScript
 // トリガー検知
@@ -3749,8 +3874,7 @@ moControlbar.disconnect(controlbar, config);
 // NOTE: 再度RUNしたときのためにhandlerOfRunを修正する必要がある
 ```
 
-
-case2, 3ですること：
+case2, 3 ですること：
 
 ```TypeScript
 // 検知部分
@@ -3765,21 +3889,19 @@ chrome.tabs.onRemoved.addListener();
 // NOTE: local stroageのクリア
 ```
 
-
-
 ```TypeScript
 // backgorund.ts
 
 /*******************
- * 
+ *
  * @param {tabId} number:
- * @param {case} string: 
+ * @param {case} string:
  *  Represents the case of turn-off extension.
  *  "by-slider", "closed".
  *  case1 turn off by slider off on POPUP
  *  case2 triggered by closing the tab extension deployed.
  *  case3 triggered by closing window.
- * */ 
+ * */
 const handlerOfTurnOff = async(tabId: number, case: string): Promise<void> => {
   try {
     await sendMessageToTabsPromise(tab, {
@@ -3795,8 +3917,8 @@ const handlerOfTurnOff = async(tabId: number, case: string): Promise<void> => {
     });
 
   switch(case) {
-    case "by-slider": 
-      
+    case "by-slider":
+
     await state.set({
       // NOTE: OFFにしても各content scriptはtrueのまま
       isContentScriptInjected: true,
@@ -3820,10 +3942,10 @@ const handlerOfTurnOff = async(tabId: number, case: string): Promise<void> => {
       tabInfo: /* whatever */
     });
     break;
-    case "closed": 
+    case "closed":
     break;
   }
-    
+
   }
   catch(err) {
 
@@ -3938,7 +4060,7 @@ const handlerOfPopupMessage = async (
     console.log("[background] TURN OFF ordered.");
     // phase1. reset injected content script
     await turnOffEachContentScripts(tabId: number);
-    const { 
+    const {
       isContentScriptInjected,
       isCaptureSubtitleInjected,
       isControllerInjected } = await state.get();
@@ -4024,11 +4146,8 @@ chrome.tabs.onRemoved.addListener(
 
 ```
 
-
-#### 修正：window-idとtabIdからなるIDでstateを区別する
+#### 修正：window-id と tabId からなる ID で state を区別する
 
 今フォーカスしているウィンドウのアクティブタブ（表示中タブ）を取得する方法はわかった
 
 [chrome-extension-API:Window](#chrome-extension-API:Window)より
-
-
