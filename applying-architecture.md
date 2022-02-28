@@ -38,6 +38,7 @@ MVC と DDD の設計思想を取り入れたい
     [ローディング中 view の実装](#ローディング中viewの実装)
 
 -   拡張機能を展開していたタブが閉じられたときの後始末
+
 -   エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
 
 -   デザイン改善: 見た目の話
@@ -64,6 +65,8 @@ MVC と DDD の設計思想を取り入れたい
 
 済：
 
+-   [済] [展開中のタブが別の URL へ移動したときの対応](#展開中のタブが別のURLへ移動したときの対応)
+-   [済] [実装：拡張機能 OFF](#実装：拡張機能OFF)
 -   [済] sidebar の時の自動スクロール機能関数`controller.ts::scrollToHighlight()`が機能するようにすること
 -   [済] background.ts はいったんアンロードされると state に渡した変数がすべて消えることへの対処
 -   [済] Refac: background script で `chrome.tabs.updated.addListener`に filter を設けることで余計な url はデフォで無視する仕様にする
@@ -82,18 +85,15 @@ MVC と DDD の設計思想を取り入れたい
 
 ## 成果記録
 
-#### service workerへの理解
+#### service worker への理解
 
 https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/
 
 https://developers.google.com/web/fundamentals/primers/service-workers/
 
-> service workerは、ブラウザがWebページとは別にバックグラウンドで実行するスクリプトであり、Webページやユーザーの操作を必要としない機能への扉を開きます
+> service worker は、ブラウザが Web ページとは別にバックグラウンドで実行するスクリプトであり、Web ページやユーザーの操作を必要としない機能への扉を開きます
 
-
-#### background scriptで変数を保存するなら必ず`chrome.storage`で保存すること
-
-
+#### background script で変数を保存するなら必ず`chrome.storage`で保存すること
 
 #### `chrome.tabs.query`で windowId を option で指定するな
 
@@ -107,8 +107,6 @@ windowId を絶対指定するな(めったな状況でない限り)
 最後に生成されたウィンドウの ID を取得するからである
 
 なので
-
-
 
 `tabs.query`で今フォーカスしているウィンドウのアクティブなタブを取得したいときは、
 
@@ -214,15 +212,13 @@ chrome.runtime.onMessage.addListener(
 
 ```
 
-#### popupのstateはbackground scriptで管理すること
+#### popup の state は background script で管理すること
 
-popupは開かれるたびに、webページのリロード同様に、毎回リフレッシュされる
+popup は開かれるたびに、web ページのリロード同様に、毎回リフレッシュされる
 
-なので例えばPOPUPをReactで生成しているようなとき
-一旦POPUP表示を消して再表示するとき
-stateの値は保存されない
-
-
+なので例えば POPUP を React で生成しているようなとき
+一旦 POPUP 表示を消して再表示するとき
+state の値は保存されない
 
 ## chrome-extension-API
 
@@ -3810,6 +3806,8 @@ slider ボタンについて
 
 #### 実装：拡張機能 OFF
 
+済
+
 まず知っておくこと：
 
 -   background script は拡張機能が ON であるかぎり、ブラウザを閉じていても生きている(PC を起動したら起動される)
@@ -4148,6 +4146,14 @@ chrome.tabs.onRemoved.addListener(
 
 #### 修正：window-id と tabId からなる ID で state を区別する
 
-今フォーカスしているウィンドウのアクティブタブ（表示中タブ）を取得する方法はわかった
+#### 展開中のタブが別の URL へ移動したときの対応
+
+これはたぶん chrome.tabs.onRemoved と同じことなので...
+
+同じ処理をして解決した
+
+#### 修正：window-id と tabId からなる ID で state を区別する
 
 [chrome-extension-API:Window](#chrome-extension-API:Window)より
+
+今フォーカスしているウィンドウのアクティブタブ（表示中タブ）を取得する方法はわかった

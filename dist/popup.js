@@ -30904,16 +30904,9 @@ const Popup = () => {
     const [turningOn, setTurningOn] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     //   NOTE: new added. スライダーを動かしたら、処理が完了するまでtrue
     const [disableSlider, setDisableSlider] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    //   useEffect(() => {
-    //     chrome.runtime.onMessage.removeListener(messageHandler);
-    //     chrome.runtime.onMessage.addListener(messageHandler);
-    //     return () => {
-    //       chrome.runtime.onMessage.removeListener(messageHandler);
-    //     };
-    //   }, []);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         // NOTE: DON'T USE AWAIT inside of useEffect().
-        console.log('[popup] OPENED');
+        console.log("[popup] OPENED");
         verifyValidPage();
     }, []);
     // Get current state from background script.
@@ -30926,15 +30919,20 @@ const Popup = () => {
             const { isSubtitleCapturing, isExTranscriptStructured } = res.state;
             setBuilding(isSubtitleCapturing);
             setBuilt(isExTranscriptStructured);
+            setTurningOn(isExTranscriptStructured);
         });
     }, []);
     //   const messageHandler = (): void => {};
+    /***********************
+     *
+     *
+     * NOTE: DO NOT use windowId.
+     * Use {active:true, currentWindow: true, lastFocusedWindow: true}
+     * for tabs.query instead.
+     * */
     const verifyValidPage = () => {
-        chrome.windows
-            .getCurrent()
-            .then((res) => {
-            return chrome.tabs.query({ active: true, windowId: res.id });
-        })
+        chrome.tabs
+            .query({ active: true, currentWindow: true, lastFocusedWindow: true })
             .then((tabs) => {
             console.log(tabs);
             const r = tabs[0].url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_2__.urlPattern);
@@ -30949,39 +30947,11 @@ const Popup = () => {
         })
             .catch((err) => console.error(err.message));
     };
-    //   const buttonClickHandler = (): void => {
-    //     if (!tabInfo) throw new Error("Error: tabInfo is null");
-    //     setBuilding(true);
-    //     console.log("[popup] RUNNING...");
-    //     sendMessagePromise({
-    //       from: extensionNames.popup,
-    //       to: extensionNames.background,
-    //       order: [orderNames.run],
-    //       tabInfo: tabInfo,
-    //     })
-    //       .then((res) => {
-    //         const { success } = res;
-    //         console.log("[popup] Successfully Complete!");
-    //         setBuilt(success);
-    //         setBuilding(false);
-    //         if (!success) {
-    //           throw new Error(
-    //             "Error: something went wrong while extension building"
-    //           );
-    //         }
-    //       })
-    //       .catch((err) => {
-    //         setBuilt(false);
-    //         setBuilding(false);
-    //         console.error(err.message);
-    //         // alert出した方がいいかな？
-    //       });
-    //   };
     const handlerOfRun = () => {
         if (!tabInfo)
-            throw new Error('Error: tabInfo is null');
+            throw new Error("Error: tabInfo is null");
         setBuilding(true);
-        console.log('[popup] Rebuilding...');
+        console.log("[popup] Rebuilding...");
         (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
@@ -30990,12 +30960,12 @@ const Popup = () => {
         })
             .then((res) => {
             const { success } = res;
-            console.log('[popup] Rebuilding Successfully Complete!');
+            console.log("[popup] Rebuilding Successfully Complete!");
             setBuilt(success);
             setBuilding(false);
             setDisableSlider(false);
             if (!success) {
-                throw new Error('Error: something went wrong while extension building');
+                throw new Error("Error: something went wrong while extension building");
             }
         })
             .catch((err) => {
@@ -31004,19 +30974,38 @@ const Popup = () => {
             setTurningOn(false);
             setDisableSlider(false);
             console.error(err.message);
-            // alert出した方がいいかな？
+            // TODO: alert
+        });
+    };
+    const handlerOfTurnOff = () => {
+        (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
+            from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
+            to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
+            order: [_utils_constants__WEBPACK_IMPORTED_MODULE_2__.orderNames.turnOff],
+        })
+            .then((res) => {
+            if (!res.success)
+                throw new Error(`Error: Failed to turn off extension. ${res.failureReason}`);
+            setBuilt(false);
+            setBuilding(false);
+            setTurningOn(false);
+            setDisableSlider(false);
+        })
+            .catch((err) => {
+            // TODO: alert to getpage reloaded or disable extension
+            console.error(err);
         });
     };
     const handlerOfToggle = () => {
         turningOn
             ? (function () {
-                console.log('[popup] Turning off...');
+                console.log("[popup] Turning off...");
                 setTurningOn(false);
-                //   setDisableSlider(true);
-                //   TODO: invoke and implement handler of turn off
+                setDisableSlider(true);
+                handlerOfTurnOff();
             })()
             : (function () {
-                console.log('[popup] Turning on...');
+                console.log("[popup] Turning on...");
                 setTurningOn(true);
                 setDisableSlider(true);
                 handlerOfRun();
@@ -31049,9 +31038,45 @@ const Popup = () => {
             generateComplete()),
         correctUrl ? generateFooter() : null));
 };
-const root = document.createElement('div');
+const root = document.createElement("div");
 document.body.appendChild(root);
 react_dom__WEBPACK_IMPORTED_MODULE_1__.render(react__WEBPACK_IMPORTED_MODULE_0__.createElement(Popup, null), root);
+// legacy code -------------
+//   useEffect(() => {
+//     chrome.runtime.onMessage.removeListener(messageHandler);
+//     chrome.runtime.onMessage.addListener(messageHandler);
+//     return () => {
+//       chrome.runtime.onMessage.removeListener(messageHandler);
+//     };
+//   }, []);
+//   const buttonClickHandler = (): void => {
+//     if (!tabInfo) throw new Error("Error: tabInfo is null");
+//     setBuilding(true);
+//     console.log("[popup] RUNNING...");
+//     sendMessagePromise({
+//       from: extensionNames.popup,
+//       to: extensionNames.background,
+//       order: [orderNames.run],
+//       tabInfo: tabInfo,
+//     })
+//       .then((res) => {
+//         const { success } = res;
+//         console.log("[popup] Successfully Complete!");
+//         setBuilt(success);
+//         setBuilding(false);
+//         if (!success) {
+//           throw new Error(
+//             "Error: something went wrong while extension building"
+//           );
+//         }
+//       })
+//       .catch((err) => {
+//         setBuilt(false);
+//         setBuilding(false);
+//         console.error(err.message);
+//         // alert出した方がいいかな？
+//       });
+//   };
 
 })();
 
