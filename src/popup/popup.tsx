@@ -18,6 +18,7 @@ import {
 } from '../utils/constants';
 import { sendMessagePromise } from '../utils/helpers';
 import './popup.css';
+import MainContent from './MainContent';
 import Switch from './switch';
 
 const Popup = (): JSX.Element => {
@@ -157,34 +158,6 @@ const Popup = (): JSX.Element => {
               })();
     };
 
-    const generateFooter = (): JSX.Element => {
-        return (
-            <div className="footer">
-                {/* <button onClick={buttonClickHandler} disabled={built}>
-          RUN
-        </button> */}
-                <Switch
-                    isOn={turningOn}
-                    handlerOfToggle={handlerOfToggle}
-                    disable={disableSlider}
-                />
-            </div>
-        );
-    };
-
-    //   const generateIncorrect = (): JSX.Element => {
-    //     return <div>This is INCORRECT page</div>;
-    //   };
-
-    const generateRunning = (): JSX.Element => {
-        return building ? <div className="message-middle"> Rebuilding... </div> : null;
-    };
-
-    //   5秒だけ表示するようにする
-    const generateComplete = (): JSX.Element => {
-        return built ? <div className="message-middle"> Complete!</div> : null;
-    };
-
     return (
         <div className="container">
             <div className="header">
@@ -201,11 +174,12 @@ const Popup = (): JSX.Element => {
                 </div>
             </div>
             <div className="middle">
-                <div className="middle-message-container">
+                <MainContent  built={built} building={building} correctUrl={correctUrl} turningOn={turningOn} disable={disableSlider} handlerOfToggle={handlerOfToggle} />
+                {/* <div className="middle-message-container">
                   {generateRunning()}
                   {generateComplete()}
                 </div>
-                {correctUrl ? generateFooter() : null}
+                {correctUrl ? generateFooter() : null} */}
             </div>
         </div>
     );

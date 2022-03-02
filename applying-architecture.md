@@ -85,6 +85,15 @@ MVC と DDD の設計思想を取り入れたい
 
 ## 成果記録
 
+
+####  icon が表示されないときは
+
+次を確認すること
+
+-   アイコンは 128 * 128 のアイコンを提供しないといけない
+-   48*48、16*16 も提供しないといけない
+-   アイコンは PNG でないといけない
+
 #### service worker への理解
 
 https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/
