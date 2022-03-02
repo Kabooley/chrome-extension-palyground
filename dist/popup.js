@@ -47,7 +47,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\nbody {\r\n  font-family: \"Roboto\";\r\n  width: 400px;\r\n}\r\n\r\n.container {\r\n  display: flex;\r\n  flex-direction: column;\r\n}\r\n\r\n.header {\r\n  display: flex;\r\n  flex-direction: row;\r\n  width: auto;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n  width: 128px;\r\n  height: auto;\r\n  background: black;\r\n  padding-left: 20px;\r\n}\r\n\r\n.extension-title-container {\r\n  background-color: #000;\r\n  height: 118px;\r\n  flex: 2;\r\n  padding-left: 30px;\r\n  padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n  color: #fff;\r\n  font-size: 36px;\r\n}\r\n\r\n.middle {\r\n  height: 24px;\r\n}\r\n\r\n.footer {\r\n  display: flex;\r\n  flex-direction: row;\r\n  background-color: #280794;\r\n  height: auto;\r\n}\r\n", "",{"version":3,"sources":["webpack://./src/popup/popup.css"],"names":[],"mappings":"AAAA;;;;;uCAKuC;;AAEvC;EACE,SAAS;EACT,UAAU;AACZ;;AAEA;EACE,qBAAqB;EACrB,YAAY;AACd;;AAEA;EACE,aAAa;EACb,sBAAsB;AACxB;;AAEA;EACE,aAAa;EACb,mBAAmB;EACnB,WAAW;AACb;;AAEA;AACA;;AAEA;EACE,YAAY;EACZ,YAAY;EACZ,iBAAiB;EACjB,kBAAkB;AACpB;;AAEA;EACE,sBAAsB;EACtB,aAAa;EACb,OAAO;EACP,kBAAkB;EAClB,iBAAiB;AACnB;;AAEA;EACE,WAAW;EACX,eAAe;AACjB;;AAEA;EACE,YAAY;AACd;;AAEA;EACE,aAAa;EACb,mBAAmB;EACnB,yBAAyB;EACzB,YAAY;AACd","sourcesContent":["/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\nbody {\r\n  font-family: \"Roboto\";\r\n  width: 400px;\r\n}\r\n\r\n.container {\r\n  display: flex;\r\n  flex-direction: column;\r\n}\r\n\r\n.header {\r\n  display: flex;\r\n  flex-direction: row;\r\n  width: auto;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n  width: 128px;\r\n  height: auto;\r\n  background: black;\r\n  padding-left: 20px;\r\n}\r\n\r\n.extension-title-container {\r\n  background-color: #000;\r\n  height: 118px;\r\n  flex: 2;\r\n  padding-left: 30px;\r\n  padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n  color: #fff;\r\n  font-size: 36px;\r\n}\r\n\r\n.middle {\r\n  height: 24px;\r\n}\r\n\r\n.footer {\r\n  display: flex;\r\n  flex-direction: row;\r\n  background-color: #280794;\r\n  height: auto;\r\n}\r\n"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, "/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n\r\nbody {\r\n    font-family: 'Roboto';\r\n    width: 400px;\r\n}\r\n\r\n.container {\r\n    display: flex;\r\n    flex-direction: column;\r\n}\r\n\r\n.header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    width: auto;\r\n    background-color: #000;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n    width: 128px;\r\n    height: auto;\r\n    background: black;\r\n    padding-left: 20px;\r\n}\r\n\r\n.extension-title-container {\r\n    background-color: #000;\r\n    height: 118px;\r\n    flex: 2;\r\n    padding-left: 30px;\r\n    padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n    color: #fff;\r\n    font-size: 36px;\r\n}\r\n\r\n.middle {\r\n    display: flex;\r\n    flex-direction: row;\r\n    height: 24px;\r\n}\r\n\r\n.middle-message-container {\r\n    flex: 4;\r\n}\r\n\r\n.message-middle {\r\n}\r\n\r\n.footer {\r\n    flex: 3;\r\n    display: flex;\r\n    flex-direction: row;\r\n    height: auto;\r\n    width: 40%;\r\n}\r\n", "",{"version":3,"sources":["webpack://./src/popup/popup.css"],"names":[],"mappings":"AAAA;;;;;uCAKuC;;AAEvC;IACI,SAAS;IACT,UAAU;AACd;;AAEA;IACI,qBAAqB;IACrB,YAAY;AAChB;;AAEA;IACI,aAAa;IACb,sBAAsB;AAC1B;;AAEA;IACI,aAAa;IACb,mBAAmB;IACnB,WAAW;IACX,sBAAsB;AAC1B;;AAEA;AACA;;AAEA;IACI,YAAY;IACZ,YAAY;IACZ,iBAAiB;IACjB,kBAAkB;AACtB;;AAEA;IACI,sBAAsB;IACtB,aAAa;IACb,OAAO;IACP,kBAAkB;IAClB,iBAAiB;AACrB;;AAEA;IACI,WAAW;IACX,eAAe;AACnB;;AAEA;IACI,aAAa;IACb,mBAAmB;IACnB,YAAY;AAChB;;AAEA;IACI,OAAO;AACX;;AAEA;AACA;;AAEA;IACI,OAAO;IACP,aAAa;IACb,mBAAmB;IACnB,YAAY;IACZ,UAAU;AACd","sourcesContent":["/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n    margin: 0;\r\n    padding: 0;\r\n}\r\n\r\nbody {\r\n    font-family: 'Roboto';\r\n    width: 400px;\r\n}\r\n\r\n.container {\r\n    display: flex;\r\n    flex-direction: column;\r\n}\r\n\r\n.header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    width: auto;\r\n    background-color: #000;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n    width: 128px;\r\n    height: auto;\r\n    background: black;\r\n    padding-left: 20px;\r\n}\r\n\r\n.extension-title-container {\r\n    background-color: #000;\r\n    height: 118px;\r\n    flex: 2;\r\n    padding-left: 30px;\r\n    padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n    color: #fff;\r\n    font-size: 36px;\r\n}\r\n\r\n.middle {\r\n    display: flex;\r\n    flex-direction: row;\r\n    height: 24px;\r\n}\r\n\r\n.middle-message-container {\r\n    flex: 4;\r\n}\r\n\r\n.message-middle {\r\n}\r\n\r\n.footer {\r\n    flex: 3;\r\n    display: flex;\r\n    flex-direction: row;\r\n    height: auto;\r\n    width: 40%;\r\n}\r\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -30448,7 +30448,6 @@ const Switch = ({ isOn, handlerOfToggle, disable }) => {
     const labelClassName = isOn
         ? `react-switch-label slider-on`
         : "react-switch-label";
-    console.log(labelClassName);
     return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null,
         react__WEBPACK_IMPORTED_MODULE_0__.createElement("input", { checked: isOn, onChange: handlerOfToggle, className: "react-switch-checkbox", id: `react-switch-new`, type: "checkbox", disabled: disable }),
         react__WEBPACK_IMPORTED_MODULE_0__.createElement("label", { className: labelClassName, htmlFor: `react-switch-new` },
@@ -30906,7 +30905,7 @@ const Popup = () => {
     const [disableSlider, setDisableSlider] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
         // NOTE: DON'T USE AWAIT inside of useEffect().
-        console.log("[popup] OPENED");
+        console.log('[popup] OPENED');
         verifyValidPage();
     }, []);
     // Get current state from background script.
@@ -30932,7 +30931,11 @@ const Popup = () => {
      * */
     const verifyValidPage = () => {
         chrome.tabs
-            .query({ active: true, currentWindow: true, lastFocusedWindow: true })
+            .query({
+            active: true,
+            currentWindow: true,
+            lastFocusedWindow: true,
+        })
             .then((tabs) => {
             console.log(tabs);
             const r = tabs[0].url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_2__.urlPattern);
@@ -30949,9 +30952,9 @@ const Popup = () => {
     };
     const handlerOfRun = () => {
         if (!tabInfo)
-            throw new Error("Error: tabInfo is null");
+            throw new Error('Error: tabInfo is null');
         setBuilding(true);
-        console.log("[popup] Rebuilding...");
+        console.log('[popup] Rebuilding...');
         (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
@@ -30960,12 +30963,12 @@ const Popup = () => {
         })
             .then((res) => {
             const { success } = res;
-            console.log("[popup] Rebuilding Successfully Complete!");
+            console.log('[popup] Rebuilding Successfully Complete!');
             setBuilt(success);
             setBuilding(false);
             setDisableSlider(false);
             if (!success) {
-                throw new Error("Error: something went wrong while extension building");
+                throw new Error('Error: something went wrong while extension building');
             }
         })
             .catch((err) => {
@@ -30999,13 +31002,13 @@ const Popup = () => {
     const handlerOfToggle = () => {
         turningOn
             ? (function () {
-                console.log("[popup] Turning off...");
+                console.log('[popup] Turning off...');
                 setTurningOn(false);
                 setDisableSlider(true);
                 handlerOfTurnOff();
             })()
             : (function () {
-                console.log("[popup] Turning on...");
+                console.log('[popup] Turning on...');
                 setTurningOn(true);
                 setDisableSlider(true);
                 handlerOfRun();
@@ -31019,11 +31022,11 @@ const Popup = () => {
     //     return <div>This is INCORRECT page</div>;
     //   };
     const generateRunning = () => {
-        return building ? react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, " Rebuilding... ") : null;
+        return building ? react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "message-middle" }, " Rebuilding... ") : null;
     };
     //   5秒だけ表示するようにする
     const generateComplete = () => {
-        return built ? react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, " Complete!") : null;
+        return built ? react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "message-middle" }, " Complete!") : null;
     };
     return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "container" },
         react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "header" },
@@ -31034,11 +31037,12 @@ const Popup = () => {
                 react__WEBPACK_IMPORTED_MODULE_0__.createElement("br", null),
                 react__WEBPACK_IMPORTED_MODULE_0__.createElement("span", null, " Transcript"))),
         react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "middle" },
-            generateRunning(),
-            generateComplete()),
-        correctUrl ? generateFooter() : null));
+            react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "middle-message-container" },
+                generateRunning(),
+                generateComplete()),
+            correctUrl ? generateFooter() : null)));
 };
-const root = document.createElement("div");
+const root = document.createElement('div');
 document.body.appendChild(root);
 react_dom__WEBPACK_IMPORTED_MODULE_1__.render(react__WEBPACK_IMPORTED_MODULE_0__.createElement(Popup, null), root);
 // legacy code -------------

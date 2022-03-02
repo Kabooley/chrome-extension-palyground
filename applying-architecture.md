@@ -3777,6 +3777,10 @@ chrome.runtime.onMessage.addListener(
 
 進捗：slider を設けた、ある程度のデザインは決まった、拡張機能 OFF 機能を実装し終わったらまた手を付ける
 
+drawioにアイディアを書き出した 確認のこと
+(./design-image.drawio)
+
+
 参考：
 https://uxplanet.org/chrome-extension-popups-design-inspiration-b38de2cbd589
 
@@ -3785,16 +3789,8 @@ https://stackoverflow.com/questions/20424425/recommended-size-of-icon-for-google
 svg を自作した:
 `./src/statics/udmey-re-transcript.svg`
 
-デザイン：
-ヘッダー、アイコン左、タイトル右
-中間、メッセージ表示部分(展開中とか、展開完了とか、ここでは使えませんとか)
-中間右、slider 表示部分(無効な URL では表示しない)
 
-slider ボタンについて
 
--   slider を右にすると拡張機能が実行される
--   左にすると拡張機能を OFF にする（未実装機能）
--   slider を動かして処理が完了するまでは slider を無効にしたい（未実装）
 
 ##### chrome API Tips: icon が表示されないときは
 

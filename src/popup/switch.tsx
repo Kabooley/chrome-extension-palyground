@@ -16,7 +16,6 @@
     ? `react-switch-label slider-on`
     : "react-switch-label";
 
-  console.log(labelClassName);
   return (
     <>
       <input
