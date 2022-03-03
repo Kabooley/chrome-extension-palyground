@@ -21,8 +21,16 @@ const MainContent = (props): JSX.Element => {
         );
     };
 
+    // const generateButton = (): JSX.Element => {
+    //     return (
+    //         <>
+    //             <img src="rebuild-button-usual.png"></img>
+    //         </>
+    //     );
+    // };
+
     const generateIncorrect = (): JSX.Element => {
-        return <div>This is INCORRECT page</div>;
+        return <div>このページではご利用できません</div>;
     };
 
     const generateRunning = (): JSX.Element => {
@@ -35,6 +43,12 @@ const MainContent = (props): JSX.Element => {
     const generateComplete = (): JSX.Element => {
         return props.built ? (
             <div className="message-middle"> 完了！</div>
+        ) : null;
+    };
+
+    const generateUsual = (): JSX.Element => {
+        return !props.built && !props.building ? (
+            <div>トランスクリプトを再生成する</div>
         ) : null;
     };
 

@@ -30421,6 +30421,62 @@ module.exports = styleTagTransform;
 
 /***/ }),
 
+/***/ "./src/popup/MainContent.tsx":
+/*!***********************************!*\
+  !*** ./src/popup/MainContent.tsx ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var _popup_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./popup.css */ "./src/popup/popup.css");
+/* harmony import */ var _switch__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./switch */ "./src/popup/switch.tsx");
+/*********************************************************
+ *
+ *
+ * ********************************************************/
+
+
+
+const MainContent = (props) => {
+    const generateFooter = () => {
+        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "footer" },
+            react__WEBPACK_IMPORTED_MODULE_0__.createElement(_switch__WEBPACK_IMPORTED_MODULE_2__["default"], { isOn: props.turningOn, handlerOfToggle: props.handlerOfToggle, disable: props.disableSlider })));
+    };
+    // const generateButton = (): JSX.Element => {
+    //     return (
+    //         <>
+    //             <img src="rebuild-button-usual.png"></img>
+    //         </>
+    //     );
+    // };
+    const generateIncorrect = () => {
+        return react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, "\u3053\u306E\u30DA\u30FC\u30B8\u3067\u306F\u3054\u5229\u7528\u3067\u304D\u307E\u305B\u3093");
+    };
+    const generateRunning = () => {
+        return props.building ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "message-middle" }, " \u751F\u6210\u4E2D... ")) : null;
+    };
+    //   5秒だけ表示するようにする
+    const generateComplete = () => {
+        return props.built ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "message-middle" }, " \u5B8C\u4E86\uFF01")) : null;
+    };
+    const generateUsual = () => {
+        return !props.built && !props.building ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, "\u30C8\u30E9\u30F3\u30B9\u30AF\u30EA\u30D7\u30C8\u3092\u518D\u751F\u6210\u3059\u308B")) : null;
+    };
+    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, props.correctUrl ? (react__WEBPACK_IMPORTED_MODULE_0__.createElement(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null,
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "middle-message-container" },
+            generateRunning(),
+            generateComplete()),
+        generateFooter())) : (react__WEBPACK_IMPORTED_MODULE_0__.createElement(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, generateIncorrect()))));
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (MainContent);
+
+
+/***/ }),
+
 /***/ "./src/popup/switch.tsx":
 /*!******************************!*\
   !*** ./src/popup/switch.tsx ***!
@@ -30874,7 +30930,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/constants */ "./src/utils/constants.ts");
 /* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
 /* harmony import */ var _popup_css__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./popup.css */ "./src/popup/popup.css");
-/* harmony import */ var _switch__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./switch */ "./src/popup/switch.tsx");
+/* harmony import */ var _MainContent__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./MainContent */ "./src/popup/MainContent.tsx");
 /*******************************************************
  *  POPUP
  * _____________________________________________________
@@ -31014,20 +31070,6 @@ const Popup = () => {
                 handlerOfRun();
             })();
     };
-    const generateFooter = () => {
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "footer" },
-            react__WEBPACK_IMPORTED_MODULE_0__.createElement(_switch__WEBPACK_IMPORTED_MODULE_5__["default"], { isOn: turningOn, handlerOfToggle: handlerOfToggle, disable: disableSlider })));
-    };
-    //   const generateIncorrect = (): JSX.Element => {
-    //     return <div>This is INCORRECT page</div>;
-    //   };
-    const generateRunning = () => {
-        return building ? react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "message-middle" }, " Rebuilding... ") : null;
-    };
-    //   5秒だけ表示するようにする
-    const generateComplete = () => {
-        return built ? react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "message-middle" }, " Complete!") : null;
-    };
     return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "container" },
         react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "header" },
             react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "container-image" },
@@ -31037,10 +31079,7 @@ const Popup = () => {
                 react__WEBPACK_IMPORTED_MODULE_0__.createElement("br", null),
                 react__WEBPACK_IMPORTED_MODULE_0__.createElement("span", null, " Transcript"))),
         react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "middle" },
-            react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: "middle-message-container" },
-                generateRunning(),
-                generateComplete()),
-            correctUrl ? generateFooter() : null)));
+            react__WEBPACK_IMPORTED_MODULE_0__.createElement(_MainContent__WEBPACK_IMPORTED_MODULE_5__["default"], { built: built, building: building, correctUrl: correctUrl, turningOn: turningOn, disable: disableSlider, handlerOfToggle: handlerOfToggle }))));
 };
 const root = document.createElement('div');
 document.body.appendChild(root);

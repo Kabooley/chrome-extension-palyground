@@ -26,13 +26,11 @@ MVC と DDD の設計思想を取り入れたい
     [chrome-extension-API:Window](#chrome-extension-API:Window)
 
     もしくはタブ情報を「持たない」とか？
+    もしくはそれがでふぉということで、1 ページにしか使えないという仕様にする
 
 -   拡張機能の OFF 機能の実装
     [実装：拡張機能 OFF](#実装：拡張機能OFF)
 
--   拡張機能を展開中に展開しているタブをリロードしたときの挙動の実装
-    いまんところ、拡張機能は OFF になっているのか？
-    POPUP はそのまま表示が変わらない
 
 -   loading 中を ExTranscript へ表示させる
     [ローディング中 view の実装](#ローディング中viewの実装)
@@ -65,6 +63,8 @@ MVC と DDD の設計思想を取り入れたい
 
 済：
 
+
+-  [済] [展開中にリロードしたときの挙動の実装](#展開中にリロードしたときの挙動の実装)
 -   [済] [展開中のタブが別の URL へ移動したときの対応](#展開中のタブが別のURLへ移動したときの対応)
 -   [済] [実装：拡張機能 OFF](#実装：拡張機能OFF)
 -   [済] sidebar の時の自動スクロール機能関数`controller.ts::scrollToHighlight()`が機能するようにすること
@@ -83,14 +83,18 @@ MVC と DDD の設計思想を取り入れたい
 -   [済] message passing で受信側が非同期関数を実行するとき完了を待たずに port が閉じられてしまう問題
     [onMessage で非同期関数の完了を待たずに接続が切れる問題](#onMessageで非同期関数の完了を待たずに接続が切れる問題)
 
+実装しない機能：
+
+-   Autro Scroll ON/OFF ボタンとその機能
+-
+
 ## 成果記録
 
-
-####  icon が表示されないときは
+#### icon が表示されないときは
 
 次を確認すること
 
--   アイコンは 128 * 128 のアイコンを提供しないといけない
+-   アイコンは 128 \* 128 のアイコンを提供しないといけない
 -   48*48、16*16 も提供しないといけない
 -   アイコンは PNG でないといけない
 
@@ -3786,9 +3790,8 @@ chrome.runtime.onMessage.addListener(
 
 進捗：slider を設けた、ある程度のデザインは決まった、拡張機能 OFF 機能を実装し終わったらまた手を付ける
 
-drawioにアイディアを書き出した 確認のこと
+drawio にアイディアを書き出した 確認のこと
 (./design-image.drawio)
-
 
 参考：
 https://uxplanet.org/chrome-extension-popups-design-inspiration-b38de2cbd589
@@ -3797,9 +3800,6 @@ https://stackoverflow.com/questions/20424425/recommended-size-of-icon-for-google
 
 svg を自作した:
 `./src/statics/udmey-re-transcript.svg`
-
-
-
 
 ##### chrome API Tips: icon が表示されないときは
 
@@ -4149,13 +4149,114 @@ chrome.tabs.onRemoved.addListener(
 
 ```
 
-#### 修正：window-id と tabId からなる ID で state を区別する
-
 #### 展開中のタブが別の URL へ移動したときの対応
 
 これはたぶん chrome.tabs.onRemoved と同じことなので...
 
 同じ処理をして解決した
+
+#### 展開中にリロードしたときの挙動の実装
+
+現状：
+
+-   ExTranscript は消える
+-   background script の state はそのまま
+
+```TypeScript
+{
+  isCaptureSubtitleInjected: true,
+  isContentScriptInjected: true,
+  isControllerInjected: true,
+  isEnglish: true,
+  isExTranscriptStructured: true,
+  isSubtitleCaptured: false,
+  isSubtitleCapturing: false,
+  isTranscriptDisplaying: true,
+  subtitles: (107) [{…}, {…},  …],
+  tabId: 151,
+  tabInfo: {active: true, audible: false, autoDiscardable: true, discarded: false, favIconUrl: 'https://www.udemy.com/staticx/udemy/images/v8/favicon-32x32.png', …}
+  url: "https://www.udemy.com/course/chrome-extension/learn/lecture/25576324"
+}
+```
+
+どうするか：
+
+拡張機能を OFF にする
+
+理由は、google 翻訳も OFF になるからそもそも意味がなくなるし
+多分リロードすると content script が排除されている
+
+なのでこれは仕様ということで OFF にすることとする
+
+```TypeScript
+chrome.tabs.onUpdated.addListener(
+    async (
+        tabIdUpdatedOccured: number,
+        changeInfo: chrome.tabs.TabChangeInfo,
+        Tab: chrome.tabs.Tab
+    ): Promise<void> => {
+        // "https://www.udemy.com/course/*"以外のURLなら無視する
+        const { url, tabId, isExTranscriptStructured } = await state.get();
+
+        // 拡張機能が未展開、changeInfo.statusがloadingでないなら無視する
+        if (changeInfo.status !== 'loading' || !isExTranscriptStructured)
+            return;
+
+        // 拡張機能が展開済だとして、tabIdが展開済のtabId以外に切り替わったなら無視する
+        // return;
+        if (tabIdUpdatedOccured !== tabId) return;
+
+        // 展開中のtabId && chnageInfo.urlがUdemy講義ページ以外のURLならば
+        // 拡張機能OFFの処理へ
+        if (isExTranscriptStructured && tabIdUpdatedOccured === tabId) {
+            // おなじURLでのリロードか？
+            if (changeInfo.url === undefined) {
+                console.log('[background] Turn off extension because page reloaded');
+                await state.set(modelBase);
+            } else if (!changeInfo.url.match(urlPattern)) {
+                // Udemy講義ページ以外に移動した
+                console.log('[background] the page moved to invalid url');
+                await state.set(modelBase);
+            }
+
+            // 展開中のtabIdである && changeInfo.urlが講義ページである
+            // その上でURLが変化した
+            // NOTE: Compare URL WITHOUT below hash.
+            else if (
+                changeInfo.url.match(urlPattern) &&
+                exciseBelowHash(changeInfo.url) !== exciseBelowHash(url)
+            ) {
+                // ページが切り替わった
+                // NOTE: MUST Update URL
+                console.log('[background] page moved');
+                await state.set({ url: exciseBelowHash(changeInfo.url) });
+
+                // 動画ページ以外に切り替わったのか？
+                const res: iResponse = await sendMessageToTabsPromise(tabId, {
+                    from: extensionNames.background,
+                    to: extensionNames.contentScript,
+                    order: [orderNames.isPageIncludingMovie],
+                });
+
+                // TODO: Fix Udemyで動画ページに切り替わったのに
+                // 動画ページじゃない判定してくる...
+                // これの対処
+                // DEBUG:
+                //
+                console.log(res);
+
+                res.isPageIncludingMovie
+                    ? // 次の動画に移った
+                      await handlerOfReset(tabIdUpdatedOccured)
+                    : // 動画を含まないページへ移った
+                      await handlerOfHide(tabIdUpdatedOccured);
+            }
+        }
+    }
+);
+
+
+```
 
 #### 修正：window-id と tabId からなる ID で state を区別する
 
