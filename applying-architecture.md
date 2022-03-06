@@ -4633,7 +4633,7 @@ const isSubtitleEnglish = (): boolean => {
   );
  }
  catch(err) {
-  //  Could not capture DOM.
+     console.error(err.message);
    throw err;
  }
 
@@ -4693,18 +4693,20 @@ chrome.runtime.onMessage.addListener(
 
           response.language = isEnglish;
           response.isTranscriptDisplaying = isOpen;
-          response.complete = true;
         }
         catch(err) {
           response.success = false;
           // failureReasonを投げるよりも、
           // Errorインスタンスそのものを渡した方がいいかも？
-          response.failureReason = err.message;
+        //   TODO: ErrorインスタンスをiResponseに含める
+        response.error = err;
+        //   response.failureReason = err.message;
           // ここでエラースローしても受け取る相手がいない
           // 結局backgroundへ伝えるにはメッセージを送信するしかない
           // throw new PageStatusNotReadyError(err.message);
         }
         finally {
+            response.complete = true;
           sendResponse(response);
         }
       }
@@ -4713,31 +4715,34 @@ chrome.runtime.onMessage.addListener(
         console.log("Order: RESET");
         handlerOfReset()
           .then(() => {
-            console.log("[contentScript] Reset resolved");
-            sendResponse({
-              from: extensionNames.contentScript,
-              to: from,
-              complete: true,
-              success: true,
-            });
+            response.success = true;
           })
           .catch((err) => {
             console.error(err);
+            response.success = false;
+            response.error = err;
+          })
+          .finally(() => {
+            response.complete = true;
+              sendResponse(response)
           });
       }
       // Require to make sure the page is including movie container or not.
       if (order.includes(orderNames.isPageIncludingMovie)) {
-        console.log("Order: is this page including movie container?");
+        console.log("Order: Is this page including movie container?");
         repeatQuerySelector(selectors.videoContainer)
           .then((r: boolean) => {
-            console.log(`result: ${r}`);
-            sendResponse({
-              complete: true,
-              isPageIncludingMovie: r,
-            });
+            response.isPageIncludingMovie = r;
+            response.success = true;
           })
           .catch((err) => {
             console.error(err);
+            response.success = false;
+            response.error = err;
+          })
+          .finally(() => {
+              response.complete = true;
+              sendResponse(response)
           });
       }
       // TURN OFF
@@ -4747,11 +4752,35 @@ chrome.runtime.onMessage.addListener(
         controlbar.removeEventListener("click", handlerOfControlbar);
         // moControlbarとcontrolbarはnullにしておく必要があるかな？
         // その後のorderによるなぁ
-        sendResponse({ complete: true });
+        response.complete = true;
+        sendResponse(response);
       }
     }
     return true;
   }
 );
 
+```
+
+```TypeScript
+// constants.ts
+export type uError = ErrorBase | DomManipulationError | PageStatusNotReadyError;
+
+export interface iResponse {
+    // ...
+    error?: uError;
+
+}
+
+
+try {
+
+}
+catch(err) {
+    // TODO: 
+}
+finally {
+    response.complete = true;
+    sendResponse(response);
+}
 ```

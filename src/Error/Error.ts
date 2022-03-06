@@ -1,4 +1,4 @@
-class Error_ {
+class Err {
     public message: string;
     public name: string;
     constructor(message) {
@@ -7,14 +7,14 @@ class Error_ {
     }
 }
 
-export class MyError extends Error {
+export class ErrorBase extends Err {
     constructor(message) {
         super(message);
         this.name = this.constructor.name;
     }
 }
 
-export class DomManipulationError extends MyError {
+export class DomManipulationError extends ErrorBase {
     constructor(message) {
         super(message);
         this.name = 'DomManipulationError';
@@ -25,7 +25,7 @@ export class DomManipulationError extends MyError {
  * Among contentScript.js
  * Thrown if subtitle is not English, or Transcript is not opened
  * */
-export class PageStatusNotReadyError extends MyError {
+export class PageStatusNotReadyError extends ErrorBase {
     constructor(message) {
         super(message);
         this.name = 'PageStatusNotReadyError';

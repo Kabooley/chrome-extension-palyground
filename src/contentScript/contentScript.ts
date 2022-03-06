@@ -430,7 +430,8 @@ const repeatQuerySelector = async (selector: string): Promise<boolean> => {
       10
     );
   } catch (err) {
-    console.error(err.message);
+    console.error(err);
+    throw err;
   }
 };
 
