@@ -35,6 +35,7 @@ import {
   delay,
   repeatActionPromise,
 } from "../utils/helpers";
+import { DomManipulationError, PageStatusNotReadyError } from "../Error/Error";
 
 //
 // --- GLOBALS ---------------------------------------------------

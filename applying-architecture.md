@@ -31,13 +31,13 @@ MVC と DDD の設計思想を取り入れたい
 -   拡張機能の OFF 機能の実装
     [実装：拡張機能 OFF](#実装：拡張機能OFF)
 
-
 -   loading 中を ExTranscript へ表示させる
     [ローディング中 view の実装](#ローディング中viewの実装)
 
 -   拡張機能を展開していたタブが閉じられたときの後始末
 
--   エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
+-   [エラーハンドリング](#エラーハンドリング)
+    エラーハンドリング: 適切な場所へエラーを投げる、POPUP に表示させる、アラートを出すなど
 
 -   デザイン改善: 見た目の話
     [デザイン改善:popup](#デザイン改善:popup)
@@ -63,8 +63,7 @@ MVC と DDD の設計思想を取り入れたい
 
 済：
 
-
--  [済] [展開中にリロードしたときの挙動の実装](#展開中にリロードしたときの挙動の実装)
+-   [済] [展開中にリロードしたときの挙動の実装](#展開中にリロードしたときの挙動の実装)
 -   [済] [展開中のタブが別の URL へ移動したときの対応](#展開中のタブが別のURLへ移動したときの対応)
 -   [済] [実装：拡張機能 OFF](#実装：拡張機能OFF)
 -   [済] sidebar の時の自動スクロール機能関数`controller.ts::scrollToHighlight()`が機能するようにすること
@@ -89,6 +88,300 @@ MVC と DDD の設計思想を取り入れたい
 -
 
 ## 成果記録
+
+### 普遍的な知見まとめ
+
+#### JavaScript エラーハンドリング
+
+https://ja.javascript.info/try-catch
+
+https://ja.javascript.info/custom-errors
+
+https://ja.javascript.info/promise-error-handling
+
+try...catch 構造:
+
+-   エラーが起こったら残りの*try 内のコードは無視されて*catch ブロックが実行される
+
+で、とくに catch ブロックで何もしなければ関数の外側が実行される
+
+-   try...catch は同期的に動作する
+
+try 内で setTiemout を置いておいて、setTimeout のなかでエラーが発生しても
+catch は同期呼出なのでキャッチされない
+
+-   catch するのはエラーオブジェクト
+
+```JavaScript
+{
+  name: // 未定義変数の場合"RefferenceError"
+  message: // エラーに関する詳細
+  stack: // コールスタック
+}
+```
+
+tyr...catch の利用：
+
+-   `throw`演算子でエラーオブジェクトを生成しよう
+
+エラーオブジェクトには種類がある！
+エラーオブジェクトの`name`は各オブジェクトにちなんだ名前になる
+
+```JavaScript
+// error.name === 'Error'
+let error = new Error(message);
+// or
+// error.name === 'SyntaxError'
+let error = new SyntaxError(message);
+// error.name === 'ReferenceError'
+let error = new ReferenceError(message);
+// ...
+```
+
+名前を付加できるのでエラーの分類がしやすくなる
+
+-   再スロー
+
+**キャッチはそれが知っているエラーだけを処理し、すべてのオブジェクトを “再スロー” するべきです**
+
+1. すべてのエラーをキャッチします。
+2. catch(err) {...} ブロックで、エラーオブジェクト err を解析します。
+3. どう処理すればいいか分からなければ、throw err をします。
+
+```JavaScript
+
+let json = '{ "age": 30 }'; // 不完全なデータ
+try {
+
+  let user = JSON.parse(json);
+
+  if (!user.name) {
+    throw new SyntaxError("Incomplete data: no name");
+  }
+
+  blabla(); // 予期しないエラー
+
+  alert( user.name );
+
+} catch(e) {
+
+  // エラーを選別して再スローしている
+  if (e.name == "SyntaxError") {
+    alert( "JSON Error: " + e.message );
+  } else {
+    // それ以外のエラーをスローする
+    throw e; // 再スロー (*)
+  }
+
+}
+```
+
+finally :
+
+`finally`は try で何も起こらなくても、catch が実行されることになっても
+必ず実行される
+
+現在の開発でいえば、
+chrome extension では sendResponse するときに都合がいいかも
+
+-   `finally`と`return`
+
+`return`が`try`のなかにあったら`finally`はどうなるのか？
+
+**`finally`は制御が外部に戻る前に実行される**
+
+カスタムエラー、Error の拡張
+
+-   継承でエラーオブジェクトをカスタマイズして分類しやすくする
+
+```JavaScript
+
+// JavaScript自体で定義された組み込みのErrorクラスの「擬似コード」
+class Error {
+  constructor(message) {
+    this.message = message;
+    this.name = "Error"; // (組み込みのエラークラスごとに異なる名前)
+    // this.stack = <nested calls>; // non-standard, but most environments support it
+  }
+}
+
+class ValidationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
+
+// Usage
+function readUser(json) {
+  let user = JSON.parse(json);
+
+  if (!user.age) {
+    throw new ValidationError("No field: age");
+  }
+  if (!user.name) {
+    throw new ValidationError("No field: name");
+  }
+
+  return user;
+}
+
+// try..catch での動作例
+
+try {
+  let user = readUser('{ "age": 25 }');
+} catch (err) {
+  if (err instanceof ValidationError) {
+    alert("Invalid data: " + err.message); // Invalid data: No field: name
+  } else if (err instanceof SyntaxError) { // (*)
+    alert("JSON Syntax Error: " + err.message);
+  } else {
+    throw err; // 知らないエラーなので、再スロー
+  }
+}
+```
+
+> instanceof の方がよりベターです。
+> なぜなら、将来 ValidationError を拡張し、PropertyRequiredError のようなサブタイプを作るからです。
+> そして instanceof チェックは新しい継承したクラスでもうまく機能し続けます。それは将来を保証します。
+
+-   さらなる継承
+
+```JavaScript
+
+class ValidationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
+
+class PropertyRequiredError extends ValidationError {
+  constructor(property) {
+    super("No property: " + property);
+    this.name = "PropertyRequiredError";
+    this.property = property;
+  }
+}
+
+// 使用法
+function readUser(json) {
+  let user = JSON.parse(json);
+
+  if (!user.age) {
+    throw new PropertyRequiredError("age");
+  }
+  if (!user.name) {
+    throw new PropertyRequiredError("name");
+  }
+
+  return user;
+}
+
+// try..catch での動作例
+
+try {
+  let user = readUser('{ "age": 25 }');
+} catch (err) {
+  if (err instanceof ValidationError) {
+    alert("Invalid data: " + err.message); // Invalid data: No property: name
+    alert(err.name); // PropertyRequiredError
+    alert(err.property); // name
+  } else if (err instanceof SyntaxError) {
+    alert("JSON Syntax Error: " + err.message);
+  } else {
+    throw err; // 知らないエラーなので、それを再スロー
+  }
+}
+```
+
+例外のラッピング：
+
+たとえばいまユーザ情報をよみとってバリデートする関数があるとして
+バリデートで問題が発見されたらエラーを投げるようにしているけれど
+今後読み取るユーザ情報が拡張されるかもしれない
+たとえば出身国とか追加されるかも
+
+そうなったときに
+バリデート関数はすべての項目に対してそれぞれ異なるエラータイプをチェックすべきか？
+
+> 答えは NO で
+> 外側のコードは “それらすべての 1 つ上のレベル” でありたいです。つまり “データ読み込みエラー” でいくつかの種類を持ちたいです。正確になぜそれが起きたのか – はしばしば重要ではありません(エラーメッセージがそれを説明します)。もしくは、必要な場合にのみ、エラーの詳細を取得方法があると更にベターです。
+
+なので「それ以外」ひとまとめの新しいエラークラスを作ればいい
+
+```JavaScript
+"use strict";
+
+class ReadError extends Error {
+  constructor(message, cause) {
+    super(message);
+    this.cause = cause;
+    this.name = 'ReadError';
+  }
+}
+
+class ValidationError extends Error { /*...*/ }
+class PropertyRequiredError extends ValidationError { /* ... */ }
+
+function validateUser(user) {
+  if (!user.age) {
+    throw new PropertyRequiredError("age");
+  }
+
+  if (!user.name) {
+    throw new PropertyRequiredError("name");
+  }
+}
+
+function readUser(json) {
+  let user;
+
+  try {
+    user = JSON.parse(json);
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      throw new ReadError("Syntax Error", err);
+    } else {
+      throw err;
+    }
+  }
+
+  try {
+    validateUser(user);
+  } catch (err) {
+    if (err instanceof ValidationError) {
+      throw new ReadError("Validation Error", err);
+    } else {
+      throw err;
+    }
+  }
+
+}
+
+try {
+  readUser('{bad json}');
+} catch (e) {
+  if (e instanceof ReadError) {
+    alert(e);
+    // Original error: SyntaxError: Unexpected token b in JSON at position 1
+    alert("Original error: " + e.cause);
+  } else {
+    throw e;
+  }
+}
+```
+
+> 外部のコードは instanceof ReadError をチェックするだけです。可能性のあるすべてのエラータイプをリストする必要はありません。
+
+> このアプローチは、“低レベルの例外” を取り除き、呼び出しコードで使用するより抽象的で便利な “ReadError” に “ラップ” するため、“例外のラッピング” と呼ばれます。 オブジェクト指向プログラミングで広く使用されています。
+
+呼出先のスローエラーは、呼出もとの catch でとらえられるのか？:
+
+上の例コードを見るとわかるけれど、
+その通りになる
+
+### chrome API 知見まとめ
 
 #### icon が表示されないときは
 
@@ -3437,8 +3730,6 @@ async/await 呼出しても意味がない...
 
 #### ローディング中 view の実装
 
-#### エラーハンドリング実装
-
 #### 自動スクロール機能修正：ハイライト重複
 
 いまんとこ手つかず
@@ -4263,3 +4554,200 @@ chrome.tabs.onUpdated.addListener(
 [chrome-extension-API:Window](#chrome-extension-API:Window)より
 
 今フォーカスしているウィンドウのアクティブタブ（表示中タブ）を取得する方法はわかった
+
+#### エラーハンドリング実装
+
+(JavaScript エラーハンドリング)[#JavaScript エラーハンドリング]
+を参考にリファクタリング
+
+&&
+
+エラーハンドリング実装
+
+いったんユーザの操作を起点としてアプローチしてみる
+
+1. 実行ボタンを押してからエラーが起こった時
+
+考えられる原因@background.ts :
+
+-   state が初期化されていない(chrome.runtime.onInstalled が実行されていない)
+-   `cotnentScript`への`orderNames.sendStatus`オーダのレスポンスのいずれかが false だった時
+
+考えられる原因@contentScript.ts :
+
+-   `initialize()`時、`controlbar`が取得できない
+    background へ伝えるには background へ sendMessage するしかない
+
+-   `orderNames.sendStatus`の対応中に、DOM が取得できない
+    検知するにはすべての DOM 取得関数の後に条件分岐を設けること
+    条件分岐でエラースローすること
+
+Refac: `finally`で`sendResponse()`するようにする && `try...catch`の範囲を小さくする
+
+結局エラーは background へ通知しないといけないし、
+`sendMessageToTabsPromise`は失敗成功にかかわらず
+`{complete: true}`を取得しない限り
+`runtime.lastError`が起こる
+
+```TypeScript
+// contentScript.ts
+
+// helper: wrapper of document.qeurySelectorAll() for Not found DOM.
+const qsa = <T>(selector: string, target: HTMLElement | Element = null): NodeListOf<T> => {
+  const e: NodeListOf<T> = target ? target.querySelectorAll<T>(selector) : document.querySelectorAll<T>(selector);
+  if(!e) throw new DomManipulationError(`DOM could not caputred with ${selector}`);
+  else return e;
+}
+
+// helper: wrapper of document.qeurySelector()
+const qs = <T>(selector: string, target: HTMLElement | Element = null): T => {
+  const e: T = target ? target.querySelector<T>(selector) : document.querySelector<T>(selector);
+  if(!e) throw new DomManipulationError(`DOM could not caputred with ${selector}`);
+  else return e;
+}
+
+
+// Refactored
+// querySelectorがnullだったら例外をスローするラッピング関数を使うことにする
+/****************************
+ * @return {boolean} true as Subtitle is English, false as but English.
+ * @throw {DomManipulationError}
+ *
+ *
+ * */
+const isSubtitleEnglish = (): boolean => {
+
+ try {
+  const listParent: NodeListOf<HTMLElement> = qsa<HTMLElement>(
+    selectors.controlBar.cc.menuListParent);
+
+  const checkButtons: NodeListOf<HTMLElement> = qsa<HTMLElement>(
+      selectors.controlBar.cc.menuCheckButtons, listParent);
+
+  const menuList: NodeListOf<HTMLElement> = qsa<HTMLElement>(
+    selectors.controlBar.cc.menuList, listParent
+  );
+ }
+ catch(err) {
+  //  Could not capture DOM.
+   throw err;
+ }
+
+  let counter: number = 0;
+  let i: number = null;
+  const els: HTMLElement[] = Array.from<HTMLElement>(checkButtons);
+  for (const btn of els) {
+    if (btn.getAttribute("aria-checked") === "true") {
+      i = counter;
+      break;
+    }
+    counter++;
+  }
+
+  if (i === null) {
+    // NOTE: どういうわけか、いずれの字幕も選択されていなかったとき
+    //
+    // 結局のところ英語字幕じゃないと動作できないので
+    // falseを返すことにする
+    return false;
+  }
+  const currentLanguage: string = Array.from(menuList)[i].innerText;
+  if (currentLanguage.includes("English") || currentLanguage.includes("英語"))
+    return true;
+  else return false;
+};
+
+
+
+chrome.runtime.onMessage.addListener(
+  (
+    message: iMessage,
+    sender,
+    sendResponse: (response: iResponse) => void
+  ): boolean => {
+    console.log("CONTENT SCRIPT GOT MESSAGE");
+    const { from, order, to } = message;
+    const response: iResponse = {
+      from: extensionNames.contentScript,
+      to: from,
+    };
+    if (to !== extensionNames.contentScript) return;
+
+    // ORDERS:
+    if (order && order.length) {
+      // SEND STATUS
+      if (order.includes(orderNames.sendStatus)) {
+        console.log("Order: SEND STATUS");
+        try {
+          const isEnglish: boolean = isSubtitleEnglish();
+          let isOpen: boolean = false;
+          const toggle: HTMLElement = document.querySelector<HTMLElement>(
+            selectors.controlBar.transcript.toggleButton
+          );
+          if (!toggle) isOpen = false;
+          else isOpen = isTranscriptOpen();
+
+          response.language = isEnglish;
+          response.isTranscriptDisplaying = isOpen;
+          response.complete = true;
+        }
+        catch(err) {
+          response.success = false;
+          // failureReasonを投げるよりも、
+          // Errorインスタンスそのものを渡した方がいいかも？
+          response.failureReason = err.message;
+          // ここでエラースローしても受け取る相手がいない
+          // 結局backgroundへ伝えるにはメッセージを送信するしかない
+          // throw new PageStatusNotReadyError(err.message);
+        }
+        finally {
+          sendResponse(response);
+        }
+      }
+      // RESET
+      if (order.includes(orderNames.reset)) {
+        console.log("Order: RESET");
+        handlerOfReset()
+          .then(() => {
+            console.log("[contentScript] Reset resolved");
+            sendResponse({
+              from: extensionNames.contentScript,
+              to: from,
+              complete: true,
+              success: true,
+            });
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      }
+      // Require to make sure the page is including movie container or not.
+      if (order.includes(orderNames.isPageIncludingMovie)) {
+        console.log("Order: is this page including movie container?");
+        repeatQuerySelector(selectors.videoContainer)
+          .then((r: boolean) => {
+            console.log(`result: ${r}`);
+            sendResponse({
+              complete: true,
+              isPageIncludingMovie: r,
+            });
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      }
+      // TURN OFF
+      if (order.includes(orderNames.turnOff)) {
+        console.log("Order: Turn off");
+        moControlbar.disconnect();
+        controlbar.removeEventListener("click", handlerOfControlbar);
+        // moControlbarとcontrolbarはnullにしておく必要があるかな？
+        // その後のorderによるなぁ
+        sendResponse({ complete: true });
+      }
+    }
+    return true;
+  }
+);
+
+```
