@@ -425,12 +425,11 @@ const handlerOfControllerMessage = async (
 // --- Order Handlers -------------------------------------------
 //
 
-
 /**
  * handler of RUN order.
  * _______________________________________________
  *
- * 
+ *
  * */
 const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
   try {
@@ -462,29 +461,31 @@ const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
         to: extensionNames.contentScript,
         order: [orderNames.reset],
       });
+      if (!r.success) {
+        throw r.error;
+      }
     }
 
-    // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...実装する技術がない...
-    const { language, isTranscriptDisplaying } = await sendMessageToTabsPromise(
-      tabId,
-      {
-        from: extensionNames.background,
-        to: extensionNames.contentScript,
-        order: [orderNames.sendStatus],
-      }
-    );
-    // 結果がどうあれ現状の状態を保存する
-    await state.set({
-      isEnglish: language,
-      isTranscriptDisplaying: isTranscriptDisplaying,
+    const currentPageStatus = await sendMessageToTabsPromise(tabId, {
+      from: extensionNames.background,
+      to: extensionNames.contentScript,
+      order: [orderNames.sendStatus],
     });
-    // 字幕が英語じゃない、またはトランスクリプトがONでないならば
-    // キャンセル
-    if (!language || !isTranscriptDisplaying) {
-      // TODO: 失敗またはキャンセルの方法未定義...
-      // ひとまずfalseを返している
-      return false;
+    if (currentPageStatus.success) {
+      // 結果がどうあれ現状の状態を保存する
+      await state.set({
+        isEnglish: currentPageStatus.language,
+        isTranscriptDisplaying: currentPageStatus.isTranscriptDisplaying,
+      });
+      // 字幕が英語じゃない、またはトランスクリプトがONでないならば
+      // キャンセル
+      if (!currentPageStatus.language || !currentPageStatus.isTranscriptDisplaying) {
+        // TODO: 失敗またはキャンセルの方法未定義...
+        // ひとまずfalseを返している
+        return false;
+      }
     }
+    else throw currentPageStatus.error;
 
     // <phase 3> inject captureSubtitle.js
     // 字幕データを取得する

@@ -94,7 +94,9 @@ MVC と DDD の設計思想を取り入れたい
 
 ### 普遍的な知見まとめ
 
-#### JavaScript エラーハンドリング
+[JavaScriptエラーハンドリング](#JavaScriptエラーハンドリング)
+[Return-false-vs.-throw-exception](#Return-false-vs.-throw-exception)
+#### JavaScriptエラーハンドリング
 
 https://ja.javascript.info/try-catch
 
@@ -383,6 +385,44 @@ try {
 
 上の例コードを見るとわかるけれど、
 その通りになる
+
+
+#### Return-false-vs.-throw-exception
+
+教科書レベルのデザインパターンはないみたい...
+
+あんま参考にならんけど：
+
+https://stackoverflow.com/questions/15542608/design-patterns-exception-error-handling
+
+参考：
+https://medium.com/swlh/error-handling-in-javascript-a-quick-guide-54b954427e47
+
+- should I use throw, return or console.error?
+
+`return`は関数の終了である
+`throw`はランタイムがそのブロックの残りの処理を無視して、例外処理系に移行する
+
+- What if using throw without a tyr...catch statement?
+
+catchステートメントがない場合、throwの時点でアプリケーションは処理が止まって続行できなくなる
+catchステートメントがある場合、throwがcatchをトリガーする
+
+- いつthrowすべきなの？
+
+エラーが予期されないような場面でtry...catchするといいかも
+
+- 一般的な例外：throwが不要かもしれない場面
+
+> **予測可能で一般的に発生する一部のエラーの場合、実際、throwを使用すると、**
+> **他のエラーよりも大幅に遅くなることがよくあります**
+
+解決策1. `return boolean`にする(errorを返さない)
+
+解決策2. より大規模なアプリケーションならば（正常系の外の）エラーハンドリング・ロジックに処理を移すべき
+
+
+
 
 ### chrome API 知見まとめ
 
