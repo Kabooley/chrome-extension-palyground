@@ -5,6 +5,7 @@
  * ************************************************/
 
 import { iModel } from '../background/annotations';
+import { uError } from "../Error/Error";
 
 export const _key_of_model_state__ = '_key_of_model_state__@&%8=8';
 
@@ -88,18 +89,17 @@ export interface iResponse {
     isExTranscriptDeployed?: boolean;
     // Udemy講義ページでトランスクリプトが表示されているかどうか
     isTranscriptDisplaying?: boolean;
-    
-    // NOTE: new added
     // Is page including movie container?
-    isPageIncludingMovie?: boolean
+    isPageIncludingMovie?: boolean;
 
-    // NOTE: new added
+    // NOTE: いらないかも
     // chrome.tabs.Tab info will be included
-    tabInfo?: chrome.tabs.Tab 
+    tabInfo?: chrome.tabs.Tab;
+    // state popup requires.
+    state?: {[Property in keyof iModel]?: iModel[Property]};
 
     // NOTE: new added
-    // state popup requires.
-    state?: {[Property in keyof iModel]?: iModel[Property]}
+    error?: uError;
 
     // --- DUPLICATED ----
     // disconnect?: boolean;

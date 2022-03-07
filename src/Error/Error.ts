@@ -1,3 +1,5 @@
+export type uError = ErrorBase | DomManipulationError | PageStatusNotReadyError;
+
 class Err {
     public message: string;
     public name: string;

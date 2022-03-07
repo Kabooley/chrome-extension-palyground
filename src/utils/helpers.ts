@@ -1,4 +1,6 @@
 import { iMessage, iResponse } from "../utils/constants";
+import { DomManipulationError } from "../Error/Error";
+
 
 export const deepCopier = <T>(data: T): T => {
   return JSON.parse(JSON.stringify(data));

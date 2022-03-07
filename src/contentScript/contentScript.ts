@@ -23,19 +23,19 @@ moControlbarでコントロールバー上でトランスクリプト・トグ�
 TODO:
 ************************************************************/
 
-import * as selectors from "../utils/selectors";
+import * as selectors from '../utils/selectors';
 import {
-  iMessage,
-  iResponse,
-  extensionNames,
-  orderNames,
-} from "../utils/constants";
+    iMessage,
+    iResponse,
+    extensionNames,
+    orderNames,
+} from '../utils/constants';
 import {
-  sendMessagePromise,
-  delay,
-  repeatActionPromise,
-} from "../utils/helpers";
-import { DomManipulationError, PageStatusNotReadyError } from "../Error/Error";
+    sendMessagePromise,
+    delay,
+    repeatActionPromise,
+} from '../utils/helpers';
+import { DomManipulationError, PageStatusNotReadyError } from '../Error/Error';
 
 //
 // --- GLOBALS ---------------------------------------------------
@@ -50,12 +50,9 @@ let controlbar: HTMLElement = null;
 //
 
 /*********
- * @message {iMessage} message
+ * @param {iMessage} message
  * @param {function} sendResponse:
  * Invoke this function to response. The function is required.
- *
- *
- *
  * @return {boolean} :
  * `return true` to wait for sendResponse() solved asynchronously.
  * DO NOT return Promise<boolean>.
@@ -66,85 +63,100 @@ let controlbar: HTMLElement = null;
  * And every order should be responsed by invoking sendResponse with `{complete: true}`.
  * */
 chrome.runtime.onMessage.addListener(
-  (
-    message: iMessage,
-    sender,
-    sendResponse: (response: iResponse) => void
-  ): boolean => {
-    console.log("CONTENT SCRIPT GOT MESSAGE");
-    const { from, order, to } = message;
-    const response: iResponse = {
-      from: extensionNames.contentScript,
-      to: from,
-    };
-    if (to !== extensionNames.contentScript) return;
+    (
+        message: iMessage,
+        sender,
+        sendResponse: (response: iResponse) => void
+    ): boolean => {
+        console.log('CONTENT SCRIPT GOT MESSAGE');
+        const { from, order, to } = message;
+        const response: iResponse = {
+            from: extensionNames.contentScript,
+            to: from,
+        };
+        if (to !== extensionNames.contentScript) return;
 
-    // ORDERS:
-    if (order && order.length) {
-      // SEND STATUS
-      if (order.includes(orderNames.sendStatus)) {
-        console.log("Order: SEND STATUS");
-        const isEnglish: boolean = isSubtitleEnglish();
+        // ORDERS:
+        if (order && order.length) {
+            // SEND STATUS
+            if (order.includes(orderNames.sendStatus)) {
+                console.log('Order: SEND STATUS');
+                try {
+                    const isEnglish: boolean = isSubtitleEnglish();
+                    let isOpen: boolean = false;
+                    const toggle: HTMLElement =
+                        document.querySelector<HTMLElement>(
+                            selectors.controlBar.transcript.toggleButton
+                        );
+                    if (!toggle) isOpen = false;
+                    else isOpen = isTranscriptOpen();
 
-        // トランスクリプトボタンがコントロールバー上にある
-        // かつ
-        // トランスクリプトが表示されてる
-        let isOpen: boolean = false;
-        const toggle: HTMLElement = document.querySelector<HTMLElement>(
-          selectors.controlBar.transcript.toggleButton
-        );
-        if (!toggle) isOpen = false;
-        else isOpen = isTranscriptOpen();
+                    response.language = isEnglish;
+                    response.isTranscriptDisplaying = isOpen;
+                } catch (err) {
+                    response.success = false;
+                    // failureReasonを投げるよりも、
+                    // Errorインスタンスそのものを渡した方がいいかも？
+                    //   TODO: ErrorインスタンスをiResponseに含める
+                    response.error = err;
+                    //   response.failureReason = err.message;
+                    // ここでエラースローしても受け取る相手がいない
+                    // 結局backgroundへ伝えるにはメッセージを送信するしかない
+                    // throw new PageStatusNotReadyError(err.message);
+                } finally {
+                    response.complete = true;
+                    sendResponse(response);
+                }
+            }
+            // RESET
+            if (order.includes(orderNames.reset)) {
+                console.log('Order: RESET');
+                handlerOfReset()
+                    .then(() => {
+                        response.success = true;
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        response.success = false;
+                        response.error = err;
+                    })
+                    .finally(() => {
+                        response.complete = true;
+                        sendResponse(response);
+                    });
+            }
 
-        response.language = isEnglish;
-        response.isTranscriptDisplaying = isOpen;
-        response.complete = true;
-        sendResponse(response);
-      }
-      // RESET
-      if (order.includes(orderNames.reset)) {
-        console.log("Order: RESET");
-        handlerOfReset()
-          .then(() => {
-            console.log("[contentScript] Reset resolved");
-            sendResponse({
-              from: extensionNames.contentScript,
-              to: from,
-              complete: true,
-              success: true,
-            });
-          })
-          .catch((err) => {
-            console.error(err);
-          });
-      }
-      // Require to make sure the page is including movie container or not.
-      if (order.includes(orderNames.isPageIncludingMovie)) {
-        console.log("Order: is this page including movie container?");
-        repeatQuerySelector(selectors.videoContainer)
-          .then((r: boolean) => {
-            console.log(`result: ${r}`);
-            sendResponse({
-              complete: true,
-              isPageIncludingMovie: r,
-            });
-          })
-          .catch((err) => {
-            console.error(err);
-          });
-      }
-      // TURN OFF
-      if (order.includes(orderNames.turnOff)) {
-        console.log("Order: Turn off");
-        moControlbar.disconnect();
-        controlbar.removeEventListener("click", handlerOfControlbar);
-        // moControlbarとcontrolbarはnullにしておく必要があるかな？
-        // その後のorderによるなぁ
-        sendResponse({ complete: true });
-      }
+            // Require to make sure the page is including movie container or not.
+            if (order.includes(orderNames.isPageIncludingMovie)) {
+                console.log('Order: Is this page including movie container?');
+                repeatQuerySelector(selectors.videoContainer)
+                    .then((r: boolean) => {
+                        response.isPageIncludingMovie = r;
+                        response.success = true;
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        response.success = false;
+                        response.error = err;
+                    })
+                    .finally(() => {
+                        response.complete = true;
+                        sendResponse(response);
+                    });
+            }
+            // TURN OFF
+            if (order.includes(orderNames.turnOff)) {
+                console.log('Order: Turn off');
+                moControlbar.disconnect();
+                controlbar.removeEventListener('click', handlerOfControlbar);
+                // moControlbarとcontrolbarはnullにしておく必要があるかな？
+                // その後のorderによるなぁ
+                response.complete = true;
+                sendResponse(response);
+            }
+        }
+        return true;
     }
-    return true;
-  }
 );
 
 /***
@@ -152,31 +164,28 @@ chrome.runtime.onMessage.addListener(
  * @param order {object}
  * */
 const sendToBackground = async (order: {
-  isOpened?: boolean;
-  isEnglish?: boolean;
+    isOpened?: boolean;
+    isEnglish?: boolean;
 }): Promise<void> => {
-  console.log("SENDING MESSAGE TO BACKGROUND");
-  const { isOpened, isEnglish } = order;
-  const message: iMessage = {
-    from: extensionNames.contentScript,
-    to: extensionNames.background,
-  };
+    console.log('SENDING MESSAGE TO BACKGROUND');
+    const { isOpened, isEnglish } = order;
+    const m: iMessage = {
+        from: extensionNames.contentScript,
+        to: extensionNames.background,
+    };
 
-  if (isOpened !== undefined) {
-    message["isTranscriptDisplaying"] = isOpened;
-  }
-  if (isEnglish !== undefined) {
-    message["language"] = isEnglish;
-  }
+    if (isOpened !== undefined) {
+        m['isTranscriptDisplaying'] = isOpened;
+    }
+    if (isEnglish !== undefined) {
+        m['language'] = isEnglish;
+    }
 
-  console.log("DEBUG: make sure message object");
-  console.log(message);
-
-  try {
-    await sendMessagePromise(message);
-  } catch (err) {
-    console.error(err.message);
-  }
+    try {
+        await sendMessagePromise(m);
+    } catch (err) {
+        console.error(err.message);
+    }
 };
 
 //
@@ -193,11 +202,11 @@ const sendToBackground = async (order: {
  *
  * */
 const handlerOfReset = async (): Promise<void> => {
-  try {
-    await initialize();
-  } catch (err) {
-    console.error(err.message);
-  }
+    try {
+        await initialize();
+    } catch (err) {
+        console.error(err.message);
+    }
 };
 
 /****
@@ -207,28 +216,28 @@ const handlerOfReset = async (): Promise<void> => {
  * １０回取得を試みても取得できなかったらnullを返す
  * */
 const repeatQueryDom = async (selector: string): Promise<HTMLElement> => {
-  return new Promise((resolve, reject): void => {
-    let intervalId: NodeJS.Timer;
-    let counter: number = 10;
+    return new Promise((resolve, reject): void => {
+        let intervalId: NodeJS.Timer;
+        let counter: number = 10;
 
-    intervalId = setInterval(function () {
-      if (counter <= 0) {
-        // Failed
-        console.log("[repeatQueryDom] Time out! It's over 10 times");
-        clearInterval(intervalId);
-        reject(null);
-      }
+        intervalId = setInterval(function () {
+            if (counter <= 0) {
+                // Failed
+                console.log("[repeatQueryDom] Time out! It's over 10 times");
+                clearInterval(intervalId);
+                reject(null);
+            }
 
-      console.log("[repeatQueryDom] query dom");
-      const e: HTMLElement = document.querySelector(selector);
-      if (e) {
-        // Succeed
-        console.log("[repeatQueryDom] Succeeed to query dom!");
-        clearInterval(intervalId);
-        resolve(e);
-      } else counter--;
-    }, INTERVAL_TIME);
-  });
+            console.log('[repeatQueryDom] query dom');
+            const e: HTMLElement = document.querySelector(selector);
+            if (e) {
+                // Succeed
+                console.log('[repeatQueryDom] Succeeed to query dom!');
+                clearInterval(intervalId);
+                resolve(e);
+            } else counter--;
+        }, INTERVAL_TIME);
+    });
 };
 
 /****
@@ -238,45 +247,45 @@ const repeatQueryDom = async (selector: string): Promise<HTMLElement> => {
  *
  * */
 const handlerOfControlbar = function (ev: PointerEvent): void {
-  // Clickイベント中にDOMを取得しておく...
-  // イベントバブリングpath
-  const path: EventTarget[] = ev.composedPath();
-  // トランスクリプト・トグルボタン
-  const transcriptToggle: HTMLElement = document.querySelector<HTMLElement>(
-    selectors.controlBar.transcript.toggleButton
-  );
-  // シアターモード・トグルボタン
-  const theaterToggle: HTMLElement = document.querySelector<HTMLElement>(
-    selectors.controlBar.theatre.theatreToggle
-  );
-  // クローズド・キャプション・メニュー
-  const ccPopupMenu: HTMLElement = document.querySelector<HTMLElement>(
-    selectors.controlBar.cc.menuListParent
-  );
-
-  // [動作確認済] clickイベント完了後に実行したい事柄はsetTimeoutで
-  setTimeout(function () {
-    // トグルボタンが押されたら
-    if (path.includes(transcriptToggle) || path.includes(theaterToggle)) {
-      // トランスクリプト・トグルボタンがあるかどうかを確認し、
-      // あれば開かれているか調査、
-      // なければトランスクリプト非表示として判定する
-      let result: boolean;
-      const t: HTMLElement = document.querySelector<HTMLElement>(
+    // Clickイベント中にDOMを取得しておく...
+    // イベントバブリングpath
+    const path: EventTarget[] = ev.composedPath();
+    // トランスクリプト・トグルボタン
+    const transcriptToggle: HTMLElement = document.querySelector<HTMLElement>(
         selectors.controlBar.transcript.toggleButton
-      );
-      if (!t) result = false;
-      else result = isTranscriptOpen();
-      sendToBackground({ isOpened: result });
-    }
+    );
+    // シアターモード・トグルボタン
+    const theaterToggle: HTMLElement = document.querySelector<HTMLElement>(
+        selectors.controlBar.theatre.theatreToggle
+    );
+    // クローズド・キャプション・メニュー
+    const ccPopupMenu: HTMLElement = document.querySelector<HTMLElement>(
+        selectors.controlBar.cc.menuListParent
+    );
 
-    // cc popup menu内部でクリックイベントが起こったら
-    // 字幕が変更されたのか調べる
-    if (path.includes(ccPopupMenu)) {
-      const r: boolean = isSubtitleEnglish();
-      sendToBackground({ isEnglish: r });
-    }
-  }, 200);
+    // [動作確認済] clickイベント完了後に実行したい事柄はsetTimeoutで
+    setTimeout(function () {
+        // トグルボタンが押されたら
+        if (path.includes(transcriptToggle) || path.includes(theaterToggle)) {
+            // トランスクリプト・トグルボタンがあるかどうかを確認し、
+            // あれば開かれているか調査、
+            // なければトランスクリプト非表示として判定する
+            let result: boolean;
+            const t: HTMLElement = document.querySelector<HTMLElement>(
+                selectors.controlBar.transcript.toggleButton
+            );
+            if (!t) result = false;
+            else result = isTranscriptOpen();
+            sendToBackground({ isOpened: result });
+        }
+
+        // cc popup menu内部でクリックイベントが起こったら
+        // 字幕が変更されたのか調べる
+        if (path.includes(ccPopupMenu)) {
+            const r: boolean = isSubtitleEnglish();
+            sendToBackground({ isEnglish: r });
+        }
+    }, 200);
 };
 
 /**
@@ -287,10 +296,10 @@ const handlerOfControlbar = function (ev: PointerEvent): void {
  * Get DOM everytime this function invoked.
  * */
 const isTranscriptOpen = (): boolean => {
-  const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
-    selectors.controlBar.transcript.toggleButton
-  );
-  return toggleButton.getAttribute("aria-expanded") === "true" ? true : false;
+    const toggleButton: HTMLElement = document.querySelector<HTMLElement>(
+        selectors.controlBar.transcript.toggleButton
+    );
+    return toggleButton.getAttribute('aria-expanded') === 'true' ? true : false;
 };
 
 /**
@@ -301,36 +310,41 @@ const isTranscriptOpen = (): boolean => {
  * Get DOM everytime this function invoked.
  */
 const isSubtitleEnglish = (): boolean => {
-  const listParent: HTMLElement = document.querySelector<HTMLElement>(
-    selectors.controlBar.cc.menuListParent
-  );
-  const checkButtons: NodeListOf<HTMLElement> =
-    listParent.querySelectorAll<HTMLElement>(
-      selectors.controlBar.cc.menuCheckButtons
+    const listParent: HTMLElement = document.querySelector<HTMLElement>(
+        selectors.controlBar.cc.menuListParent
     );
-  const menuList: NodeListOf<HTMLElement> =
-    listParent.querySelectorAll<HTMLElement>(selectors.controlBar.cc.menuList);
+    const checkButtons: NodeListOf<HTMLElement> =
+        listParent.querySelectorAll<HTMLElement>(
+            selectors.controlBar.cc.menuCheckButtons
+        );
+    const menuList: NodeListOf<HTMLElement> =
+        listParent.querySelectorAll<HTMLElement>(
+            selectors.controlBar.cc.menuList
+        );
 
-  let counter: number = 0;
-  let i: number = null;
-  const els: HTMLElement[] = Array.from<HTMLElement>(checkButtons);
-  for (const btn of els) {
-    if (btn.getAttribute("aria-checked") === "true") {
-      i = counter;
-      break;
+    if (!listParent || !checkButtons || !menuList)
+        throw new DomManipulationError('Failed to manipulate DOM');
+
+    let counter: number = 0;
+    let i: number = null;
+    const els: HTMLElement[] = Array.from<HTMLElement>(checkButtons);
+    for (const btn of els) {
+        if (btn.getAttribute('aria-checked') === 'true') {
+            i = counter;
+            break;
+        }
+        counter++;
     }
-    counter++;
-  }
 
-  if (i === null) {
-    throw new Error(
-      "Error: [isSubtitleEnglish()] Something went wrong but No language is selected"
-    );
-  }
-  const currentLanguage: string = Array.from(menuList)[i].innerText;
-  if (currentLanguage.includes("English") || currentLanguage.includes("英語"))
-    return true;
-  else return false;
+    if (i === null) {
+        throw new Error(
+            'Error: [isSubtitleEnglish()] Something went wrong but No language is selected'
+        );
+    }
+    const currentLanguage: string = Array.from(menuList)[i].innerText;
+    if (currentLanguage.includes('English') || currentLanguage.includes('英語'))
+        return true;
+    else return false;
 };
 
 //
@@ -340,9 +354,9 @@ const isSubtitleEnglish = (): boolean => {
 // コントロールバーの子要素だけ追加されたのか削除されたのか知りたいので
 // childListだけtrueにする
 const config: MutationObserverInit = {
-  attributes: false,
-  childList: true,
-  subtree: false,
+    attributes: false,
+    childList: true,
+    subtree: false,
 };
 
 /*
@@ -366,39 +380,43 @@ const config: MutationObserverInit = {
         );
 */
 const moCallback = (mr: MutationRecord[]): void => {
-  let guard: boolean = false;
-  mr.forEach((record) => {
-    if (record.type === "childList" && !guard) {
-      // NOTE: MutationRecord[0]だけしらべればいいので1週目だけでループを止める
-      // じゃぁforEach()を使うなという話ではあるけど...
-      guard = true;
+    let guard: boolean = false;
+    mr.forEach((record) => {
+        if (record.type === 'childList' && !guard) {
+            // NOTE: MutationRecord[0]だけしらべればいいので1週目だけでループを止める
+            // じゃぁforEach()を使うなという話ではあるけど...
+            guard = true;
 
-      // Added Nodes
-      record.addedNodes.forEach((node) => {
-        const dataPurpose: string =
-          node.childNodes[0].parentElement.firstElementChild.getAttribute(
-            "data-purpose"
-          );
-        if (dataPurpose && dataPurpose === "transcript-toggle") {
-          console.log("[contentScript] Added Transcript Toggle Button");
-          sendToBackground({ isOpened: isTranscriptOpen() });
-        }
-      });
+            // Added Nodes
+            record.addedNodes.forEach((node) => {
+                const dataPurpose: string =
+                    node.childNodes[0].parentElement.firstElementChild.getAttribute(
+                        'data-purpose'
+                    );
+                if (dataPurpose && dataPurpose === 'transcript-toggle') {
+                    console.log(
+                        '[contentScript] Added Transcript Toggle Button'
+                    );
+                    sendToBackground({ isOpened: isTranscriptOpen() });
+                }
+            });
 
-      // Removed Nodes
-      record.removedNodes.forEach((node) => {
-        // これで取得できた！！！
-        const dataPurpose: string =
-          node.childNodes[0].parentElement.firstElementChild.getAttribute(
-            "data-purpose"
-          );
-        if (dataPurpose && dataPurpose === "transcript-toggle") {
-          console.log("[contentScript] Removed Transcript Toggle Button");
-          sendToBackground({ isOpened: false });
+            // Removed Nodes
+            record.removedNodes.forEach((node) => {
+                // これで取得できた！！！
+                const dataPurpose: string =
+                    node.childNodes[0].parentElement.firstElementChild.getAttribute(
+                        'data-purpose'
+                    );
+                if (dataPurpose && dataPurpose === 'transcript-toggle') {
+                    console.log(
+                        '[contentScript] Removed Transcript Toggle Button'
+                    );
+                    sendToBackground({ isOpened: false });
+                }
+            });
         }
-      });
-    }
-  });
+    });
 };
 
 //
@@ -411,8 +429,8 @@ const moCallback = (mr: MutationRecord[]): void => {
  * 真偽値を返す
  */
 const investTheElementIncluded = (selector: string): boolean => {
-  const e: HTMLElement = document.querySelector<HTMLElement>(selector);
-  return e ? true : false;
+    const e: HTMLElement = document.querySelector<HTMLElement>(selector);
+    return e ? true : false;
 };
 
 /*******
@@ -420,19 +438,19 @@ const investTheElementIncluded = (selector: string): boolean => {
  *
  * */
 const repeatQuerySelector = async (selector: string): Promise<boolean> => {
-  try {
-    return await repeatActionPromise(
-      function () {
-        return investTheElementIncluded(selector);
-      },
-      true,
-      200,
-      10
-    );
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
+    try {
+        return await repeatActionPromise(
+            function () {
+                return investTheElementIncluded(selector);
+            },
+            true,
+            200,
+            10
+        );
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
 };
 
 /****
@@ -442,30 +460,31 @@ const repeatQuerySelector = async (selector: string): Promise<boolean> => {
  *  set up MutationObserver of controlbar.
  * */
 const initialize = async (): Promise<void> => {
-  console.log("CONTENT SCRIPT INITIALIZING...");
-  try {
-    // いったんMutationObserverを停止してから...
-    if(moControlbar) moControlbar.disconnect();
-    moControlbar = null;
-    moControlbar = new MutationObserver(moCallback);
-    // controlbarのDOMを再取得
-    if(controlbar) controlbar.removeEventListener("click", handlerOfControlbar);
-    controlbar = null;
-    controlbar = await repeatQueryDom(selectors.transcript.controlbar);
-    if (!controlbar) throw new Error("Error: Failed to get controlbar DOM");
-    controlbar.addEventListener("click", handlerOfControlbar);
-    // 再度、更新済のDOMに対してMutationObserverを設置する
-    moControlbar.observe(controlbar, config);
-    console.log("content script initialize has been done");
-  } catch (err) {
-    console.error(err.message);
-  }
+    console.log('CONTENT SCRIPT INITIALIZING...');
+    try {
+        // いったんMutationObserverを停止してから...
+        if (moControlbar) moControlbar.disconnect();
+        moControlbar = null;
+        moControlbar = new MutationObserver(moCallback);
+        // controlbarのDOMを再取得
+        if (controlbar)
+            controlbar.removeEventListener('click', handlerOfControlbar);
+        controlbar = null;
+        controlbar = await repeatQueryDom(selectors.transcript.controlbar);
+        if (!controlbar) throw new DomManipulationError('Error: Failed to get controlbar DOM');
+        controlbar.addEventListener('click', handlerOfControlbar);
+        // 再度、更新済のDOMに対してMutationObserverを設置する
+        moControlbar.observe(controlbar, config);
+        console.log('content script initialize has been done');
+    } catch (err) {
+        throw err;
+    }
 };
 
 // Entry point
 //
 (function () {
-  initialize();
+    initialize();
 })();
 
 //

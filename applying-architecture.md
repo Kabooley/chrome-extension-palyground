@@ -12,6 +12,7 @@ MVC と DDD の設計思想を取り入れたい
 [成果記録](#成果記録)
 [1/25:処理についておさらい](#1/25:処理についておさらい)
 [chrome-extension-API](#chrome-extension-API)
+[TEST](#TEST)
 
 ## 課題
 
@@ -677,6 +678,21 @@ chrome.runtime.onMessage.addListener((msg) => {
 
 これで必ず background script で
 今フォーカスしているウィンドウのアクティブなタブを取得できる
+
+
+## TEST
+
+テストって何ぞや
+
+ユニット・テスト
+
+「単体」テスト。クラスとか関数をテストするときの話
+
+インテグレーション・テスト
+
+他のクラスや外部モジュールと結合してテストすること
+
+
 
 ## DDD 設計思想の導入に関するメモ
 
@@ -4783,4 +4799,24 @@ finally {
     response.complete = true;
     sendResponse(response);
 }
+```
+
+
+##### RUNプロセスの最中のエラーハンドリング
+
+ありえる例外：
+
+- contentScriptがsendStatusのおーだにこたえようとして調査した結果、DOMが取得できないことによる例外
+
+DomManipulationError
+
+- captureSubtitle.tsで字幕を取得できなかったことによる例外
+
+ページがローディング中かセレクタが一致しないなにかで字幕が取得できない
+
+- controller.tsの初期化失敗による例外
+
+
+
+```TypeScript
 ```

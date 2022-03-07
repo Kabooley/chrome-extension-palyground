@@ -43,19 +43,24 @@ chrome.runtime.onMessage.addListener(
     ): void => {
         const { from, to, order } = message;
         if (to !== extensionNames.captureSubtitle) return;
+        const r: iResponse = {
+            from: extensionNames.captureSubtitle,
+            to: from
+        };
 
         if (order && order.length) {
             if (order.includes(orderNames.sendSubtitles)) {
-                const chunks: subtitle_piece[] = mainProcess();
-                if (sendResponse) {
-                    sendResponse({
-                        subtitles: chunks,
-                        complete: true,
-                    });
-                } else {
-                    throw new Error(
-                        '[captureSubtitle] Cannot send response. sendResponse is nessesary but there is not the function'
-                    );
+                try {
+                    const chunks: subtitle_piece[] = mainProcess();
+                    r.subtitles = chunks;
+                }
+                catch(err) {
+                    // TODO: error分類
+                }
+                finally {
+                    r.complete = true;
+                    sendResponse(r);
+
                 }
             }
         }

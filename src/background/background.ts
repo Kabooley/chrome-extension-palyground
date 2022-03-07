@@ -514,6 +514,7 @@ const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
         to: extensionNames.controller,
         order: [orderNames.reset],
       });
+      // TODO: FIX successの値ではなくて例外スローを受け取ること
       if (!r.success)
         throw new Error(`Error: Failed to reset controller.${r.failureReason}`);
     }
