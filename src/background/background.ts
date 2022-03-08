@@ -262,12 +262,24 @@ const handlerOfPopupMessage = async (
     if (order.includes(orderNames.run)) {
       console.log("[background] RUN");
       try {
+        // - falseが返される理由
+        // 字幕がONじゃない、トランスクリプトがONじゃない、字幕が英語じゃない
+        // 
+        // - RUN処理中、起こりうる可能性がきわめて低い問題
+        // chrome.scripting.execute()中のエラー
+        // 字幕が取得できない（条件がそろってから実行するから、取得できないのはおかしい）
+        // 
+        // - 起こったら終了な問題(例外判定)
+        // DOMが取得できない（DOMの種類による）
+        // chrome.runtime.onInstalledが実行されていないことによる、stateの未初期化
         const r: boolean = await handlerOfRun(rest.tabInfo);
         response.success = r ? true : false;
+        // TODO: 失敗理由を追加しないとアラート出せない
       } catch (err) {
-        // TODO: RUNが失敗したときの挙動
-        //
-        // Errorの種類による
+        // 起こったら終了な代物
+        // RUNプロセスの状況によっていろいろリセットが必要か？
+        response.success = false;
+        response.error = err;
       } finally {
         response.complete = true;
         sendResponse(response);

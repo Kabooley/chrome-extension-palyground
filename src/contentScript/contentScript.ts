@@ -20,7 +20,14 @@ Injectタイミング:
 handlerOfControlbar()でコントロールバー上のクリックイベントを監視する
 moControlbarでコントロールバー上でトランスクリプト・トグルボタンが現れたか消えたかを監視する
 
-TODO:
+NOTE:
+
+エラーハンドリングと例外処理：
+
+エラーにすべきか、例外にすべきかは処理によるので
+各処理を吟味しないといかんかも
+
+
 ************************************************************/
 
 import * as selectors from '../utils/selectors';
@@ -340,6 +347,8 @@ const isSubtitleEnglish = (): boolean => {
         counter++;
     }
 
+    // NOTE: 字幕リストで何も選択されていないというのは起こりえないはず
+    // なのでこのチェック自体が無意味かも
     if (i === null) {
         throw new Error(
             'Error: [isSubtitleEnglish()] Something went wrong but No language is selected'

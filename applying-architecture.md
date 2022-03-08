@@ -387,38 +387,41 @@ try {
 上の例コードを見るとわかるけれど、
 その通りになる
 
-#### Return-false-vs.-throw-exception
-
-教科書レベルのデザインパターンはないみたい...
-
-あんま参考にならんけど：
-
-https://stackoverflow.com/questions/15542608/design-patterns-exception-error-handling
+#### エラーvs例外
 
 参考：
-https://medium.com/swlh/error-handling-in-javascript-a-quick-guide-54b954427e47
 
--   should I use throw, return or console.error?
+https://blog.ohgaki.net/error-exception-secure-coding-programming
 
-`return`は関数の終了である
-`throw`はランタイムがそのブロックの残りの処理を無視して、例外処理系に移行する
+多くの場所でよく言われていること...
 
--   What if using throw without a tyr...catch statement?
+> 例外処理をエラー処理に使ってはならない
 
-catch ステートメントがない場合、throw の時点でアプリケーションは処理が止まって続行できなくなる
-catch ステートメントがある場合、throw が catch をトリガーする
+> エラー処理と例外処理は役割が異なるので、例外処理をエラー処理に使ってはならないのです。
 
--   いつ throw すべきなの？
+> エラー処理と例外処理の違い
 
-エラーが予期されないような場面で try...catch するといいかも
+> - **エラー処理は”起きることが期待される問題”で、多くの場合、プログラムの実行停止は行えない**
 
--   一般的な例外：throw が不要かもしれない場面
+> - **例外処理は”起きることが期待されない問題”で、多くの場合、プログラムの実行を停止しても構わない**
 
-> **予測可能で一般的に発生する一部のエラーの場合、実際、throw を使用すると、** > **他のエラーよりも大幅に遅くなることがよくあります**
+これを理解していないとおかしな例外の使い方／エラー処理になります。
 
-解決策 1. `return boolean`にする(error を返さない)
 
-解決策 2. より大規模なアプリケーションならば（正常系の外の）エラーハンドリング・ロジックに処理を移すべき
+プログラムを開発するときは
+起こりうる問題をすべて想定しておかなくてはならない
+（そして、それは予測可能なエラーと判断することになる）
+
+とはいえ、
+起こりうる問題に対処するコードを追加し始めると、
+正常系の処理のなかにエラー対処コードがたくさん追加されることになるので
+いったい何がしたいのかよくわからないコードになってしまう
+
+実現したいのは正常系の処理で
+エラー処理はなるべく分離したい！
+
+
+
 
 ### chrome API 知見まとめ
 
@@ -4888,3 +4891,19 @@ const checkDomsMatch = (): boolean => {
   ]
 }
 ```
+
+
+contentScript.tsで起こっていい問題、起こってはならない問題
+
+when orderNames.sendStatus
+
+もしもセレクタが一致しないという理由ならば、起こってはならない問題
+DOMローディングが間に合っていないという理由ならば、起こっていいもんだい
+
+isSubtitleEnglish()でDOMが取得できない
+isTranscriptOpen()で〃
+
+
+when orderNames.reset
+
+initialize()でcontrolbarのDOMが取得できない
