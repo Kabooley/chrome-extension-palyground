@@ -35,7 +35,7 @@ import {
     delay,
     repeatActionPromise,
 } from '../utils/helpers';
-import { DomManipulationError, PageStatusNotReadyError } from '../Error/Error';
+import { DomManipulationError, PageStatusNotReadyError, uError } from '../Error/Error';
 
 //
 // --- GLOBALS ---------------------------------------------------
@@ -115,8 +115,8 @@ chrome.runtime.onMessage.addListener(
                     .then(() => {
                         response.success = true;
                     })
-                    .catch((err) => {
-                        console.error(err);
+                    .catch((err: uError) => {
+                        console.error(err.message);
                         response.success = false;
                         response.error = err;
                     })
@@ -205,11 +205,13 @@ const handlerOfReset = async (): Promise<void> => {
     try {
         await initialize();
     } catch (err) {
-        console.error(err.message);
+        throw err;
     }
 };
 
 /****
+ * @param {selector} string : Selector for DOM about to capture.
+ * @return {promise} HTMLElement : Resolved when matched, rejected when times out or not matched. 
  *
  * 取得元のwebページがローディング中などでなかなかすぐにDOMがロードされないときとかに使う
  * 指定のDOMが取得できるまで、繰り返し取得を試みる
@@ -306,6 +308,8 @@ const isTranscriptOpen = (): boolean => {
  * Check Subtitle language is English or not.
  *
  * @returns {boolean}: true if it's English, false if not.
+ * @throws {DomManipulationError} : When dom acquisition failes.
+ * Exception might be happen when selector is not matches.
  *
  * Get DOM everytime this function invoked.
  */
@@ -477,6 +481,8 @@ const initialize = async (): Promise<void> => {
         moControlbar.observe(controlbar, config);
         console.log('content script initialize has been done');
     } catch (err) {
+        if(err instanceof DomManipulationError) 
+            console.error(`DomManipulationError: ${err.message}`);
         throw err;
     }
 };
@@ -484,6 +490,7 @@ const initialize = async (): Promise<void> => {
 // Entry point
 //
 (function () {
+    // TODO: FIX 例外スローをキャッチする対象がいない
     initialize();
 })();
 

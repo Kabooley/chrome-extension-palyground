@@ -94,9 +94,10 @@ MVC と DDD の設計思想を取り入れたい
 
 ### 普遍的な知見まとめ
 
-[JavaScriptエラーハンドリング](#JavaScriptエラーハンドリング)
+[JavaScript エラーハンドリング](#JavaScriptエラーハンドリング)
 [Return-false-vs.-throw-exception](#Return-false-vs.-throw-exception)
-#### JavaScriptエラーハンドリング
+
+#### JavaScript エラーハンドリング
 
 https://ja.javascript.info/try-catch
 
@@ -386,7 +387,6 @@ try {
 上の例コードを見るとわかるけれど、
 その通りになる
 
-
 #### Return-false-vs.-throw-exception
 
 教科書レベルのデザインパターンはないみたい...
@@ -398,31 +398,27 @@ https://stackoverflow.com/questions/15542608/design-patterns-exception-error-han
 参考：
 https://medium.com/swlh/error-handling-in-javascript-a-quick-guide-54b954427e47
 
-- should I use throw, return or console.error?
+-   should I use throw, return or console.error?
 
 `return`は関数の終了である
 `throw`はランタイムがそのブロックの残りの処理を無視して、例外処理系に移行する
 
-- What if using throw without a tyr...catch statement?
+-   What if using throw without a tyr...catch statement?
 
-catchステートメントがない場合、throwの時点でアプリケーションは処理が止まって続行できなくなる
-catchステートメントがある場合、throwがcatchをトリガーする
+catch ステートメントがない場合、throw の時点でアプリケーションは処理が止まって続行できなくなる
+catch ステートメントがある場合、throw が catch をトリガーする
 
-- いつthrowすべきなの？
+-   いつ throw すべきなの？
 
-エラーが予期されないような場面でtry...catchするといいかも
+エラーが予期されないような場面で try...catch するといいかも
 
-- 一般的な例外：throwが不要かもしれない場面
+-   一般的な例外：throw が不要かもしれない場面
 
-> **予測可能で一般的に発生する一部のエラーの場合、実際、throwを使用すると、**
-> **他のエラーよりも大幅に遅くなることがよくあります**
+> **予測可能で一般的に発生する一部のエラーの場合、実際、throw を使用すると、** > **他のエラーよりも大幅に遅くなることがよくあります**
 
-解決策1. `return boolean`にする(errorを返さない)
+解決策 1. `return boolean`にする(error を返さない)
 
-解決策2. より大規模なアプリケーションならば（正常系の外の）エラーハンドリング・ロジックに処理を移すべき
-
-
-
+解決策 2. より大規模なアプリケーションならば（正常系の外の）エラーハンドリング・ロジックに処理を移すべき
 
 ### chrome API 知見まとめ
 
@@ -719,7 +715,6 @@ chrome.runtime.onMessage.addListener((msg) => {
 これで必ず background script で
 今フォーカスしているウィンドウのアクティブなタブを取得できる
 
-
 ## TEST
 
 テストって何ぞや
@@ -731,8 +726,6 @@ chrome.runtime.onMessage.addListener((msg) => {
 インテグレーション・テスト
 
 他のクラスや外部モジュールと結合してテストすること
-
-
 
 ## DDD 設計思想の導入に関するメモ
 
@@ -4833,7 +4826,7 @@ try {
 
 }
 catch(err) {
-    // TODO: 
+    // TODO:
 }
 finally {
     response.complete = true;
@@ -4841,22 +4834,57 @@ finally {
 }
 ```
 
+##### RUN プロセスの最中のエラーハンドリング
 
-##### RUNプロセスの最中のエラーハンドリング
+予測可能なエラー：
 
-ありえる例外：
+-   backgruond.ts::chrome.runtime.onInstalled が実行されていないまま state へアクセスしたときのエラー（起こるとは考えづらい）
 
-- contentScriptがsendStatusのおーだにこたえようとして調査した結果、DOMが取得できないことによる例外
+-   [DomManipulationError] contentScript.ts へ sendStatus したときに、contentScript で DOM 取得に失敗したことによるエラー
+    contentScript.ts::isSubtitleEnglish()では DOMmanipulation が失敗したときに例外をスローする。
+    chrome.runtime.onMessage でキャッチして response.error として sendResponse する
 
-DomManipulationError
+-   [DomManipulationError] contentScript.ts へ reset おーだをしたとき、controlbar の DOM を取得できなかったら
 
-- captureSubtitle.tsで字幕を取得できなかったことによる例外
+    `repeatQueryDom`DOM 取得に失敗しても null を返すだけ
+    null が返されたら DomManipulationError をスローして
+    呼び出し元の chrome.runtime.onMessage がキャッチして
+    response.error として sendResponse する
 
-ページがローディング中かセレクタが一致しないなにかで字幕が取得できない
+...こんなに DOM 取得の失敗を心配するならばどこかのタイミングで DOM があるかチェックする関数でも呼出せばいいかしら？
 
-- controller.tsの初期化失敗による例外
+DOM 取得の失敗の原因...
 
+-   ローディングが間に合っていない
 
+再トライでどうにかなるかもなのでもう一度トライしてみてくださいとアラートする？
+
+-   セレクタがマッチしない
+
+どうにもならない。利用しない方がいいと警告する
+
+セレクタがマッチするかどうか inject されたときにチェックする体制にする
 
 ```TypeScript
+// contentScript.ts
+
+// inject時に(ローディングの問題以外で)必ず取得できるセレクタは？
+// controlbar
+// closed caption popup button
+// videoContainer
+// 条件がそろわないと取得できないセレクタ
+// transcriptToggle button
+// theatreToggle button
+//
+const checkDomsMatch = (): boolean => {
+  const selectors = [
+    selectors.transcript.controlbar,
+    selectors.videoContainer,
+    selectors.controlBar.cc.menuListParent,
+    selectors.controlBar.cc.menuCheckButtons,
+    selectors.controlBar.cc.menuList
+
+
+  ]
+}
 ```
