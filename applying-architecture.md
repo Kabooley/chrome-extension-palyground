@@ -4858,3 +4858,77 @@ NOTE: 共通：セレクタが不一致による問題はアプリ実行不可�
 TODO: CSS セレクタ不一致なら例外を起こす仕組み
 TODO: controller.ts, transcriptView 系のエラーの可能性のある場所の精査
 TODO: エラーまたは false 等を受け取った時の background.ts の挙動の決定、実装
+
+
+#### controller.tsのエラー精査
+
+- insertSidebarTranscript()
+- insertBottomTranscript()
+- onWindowScrollHandler()
+
+- onWindowResizeHandler()
+
+```TypeScript
+chrome.runtime.onMessage.addListener(
+  async (
+    message: iMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response: iResponse) => void
+  ): Promise<boolean> => {
+      const { from, to, order, ...rest } = message;
+      if (to !== extensionNames.controller) return;
+      const response: iResponse = {from: to, to: from};
+
+      console.log("[controller] CONTROLLER GOT MESSAGE");
+
+      if (order && order.length) {
+        if (order.includes(orderNames.reset)) {
+          console.log("[controller] order: RESET");
+            try {
+                handlerOfReset();
+                response.success = true;
+            }
+            catch(e) {
+                response.success = false;
+            }
+            finally {
+                response.complete = true;
+                sendResponse(response);
+            }
+        }
+        if (order.includes(orderNames.turnOff)) {
+          console.log("[controller] order: TURN OFF ExTranscript");
+            try {
+                handlerOfTurnOff();
+                response.success = true;
+            }
+            catch(e) {
+                response.success = false;
+            }
+            finally {
+                response.complete = true;
+                sendResponse(response);
+            }
+        }
+      }
+      // 字幕データが送られてきたら
+      if (rest.subtitles) {
+        console.log("[controller] Got subtitles");
+                    try {
+        sSubtitles.setState({ subtitles: rest.subtitles });
+                response.success = true;
+            }
+            catch(e) {
+                response.success = false;
+            }
+            finally {
+                response.complete = true;
+                sendResponse(response);
+            }
+      }
+      return true;
+
+  }
+);
+
+```

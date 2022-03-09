@@ -21,18 +21,13 @@
  *
  * NOTE:
  *
- * - 自動スクロール機能は要改善である
+ * - 自動スクロール機能は本家の自動スクロール・チェックボックスを実装しない。
+ * これは仕様とする
+ * 
  *
- * TODO:
- * - ExTranscriptのrerenderingされたら自動スクロール機能消えるのでそれのリセット
- * - RESET機能
- *  あとはウィンドウが小さくなったりそこから戻ったときの表示非表示の制御
- *  実際に表示・非表示の命令はbackground scriptから送信されるorderに従うので
- *  こちらはその境界をまたぐ時は何もしないようにすること
- *
- * - [済] Stateの外部モジュール化
- * - [済] 自動スクロール機能の発火条件の発見とそれに伴う修正
- * - [済] 字幕データは受動的に取得する仕様にする
+ * TODO: コード中の'TODO'を確認して修正のこと
+ * 
+ * 
  * *******************************************************/
 import sidebarTranscriptView from "./sidebarTranscriptView";
 import bottomTranscriptView from "./bottomTranscriptView";
@@ -57,10 +52,11 @@ import State from "../utils/contentScript/State";
 import MutationObserver_ from "../utils/MutationObserver_";
 // import { sendMessagePromise } from "../utils/helpers";
 
-// ----- GLOBALS --------------------------
-
-// Annotations
 //
+// ----- GLOBALS -----------------------------------------
+//
+
+// ----- Annotations -------------------------------------
 interface iController {
   // 本家Transcriptのポジション2通り
   position: keyof_positionStatus;
@@ -114,6 +110,19 @@ const moConfig: MutationObserverInit = {
   attributeOldValue: true,
 } as const;
 
+/*************************************************************************
+ * Callback for MutationObserver.
+ * 
+ * guard: 以下の理由で設けている変数
+ * 
+ * NOTE: Udemyの字幕はまったく同じ字幕要素が2個も3個も生成されている
+ *
+ * つまりまったく同じ要素が同時に複数存在する状況が発生してしまっている
+ * 多分バグだけど、同じ要素が何個も生成されてしまうとリスナが何度も
+ * 反応してしまう可能性がある
+ * 
+ * 
+ * */ 
 const moCallback = function (
   this: MutationObserver_,
   mr: MutationRecord[]
@@ -136,12 +145,13 @@ const moCallback = function (
 };
 
 //
-// --- CHROME LISTENERS -------------------
+// --- CHROME LISTENERS ----------------------------------------
 //
 
-/**
- *  Chrome API: On Message Handler
+/***************************************************************
+ * On Message Handler
  *
+ * @return {boolean} Return true to indicate that it will respond asynchronously.
  * */
 chrome.runtime.onMessage.addListener(
   async (
@@ -149,42 +159,63 @@ chrome.runtime.onMessage.addListener(
     sender: chrome.runtime.MessageSender,
     sendResponse: (response: iResponse) => void
   ): Promise<boolean> => {
-    try {
-      if (message.to !== extensionNames.controller) return;
-      console.log("[controller] CONTROLLER GOT MESSAGE");
-      const { order, ...rest } = message;
-      if (order && order.length) {
-        if (order.includes(orderNames.reset)) {
-          console.log("[controller] order: RESET");
-          handlerOfReset();
-          sendResponse({ complete: true, success: true });
-        }
-        if (order.includes(orderNames.turnOff)) {
-          console.log("[controller] order: TURN OFF ExTranscript");
-          handlerOfTurnOff();
-          sendResponse({ complete: true, success: true });
-        }
-      }
-      // 字幕データが送られてきたら
-      if (rest.subtitles) {
-        console.log("[controller] [controller] got subtitles");
-        console.log(rest.subtitles);
-        //  setStateのnotify()がこの変更に必要な関数を実行してくれる
+    const { from, to, order, ...rest } = message;
+    if (to !== extensionNames.controller) return;
+    const response: iResponse = { from: to, to: from };
 
-        sSubtitles.setState({ subtitles: rest.subtitles });
-        sendResponse({ complete: true });
+    console.log("[controller] CONTROLLER GOT MESSAGE");
+
+    if (order && order.length) {
+      if (order.includes(orderNames.reset)) {
+        console.log("[controller] order: RESET");
+        try {
+          handlerOfReset();
+          response.success = true;
+        } catch (e) {
+          response.success = false;
+        } finally {
+          response.complete = true;
+          sendResponse(response);
+        }
       }
-      return true;
-    } catch (err) {
-      console.error(err.message);
+      if (order.includes(orderNames.turnOff)) {
+        console.log("[controller] order: TURN OFF ExTranscript");
+        try {
+          handlerOfTurnOff();
+          response.success = true;
+        } catch (e) {
+          response.success = false;
+        } finally {
+          response.complete = true;
+          sendResponse(response);
+        }
+      }
     }
+    // 字幕データが送られてきたら
+    if (rest.subtitles) {
+      console.log("[controller] Got subtitles");
+      try {
+        sSubtitles.setState({ subtitles: rest.subtitles });
+        response.success = true;
+      } catch (e) {
+        response.success = false;
+      } finally {
+        response.complete = true;
+        sendResponse(response);
+      }
+    }
+    return true;
   }
 );
 
 //
-// --- REPLACE & INSERT VIEW METHODS ----------------------------
+// --- VIEW METHODS ------------------------------------------
 //
 
+/************************************************
+ * Insert sidebar ExTranscript
+ * And clear previoud ExTranscript.
+ * */
 const renderSidebarTranscript = (): void => {
   console.log("[controller] Rerender sidebar ExTranscript");
   const { subtitles } = sSubtitles.getState();
@@ -196,6 +227,10 @@ const renderSidebarTranscript = (): void => {
   window.addEventListener("scroll", onWindowScrollHandler);
 };
 
+/************************************************
+ * Insert bttom ExTranscript
+ * And clear previoud ExTranscript.
+ * */
 const renderBottomTranscript = (): void => {
   console.log("[controller] Rerender bottom ExTranscript");
 
@@ -208,19 +243,22 @@ const renderBottomTranscript = (): void => {
 };
 
 //
-// --- Handlers ----------------------------------------------
+// --- HANDLERS ----------------------------------------------
 //
 
-/****
+/************************************************
+ * Reduction of onWindowResizeHandler()
  *
- *
+ * Delays reaction of window resize.
  * */
 const reductionOfwindowResizeHandler = (): void => {
   clearTimeout(timerQueue);
   timerQueue = setTimeout(onWindowResizeHandler, RESIZE_TIMER);
 };
 
-/****
+/************************************************
+ * Handler of Turning off ExTranscript.
+ *
  *
  * */
 const handlerOfTurnOff = (): void => {
@@ -246,7 +284,8 @@ const handlerOfTurnOff = (): void => {
   sSubtitles.setState({ ...subtitleBase });
 };
 
-/****
+/**************************************************
+ * Handler of Reset ExTranscript.
  *
  *
  * */
@@ -273,8 +312,8 @@ const handlerOfReset = (): void => {
   window.addEventListener("resize", reductionOfwindowResizeHandler);
 };
 
-/**
- * Update ExTranscript View hight while it is sidebar.
+/**********************************************************
+ * OnScroll handler for sidebar ExTranscript.
  *
  * */
 const onWindowScrollHandler = (): void => {
@@ -285,16 +324,17 @@ const onWindowScrollHandler = (): void => {
     : sidebarTranscriptView.updateContentTop(0);
 };
 
-/*
-    onWindowResizeHandler()
-  
-  window.onresizeで境界条件を指定する
-  
-  exTranscriptの配置換え：RESIZE_BOUNDARYをまたいだ時だけ更新する
-  updateContentHeight(): position === sidebarが真のときは必ず実行
-  
-  
-  */
+
+
+/*************************************************************
+ * window onResize handler.
+ *
+ * Checks...
+ * If window clientWidth straddle the MINIMUM_BOUNDARY, update state.
+ * If window clientWidth straddle the RESIZE_BOUNDARY, update state.
+ * If ExTranscript is sidebar, check if window clientWidth straddble
+ * the SIDEBAR_WIDTH_BOUNDARY to update view state.
+ * */
 const onWindowResizeHandler = (): void => {
   console.log("[controller] onWindowResizeHandler()");
 
@@ -348,24 +388,32 @@ const onWindowResizeHandler = (): void => {
 };
 
 //
-// ----- DETECT AUTO SCROLL METHODS -----------------------------
+// ----- METHODS RELATED TO AUTO SCROLL -----------------------------
 //
 
-/****
- * 字幕データのindex番号からなる配列をsStatus.indexListとして更新する
+/***********************************************************************
+ * Initialize sStatus.indexList
+ *
+ * sSubtitles.subtitlesのindex番号からなる配列を
+ * sStatus.indexListとして保存する
  *
  * */
 const initializeIndexList = (): void => {
   console.log("[controller] initializeIndexList()");
   const { subtitles } = sSubtitles.getState();
   const indexes: number[] = subtitles.map((s) => s.index);
-  console.log(indexes);
   sStatus.setState({ indexList: indexes });
 };
 
-/*
-      字幕要素群の中から、引数の要素が何番目にあるのかを探してその順番を返す
-  */
+/************************************************************************
+ * Returns the index number if the list contains an element.
+ * 
+ * @param {NodeListOf<Element>} from: List of subtitles data.
+ * @param {Element} lookFor: Check whether the element is contained in the array.
+ * @return {number} Return -1 as element was not contained.
+ *
+ * TODO: -1を返す以外の方法ないかしら
+ * */
 const getElementIndexOfList = (
   from: NodeListOf<Element>,
   lookFor: Element
@@ -380,21 +428,23 @@ const getElementIndexOfList = (
   return -1;
 };
 
-/*
-      updateHighlistIndexes()
-      ____________________________
-  
-      state._ExHighlightを更新するための関数
-      本家のTranscriptのハイライト要素を取得して
-      それを基にExTranscriptのハイライトする要素の番号を更新する
-  
-      updaeExTranscriptHighlight()を呼び出す前に必ず呼び出すこと
-  
-  
-      まずcurrentHighlightが取得できていない
-      理由はこのセレクターだと
-      動画が再生する前の状態の時(再生画面が動画の真ん中に表示されている状態)はこのセレクタはどの要素にも追加されていないからである
-  */
+/*********************************************************************
+ * Update sStatus.ExHighlight.
+ * Invoked by MutationObserver 
+ * when Udemy highlighted element changed.
+ *
+ * 1. Get latest original highlighted element index.
+ * 2. Check if the index number includes in sStaus.indexList.
+ *    If not included,
+ *    Sets the index closest to the current index number
+ *    that is less than the "current highlight.
+ *
+ * NOTE: ExTranscript index list is different from Original index list.
+ * 
+ * この関数はsStatus.ExHighlightを更新するための関数
+ * sStatus更新内容をもとにレンダリング要素を更新するのは以下の関数で行う
+ * updateExTranscriptHighlight()
+ * */
 const updateHighlightIndexes = (): void => {
   console.log("[controller] updateHighlightIndexes()");
   // １．本家のハイライト要素を取得して、その要素群の中での「順番」を保存する
@@ -415,7 +465,7 @@ const updateHighlightIndexes = (): void => {
   } else {
     // 一致するindexがない場合
     // currentHighlightの番号に最も近い、currentHighlightより小さいindexをsetする
-    var prev: number = null;
+    let prev: number = null;
     for (let i of indexList) {
       if (i > next) {
         sStatus.setState({ ExHighlight: prev });
@@ -426,17 +476,16 @@ const updateHighlightIndexes = (): void => {
   }
 };
 
-/*
-  
-      updaeExTranscriptHighlight()
-      ________________________________________
-  
-      ExTranscriptの字幕要素のハイライトを更新する
-      前回のハイライト要素のハイライトを消し
-      次のハイライト要素にハイライトを付ける
-  
-      どれをハイライトさせるかは`state._ExHighlight`に依存する
-  */
+
+/***************************************************************************
+ * Update ExTranscript highlighted element.
+ * Invoked by MutationObserver 
+ * just after updateHighlightIndexes().
+ * 
+ * Update based on sStatus.ExHighlight.
+ * 
+ * TODO: (対応)currentもnextもnullであってはならない場面でnullだとsyntaxerrorになる
+ * */
 const updateExTranscriptHighlight = (): void => {
   console.log("[controller] updateExTranscriptHighlight()");
   // 次ハイライトする要素のdata-idの番号
@@ -482,8 +531,10 @@ const updateExTranscriptHighlight = (): void => {
   }
 };
 
-/***
- *  set detect scroll
+/********************************************************************
+ * Reset MutationObserver API for detect scroll system.
+ * 
+ * Reset based on sStatus.isAutroscrollInitialized.
  *
  * Udemyの自動スクロール機能と同じ機能をセットアップする関数
  *
@@ -492,15 +543,13 @@ const updateExTranscriptHighlight = (): void => {
  * つまりまったく同じ要素が同時に複数存在する状況が発生してしまっている
  * 多分バグだけど、同じ要素が何個も生成されてしまうとリスナが何度も
  * 反応してしまう可能性がある
- *
- * これに伴って
- * MutationObserverのMutationRecordも複数ある要素のすべてを記録するので
- * 1度だけ行いたい処理を2回以上行わなってしまう危険性がある
- *
- *  これを避けるために`guard`でループ処理が既に完了しているのかどうかを
- *  確認するようにしている
+ * MutationObserverのコールバック関数にはこれを避けるための仕組みを設けている
  *
  *
+ * TODO: DOM transcriptList が取得できなくてもスルーされちゃうかも？
+ * 
+ * 確認：`new MutationObserver()`の時にnullを渡したらSyntaxErrorになるかな？
+ * 
  * ***/
 const resetDetectScroll = (): void => {
   console.log("[controller] reset Autro Scroll System");
@@ -537,12 +586,12 @@ const resetDetectScroll = (): void => {
   }
 };
 
-/**
- *  Scroll to Highlight
- * ______________________________
+/*****************************************************************
+ * Scroll to Highlight
  *
- * ExTranscriptの自動スクロールを更新内容に反映する
+ * Make ExTranscript subtitle panel scroll to latest highlighted element.
  *
+ * TODO: (対応) DOMが取得できなかったらSyntaxErrorが発生する
  * */
 const scrollToHighlight = (): void => {
   console.log("[controller] scrollToHighlight()");
@@ -633,20 +682,22 @@ const updateSidebarView = (prop, prev): void => {
     sidebarTranscriptView.updateWidth(SIGNAL.widthStatus.wideview);
 };
 
-const updateHighlight = (prop, prev): void => {
-  const { highlight } = prop;
-  if (highlight === undefined) return;
-  console.log("[controller] UPDATED Highlight");
-};
+// NOTE: リファクタリング未定...
+// const updateHighlight = (prop, prev): void => {
+//   const { highlight } = prop;
+//   if (highlight === undefined) return;
+//   console.log("[controller] UPDATED Highlight");
+// };
 
-const updateExHighlight = (prop, prev): void => {
-  const { highlight } = prop;
-  if (highlight === undefined) return;
-  console.log("[controller] UPDATED ExHighlight");
-};
+// NOTE: リファクタリング未定...
+// const updateExHighlight = (prop, prev): void => {
+//   const { highlight } = prop;
+//   if (highlight === undefined) return;
+//   console.log("[controller] UPDATED ExHighlight");
+// };
 
-/**
- *  MAIN
+/******************************************************
+ * Entry Point
  *
  * */
 (function (): void {
@@ -660,8 +711,9 @@ const updateExHighlight = (prop, prev): void => {
   sSubtitles.observable.register(updateSubtitle);
   sStatus.observable.register(updatePosition);
   sStatus.observable.register(updateSidebarView);
-  sStatus.observable.register(updateHighlight);
-  sStatus.observable.register(updateExHighlight);
+  //   TODO: (未定)下記update関数が機能するようにリファクタリングするかも...
+  //   sStatus.observable.register(updateHighlight);
+  //   sStatus.observable.register(updateExHighlight);
 
   // 初期のExTranscriptの展開場所に関するステータスを取得する
   const w: number = document.documentElement.clientWidth;
