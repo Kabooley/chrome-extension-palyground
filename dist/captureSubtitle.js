@@ -355,7 +355,17 @@ __webpack_require__.r(__webpack_exports__);
  *  必要ない
  *  order.resetに対応するときにおいて、
  *  DOM Manipulationは関数内部で実行時のみに行われるので
- *  イベントリスナなど付け替える必要がないため
+ *  イベントリスナなど付け替える必要がない
+ *
+ * 例外：
+ * capturingSubtitle()でSuntaxErrorが起こる可能性があるかも
+ *
+ *
+ * NOTE:
+ *
+ * このcontent scriptの機能が呼び出される状況は、DOMがページに
+ * ローディング済であることを前提とする
+ * なのであらゆるローディング待機の処理を持たない
  *
  *
  *********************************************************/
@@ -374,28 +384,46 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const { from, to, order } = message;
     if (to !== _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.captureSubtitle)
         return;
+    const r = {
+        from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.captureSubtitle,
+        to: from,
+    };
     if (order && order.length) {
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.sendSubtitles)) {
-            const chunks = mainProcess();
-            if (sendResponse) {
-                sendResponse({
-                    subtitles: chunks,
-                    complete: true,
-                });
+            try {
+                const chunks = mainProcess();
+                r.subtitles = chunks;
+                r.success = true;
             }
-            else {
-                throw new Error('[captureSubtitle] Cannot send response. sendResponse is nessesary but there is not the function');
+            catch (e) {
+                r.success = false;
+                r.error = e;
+            }
+            finally {
+                r.complete = true;
+                sendResponse(r);
             }
         }
     }
 });
 // -- Capture Methods -----------------------------------
+/**********************************************
+ * @return {subtitle_piece[]}
+ * @throws {SyntaxError}
+ *
+ * */
 const capturingSubtitle = () => {
-    const spans = document.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.transcripts);
-    const subtitles = Array.from(spans).map((span, index) => {
-        return { index: index, subtitle: span.innerText.trim() };
-    });
-    return subtitles;
+    try {
+        const spans = document.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.transcripts);
+        const subtitles = Array.from(spans).map((span, index) => {
+            return { index: index, subtitle: span.innerText.trim() };
+        });
+        return subtitles;
+    }
+    catch (e) {
+        // Array.from(null)でSyntaxError. spansがnullだった可能性がある
+        throw e;
+    }
 };
 /*
   subtitlePiecesToChunks

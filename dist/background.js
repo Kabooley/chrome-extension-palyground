@@ -334,7 +334,7 @@ const repeatActionPromise = (action, timeoutAsResolve = false, interval = 200, t
                 else if (triesLeft <= 1 && !timeoutAsResolve) {
                     clearInterval(intervalId);
                     // 例外エラーとしてcatchされる
-                    reject("Error: Action callback fuction never returned true and time out.@repeatActionPromise");
+                    reject();
                 }
                 triesLeft--;
             });
@@ -485,7 +485,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 // --- GLOBALS -----------------------------------------------
 //
 const INTERVAL_TIME = 500;
-const KEY_LOCALSTORAGE = '__key__of_local_storage_';
+const KEY_LOCALSTORAGE = "__key__of_local_storage_";
 //
 // --- Chrome API Listeners ---------------------------------
 //
@@ -539,7 +539,7 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
     // "https://www.udemy.com/course/*"以外のURLなら無視する
     const { url, tabId, isExTranscriptStructured } = yield state.get();
     // 拡張機能が未展開、changeInfo.statusがloadingでないなら無視する
-    if (changeInfo.status !== 'loading' || !isExTranscriptStructured)
+    if (changeInfo.status !== "loading" || !isExTranscriptStructured)
         return;
     // 拡張機能が展開済だとして、tabIdが展開済のtabId以外に切り替わったなら無視する
     // return;
@@ -550,12 +550,12 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
     if (isExTranscriptStructured && tabIdUpdatedOccured === tabId) {
         // おなじURLでのリロードか？
         if (changeInfo.url === undefined) {
-            console.log('[background] Turn off extension because page reloaded');
+            console.log("[background] Turn off extension because page reloaded");
             yield state.set(_annotations__WEBPACK_IMPORTED_MODULE_2__.modelBase);
         }
         else if (!changeInfo.url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.urlPattern)) {
             // Udemy講義ページ以外に移動した
-            console.log('[background] the page moved to invalid url');
+            console.log("[background] the page moved to invalid url");
             yield state.set(_annotations__WEBPACK_IMPORTED_MODULE_2__.modelBase);
         }
         // 展開中のtabIdである && changeInfo.urlが講義ページである
@@ -565,7 +565,7 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
             (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.exciseBelowHash)(changeInfo.url) !== (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.exciseBelowHash)(url)) {
             // ページが切り替わった
             // NOTE: MUST Update URL
-            console.log('[background] page moved');
+            console.log("[background] page moved");
             yield state.set({ url: (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.exciseBelowHash)(changeInfo.url) });
             // 動画ページ以外に切り替わったのか？
             const res = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
@@ -650,48 +650,79 @@ const sortMessage = (message, sender, sendResponse) => {
 
  * */
 const handlerOfPopupMessage = (message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('[background] Message from Popup');
-    try {
-        const { order } = message, rest = __rest(message, ["order"]);
-        if (order && order.length) {
-            // popupからstateが要求された
-            if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendStatus)) {
+    console.log("[background] Message from Popup");
+    const { from, order } = message, rest = __rest(message, ["from", "order"]);
+    let response = {
+        from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
+        to: from,
+    };
+    if (order && order.length) {
+        // SEND STATUS
+        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendStatus)) {
+            try {
                 const { isSubtitleCapturing, isExTranscriptStructured } = yield state.get();
-                sendResponse({
-                    complete: true,
-                    state: {
-                        isSubtitleCapturing: isSubtitleCapturing,
-                        isExTranscriptStructured: isExTranscriptStructured,
-                    },
-                });
+                response.state = {
+                    isSubtitleCapturing: isSubtitleCapturing,
+                    isExTranscriptStructured: isExTranscriptStructured,
+                };
             }
-            // 拡張機能の実行命令
-            if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.run)) {
-                console.log('[background] RUN');
-                const isSuccess = yield handlerOfRun(rest.tabInfo);
-                if (!isSuccess) {
-                    sendResponse({ complete: true, success: false });
-                }
-                else {
-                    sendResponse({ complete: true, success: true });
-                }
+            catch (err) {
+                // TODO: stateが取得できなかったときの挙動
             }
-            // POPUP上のOFF操作による拡張機能のOFF命令
-            if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.turnOff)) {
-                console.log('[background] TURN OFF ordered.');
+            finally {
+                response.complete = true;
+                sendResponse(response);
+            }
+        }
+        // RUN
+        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.run)) {
+            console.log("[background] RUN");
+            try {
+                // - falseが返される理由
+                // 字幕がONじゃない、トランスクリプトがONじゃない、字幕が英語じゃない
+                // 
+                // - RUN処理中、起こりうる可能性がきわめて低い問題
+                // chrome.scripting.execute()中のエラー
+                // 字幕が取得できない（条件がそろってから実行するから、取得できないのはおかしい）
+                // 
+                // - 起こったら終了な問題(例外判定)
+                // DOMが取得できない（DOMの種類による）
+                // chrome.runtime.onInstalledが実行されていないことによる、stateの未初期化
+                const r = yield handlerOfRun(rest.tabInfo);
+                response.success = r ? true : false;
+                // TODO: 失敗理由を追加しないとアラート出せない
+            }
+            catch (err) {
+                // 起こったら終了な代物
+                // RUNプロセスの状況によっていろいろリセットが必要か？
+                response.success = false;
+                response.error = err;
+            }
+            finally {
+                response.complete = true;
+                sendResponse(response);
+            }
+        }
+        // POPUP上のOFF操作による拡張機能のOFF命令
+        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.turnOff)) {
+            console.log("[background] TURN OFF ordered.");
+            try {
                 const { tabId } = yield state.get();
-                // turn off injected content script
                 yield turnOffEachContentScripts(tabId);
                 const { isContentScriptInjected, isCaptureSubtitleInjected, isControllerInjected, } = yield state.get();
                 // content scriptのinject状況だけ反映させてstateを初期値に戻す
                 yield state.set(Object.assign(Object.assign({}, _annotations__WEBPACK_IMPORTED_MODULE_2__.modelBase), { isContentScriptInjected: isContentScriptInjected, isCaptureSubtitleInjected: isCaptureSubtitleInjected, isControllerInjected: isControllerInjected }));
-                sendResponse({ complete: true, success: true });
+                response.success = true;
+            }
+            catch (err) {
+                // TODO: TURN OFFで例外が発生したときの挙動
+                response.success = false;
+            }
+            finally {
+                response.complete = true;
+                sendResponse(response);
             }
         }
-    }
-    catch (err) {
-        console.error(err);
-        sendResponse({ complete: true, success: false, failureReason: err });
     }
 });
 /******
@@ -700,59 +731,78 @@ const handlerOfPopupMessage = (message, sender, sendResponse) => __awaiter(void 
  *
  * */
 const handlerOfContentScriptMessage = (message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('[background] Message from contentScript.js');
-    try {
-        const { order } = message, rest = __rest(message, ["order"]);
-        const { isExTranscriptStructured, isTranscriptDisplaying, isEnglish, tabId, } = yield state.get();
-        if (order && order.length) {
-        }
-        // ExTRanscriptを表示する条件が揃わなくなったとき...
-        if (!rest.isTranscriptDisplaying || !rest.language) {
+    console.log("[background] Message from contentScript.js");
+    const { from, order } = message, rest = __rest(message, ["from", "order"]);
+    let response = {
+        from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
+        to: from,
+    };
+    const { isExTranscriptStructured, isTranscriptDisplaying, isEnglish, tabId } = yield state.get();
+    if (order && order.length) {
+    }
+    // ExTRanscriptを表示する条件が揃わなくなったとき...
+    if (!rest.isTranscriptDisplaying || !rest.language) {
+        try {
             // ExTranscriptを非表示にするかする
             // もしもトランスクリプトが表示中であったならば
             if (isExTranscriptStructured && isTranscriptDisplaying) {
-                console.log('[background] Hide ExTranscript...');
+                console.log("[background] Hide ExTranscript...");
                 yield handlerOfHide(tabId);
             }
             // あとはStateを更新するだけ
             let s = {};
             if (rest.isTranscriptDisplaying !== undefined) {
-                s['isTranscriptDisplaying'] = rest.isTranscriptDisplaying;
+                s["isTranscriptDisplaying"] = rest.isTranscriptDisplaying;
             }
             if (rest.language !== undefined) {
-                s['isEnglish'] = rest.language;
+                s["isEnglish"] = rest.language;
             }
             yield state.set(s);
-            sendResponse({ complete: true });
         }
-        // トランスクリプトが再表示されたとき...
-        if (rest.isTranscriptDisplaying) {
-            // ExTranscriptが非表示だったならば再表示させる
-            if (isExTranscriptStructured && !isTranscriptDisplaying) {
-                // 非表示だった状態から
-                // 表示させる処理
+        catch (err) {
+            // TODO: Hide処理中に例外が発生したときの挙動
+        }
+        finally {
+            response.complete = true;
+            sendResponse(response);
+        }
+    }
+    // トランスクリプトが再表示されたとき...
+    if (rest.isTranscriptDisplaying) {
+        // ExTranscriptが非表示だったならば再表示させる
+        if (isExTranscriptStructured && !isTranscriptDisplaying) {
+            try {
                 yield handlerOfReset(tabId);
                 yield state.set({ isTranscriptDisplaying: true });
-                sendResponse({ complete: true });
+            }
+            catch (err) {
+                // TODO: Reset処理中に例外が発生したときの挙動
+            }
+            finally {
+                response.complete = true;
+                sendResponse(response);
             }
         }
-        // 字幕が英語を選択されたとき...
-        if (rest.language) {
-            // ExTranscriptが非表示だったならば再表示させる
-            if (isExTranscriptStructured && !isEnglish) {
-                // 非表示だった状態から
-                // 表示させる処理
+    }
+    // 字幕が英語を選択されたとき...
+    if (rest.language) {
+        // ExTranscriptが非表示だったならば再表示させる
+        if (isExTranscriptStructured && !isEnglish) {
+            try {
                 yield handlerOfReset(tabId);
                 yield state.set({
                     isTranscriptDisplaying: true,
                     isEnglish: true,
                 });
-                sendResponse({ complete: true });
+            }
+            catch (err) {
+                // TODO: Reset処理中に例外が発生したときの挙動
+            }
+            finally {
+                response.complete = true;
+                sendResponse(response);
             }
         }
-    }
-    catch (err) {
-        console.error(err.message);
     }
 });
 /**
@@ -782,192 +832,12 @@ const handlerOfControllerMessage = (message, sender, sendResponse) => __awaiter(
 //
 // --- Order Handlers -------------------------------------------
 //
-// /*****
-//  * Verify given url or current tab url
-//  * ________________________________________________________
-//  *
-//  * */
-// const handlerOfVerifyValidPage = async (_url?: string): Promise<boolean> => {
-//   try {
-//     let url: string = "";
-//     if (_url === undefined) {
-//       const tab: chrome.tabs.Tab = await tabsQuery();
-//       url = tab.url;
-//     } else url = _url;
-//     const result: RegExpMatchArray = url.match(urlPattern);
-//     return result && result.length ? true : false;
-//   } catch (err) {
-//     console.error(err.message);
-//   }
-// };
 /**
  * handler of RUN order.
  * _______________________________________________
  *
- * TODO: エラーハンドリングの改善
- * - 処理中の失敗を段階ごとに理由と一緒に返せるようにしたい
- *  失敗理由によってはエラーじゃない場合もある
  *
- * - injectしたコンテントスクリプトからのinject成功信号を受信したら、こっちに処理が戻ってくるようにしたい
- *
- *
- * 例：
- * contentScriptのステータスを確認してみたら、字幕が英語じゃなかった
- * ならば「英語字幕じゃなかったからキャンセルしたよ」をpopupへ送信できる
  * */
-// const handlerOfRun = async (): Promise<boolean> => {
-//   try {
-//     const tabs: chrome.tabs.Tab = await tabsQuery();
-//     const { url, id } = tabs;
-//     // <phase 1> is URL correct?
-//     // 拡張機能を展開するurlとtabIdを保存するため
-//     if (!handlerOfVerifyValidPage(url)) {
-//       // TODO: 失敗またはキャンセルの方法未定義...
-//       // ひとまずfalseを返している
-//       return false;
-//     }
-//     // Save valid url and current tab that extension popup opened.
-//     await state.set({ url: exciseBelowHash(url), tabId: id });
-//     //<phase 2> inject contentScript.js
-//     const { tabId } = await state.get();
-//     await chrome.scripting.executeScript({
-//       target: { tabId: tabId },
-//       files: ["contentScript.js"],
-//     });
-//     await state.set({ isContentScriptInjected: true });
-//     // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...実装する技術がない...
-//     const { language, isTranscriptDisplaying } = await sendMessageToTabsPromise(
-//       tabId,
-//       {
-//         from: extensionNames.background,
-//         to: extensionNames.contentScript,
-//         order: [orderNames.sendStatus],
-//       }
-//     );
-//     // 結果がどうあれ現状の状態を保存する
-//     await state.set({
-//       isEnglish: language,
-//       isTranscriptDisplaying: isTranscriptDisplaying,
-//     });
-//     // 字幕が英語じゃない、またはトランスクリプトがONでないならば
-//     // キャンセル
-//     if (!language || !isTranscriptDisplaying) {
-//       // TODO: 失敗またはキャンセルの方法未定義...
-//       // ひとまずfalseを返している
-//       return false;
-//     }
-//     // <phase 3> inject captureSubtitle.js
-//     // 字幕データを取得する
-//     await chrome.scripting.executeScript({
-//       target: { tabId: tabId },
-//       files: ["captureSubtitle.js"],
-//     });
-//     await state.set({ isCaptureSubtitleInjected: true });
-//     // 字幕取得できるまで10回は繰り返す関数で取得する
-//     const subtitles: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
-//     // const { subtitles } = await sendMessageToTabsPromise(tabId, {
-//     //     from: extensionNames.background,
-//     //     to: extensionNames.captureSubtitle,
-//     //     order: [orderNames.sendSubtitles],
-//     // });
-//     await state.set({ subtitles: subtitles });
-//     // <phase 4> inject controller.js
-//     await chrome.scripting.executeScript({
-//       target: { tabId: tabId },
-//       files: ["controller.js"],
-//     });
-//     await state.set({ isControllerInjected: true });
-//     const s: iModel = await state.get();
-//     await sendMessageToTabsPromise(tabId, {
-//       from: extensionNames.background,
-//       to: extensionNames.controller,
-//       subtitles: s.subtitles,
-//     });
-//     await state.set({ isExTranscriptStructured: true });
-//     // ...ここまででエラーがなければ成功
-//     return true;
-//   } catch (err) {
-//     console.error(err.message);
-//   }
-// };
-// const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
-//     try {
-//         // const tabs: chrome.tabs.Tab = await tabsQuery();
-//         // const { url, id } = tabs;
-//         // // <phase 1> is URL correct?
-//         // // 拡張機能を展開するurlとtabIdを保存するため
-//         // if (!handlerOfVerifyValidPage(url)) {
-//         //   // TODO: 失敗またはキャンセルの方法未定義...
-//         //   // ひとまずfalseを返している
-//         //   return false;
-//         // }
-//         const { url, id, windowId } = tabInfo;
-//         // Save valid url and current tab that extension popup opened.
-//         await state.set({
-//             url: exciseBelowHash(url),
-//             tabId: id,
-//             tabInfo: tabInfo,
-//         });
-//         //<phase 2> inject contentScript.js
-//         const { tabId } = await state.get();
-//         await chrome.scripting.executeScript({
-//             target: { tabId: tabId },
-//             files: ['contentScript.js'],
-//         });
-//         await state.set({ isContentScriptInjected: true });
-//         // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...実装する技術がない...
-//         const { language, isTranscriptDisplaying } =
-//             await sendMessageToTabsPromise(tabId, {
-//                 from: extensionNames.background,
-//                 to: extensionNames.contentScript,
-//                 order: [orderNames.sendStatus],
-//             });
-//         // 結果がどうあれ現状の状態を保存する
-//         await state.set({
-//             isEnglish: language,
-//             isTranscriptDisplaying: isTranscriptDisplaying,
-//         });
-//         // 字幕が英語じゃない、またはトランスクリプトがONでないならば
-//         // キャンセル
-//         if (!language || !isTranscriptDisplaying) {
-//             // TODO: 失敗またはキャンセルの方法未定義...
-//             // ひとまずfalseを返している
-//             return false;
-//         }
-//         // <phase 3> inject captureSubtitle.js
-//         // 字幕データを取得する
-//         await chrome.scripting.executeScript({
-//             target: { tabId: tabId },
-//             files: ['captureSubtitle.js'],
-//         });
-//         await state.set({ isCaptureSubtitleInjected: true });
-//         // 字幕取得できるまで10回は繰り返す関数で取得する
-//         const subtitles: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
-//         // const { subtitles } = await sendMessageToTabsPromise(tabId, {
-//         //     from: extensionNames.background,
-//         //     to: extensionNames.captureSubtitle,
-//         //     order: [orderNames.sendSubtitles],
-//         // });
-//         await state.set({ subtitles: subtitles });
-//         // <phase 4> inject controller.js
-//         await chrome.scripting.executeScript({
-//             target: { tabId: tabId },
-//             files: ['controller.js'],
-//         });
-//         await state.set({ isControllerInjected: true });
-//         const s: iModel = await state.get();
-//         await sendMessageToTabsPromise(tabId, {
-//             from: extensionNames.background,
-//             to: extensionNames.controller,
-//             subtitles: s.subtitles,
-//         });
-//         await state.set({ isExTranscriptStructured: true });
-//         // ...ここまででエラーがなければ成功
-//         return true;
-//     } catch (err) {
-//         console.error(err.message);
-//     }
-// };
 const handlerOfRun = (tabInfo) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { url, id } = tabInfo;
@@ -983,7 +853,7 @@ const handlerOfRun = (tabInfo) => __awaiter(void 0, void 0, void 0, function* ()
         if (!isContentScriptInjected) {
             yield chrome.scripting.executeScript({
                 target: { tabId: tabId },
-                files: ['contentScript.js'],
+                files: ["contentScript.js"],
             });
             yield state.set({ isContentScriptInjected: true });
         }
@@ -993,42 +863,50 @@ const handlerOfRun = (tabInfo) => __awaiter(void 0, void 0, void 0, function* ()
                 to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
                 order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.reset],
             });
+            if (!r.success) {
+                throw r.error;
+            }
         }
-        // TODO: ここでcontentScript.jsが展開完了したのを確認したうえで次に行きたいのだが...実装する技術がない...
-        const { language, isTranscriptDisplaying } = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
+        const currentPageStatus = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendStatus],
         });
-        // 結果がどうあれ現状の状態を保存する
-        yield state.set({
-            isEnglish: language,
-            isTranscriptDisplaying: isTranscriptDisplaying,
-        });
-        // 字幕が英語じゃない、またはトランスクリプトがONでないならば
-        // キャンセル
-        if (!language || !isTranscriptDisplaying) {
-            // TODO: 失敗またはキャンセルの方法未定義...
-            // ひとまずfalseを返している
-            return false;
+        if (currentPageStatus.success) {
+            // 結果がどうあれ現状の状態を保存する
+            yield state.set({
+                isEnglish: currentPageStatus.language,
+                isTranscriptDisplaying: currentPageStatus.isTranscriptDisplaying,
+            });
+            // 字幕が英語じゃない、またはトランスクリプトがONでないならば
+            // キャンセル
+            if (!currentPageStatus.language || !currentPageStatus.isTranscriptDisplaying) {
+                // TODO: 失敗またはキャンセルの方法未定義...
+                // ひとまずfalseを返している
+                return false;
+            }
         }
+        else
+            throw currentPageStatus.error;
         // <phase 3> inject captureSubtitle.js
         // 字幕データを取得する
         if (!isCaptureSubtitleInjected) {
             yield chrome.scripting.executeScript({
                 target: { tabId: tabId },
-                files: ['captureSubtitle.js'],
+                files: ["captureSubtitle.js"],
             });
             yield state.set({ isCaptureSubtitleInjected: true });
         }
         // 字幕取得できるまで10回は繰り返す関数で取得する
+        // NOTE: 戻り値が空の配列でも受け入れることにする
+        // TODO: セレクタが一致するかどうか検査する関数を設ける
         const subtitles = yield repeatCaptureSubtitles(tabId);
         yield state.set({ subtitles: subtitles });
         // <phase 4> inject controller.js
         if (!isControllerInjected) {
             yield chrome.scripting.executeScript({
                 target: { tabId: tabId },
-                files: ['controller.js'],
+                files: ["controller.js"],
             });
             yield state.set({ isControllerInjected: true });
         }
@@ -1038,6 +916,7 @@ const handlerOfRun = (tabInfo) => __awaiter(void 0, void 0, void 0, function* ()
                 to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.controller,
                 order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.reset],
             });
+            // TODO: FIX successの値ではなくて例外スローを受け取ること
             if (!r.success)
                 throw new Error(`Error: Failed to reset controller.${r.failureReason}`);
         }
@@ -1048,11 +927,12 @@ const handlerOfRun = (tabInfo) => __awaiter(void 0, void 0, void 0, function* ()
             subtitles: s.subtitles,
         });
         yield state.set({ isExTranscriptStructured: true });
-        // ...ここまででエラーがなければ成功
         return true;
     }
     catch (err) {
         console.error(err.message);
+        // TODO: Errorの種類を確認して必要に応じて再スロー
+        throw err;
     }
 });
 /**
@@ -1079,7 +959,7 @@ const handlerOfRun = (tabInfo) => __awaiter(void 0, void 0, void 0, function* ()
  * */
 const handlerOfReset = (tabId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log('[background] RESET Begin...');
+        console.log("[background] RESET Begin...");
         // stateの更新：
         yield state.set({
             isTranscriptDisplaying: false,
@@ -1093,7 +973,7 @@ const handlerOfReset = (tabId) => __awaiter(void 0, void 0, void 0, function* ()
         // データ再取得処理
         const newSubtitles = yield repeatCaptureSubtitles(tabId);
         if (!newSubtitles.length)
-            throw new Error('Error: Failed to capture subtitles');
+            throw new Error("Error: Failed to capture subtitles");
         // If okay, then save subtitles data.
         yield state.set({
             isSubtitleCaptured: true,
@@ -1113,16 +993,16 @@ const handlerOfReset = (tabId) => __awaiter(void 0, void 0, void 0, function* ()
         });
         if (!resetOrder.success || !resetSubtitle) {
             throw new Error(`Error: Failed to reset controller. ${resetOrder.success
-                ? ''
+                ? ""
                 : resetOrder.failureReason + resetSubtitle.success
-                    ? ''
+                    ? ""
                     : resetSubtitle.failureReason} `);
         }
         yield state.set({
             isTranscriptDisplaying: true,
         });
         // ここまで何も問題なければRESET成功
-        console.log('[background] RESET Complete!');
+        console.log("[background] RESET Complete!");
     }
     catch (err) {
         console.error(err.message);
@@ -1143,7 +1023,7 @@ const handlerOfReset = (tabId) => __awaiter(void 0, void 0, void 0, function* ()
  * */
 const handlerOfHide = (tabId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log('[background] handlerOfHide hides ExTranscript...');
+        console.log("[background] handlerOfHide hides ExTranscript...");
         // stateの更新：
         yield state.set({
             isTranscriptDisplaying: false,
@@ -1157,7 +1037,7 @@ const handlerOfHide = (tabId) => __awaiter(void 0, void 0, void 0, function* () 
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.turnOff],
         });
         if (!r.success) {
-            throw new Error('Failed to hide ExTranscript');
+            throw new Error("Failed to hide ExTranscript");
         }
     }
     catch (err) {
@@ -1170,7 +1050,7 @@ const handlerOfHide = (tabId) => __awaiter(void 0, void 0, void 0, function* () 
  * */
 const resetEachContentScript = (tabId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log('[background] BEGIN resetEachContentScript()');
+        console.log("[background] BEGIN resetEachContentScript()");
         const contentScript = (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
@@ -1188,11 +1068,11 @@ const resetEachContentScript = (tabId) => __awaiter(void 0, void 0, void 0, func
                 return _.failureReason;
             }
         })
-            .join(' ');
+            .join(" ");
         if (failureReasons) {
             throw new Error(`Error: failed to reset content script. ${failureReasons}`);
         }
-        console.log('[background] DONE resetEachContentScript()');
+        console.log("[background] DONE resetEachContentScript()");
     }
     catch (err) {
         console.error(err.message);
@@ -1205,7 +1085,7 @@ const resetEachContentScript = (tabId) => __awaiter(void 0, void 0, void 0, func
  * */
 const turnOffEachContentScripts = (tabId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log('[background] Turning off each content scripts');
+        console.log("[background] Turning off each content scripts");
         const contentScript = (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
@@ -1223,11 +1103,11 @@ const turnOffEachContentScripts = (tabId) => __awaiter(void 0, void 0, void 0, f
                 return _.failureReason;
             }
         })
-            .join(' ');
+            .join(" ");
         if (failureReasons) {
             throw new Error(`Error: failed to turn off content script. ${failureReasons}`);
         }
-        console.log('[background] Done turning off each content scripts');
+        console.log("[background] Done turning off each content scripts");
     }
     catch (err) {
         console.error(err.message);
@@ -1247,7 +1127,7 @@ const repeatCaptureSubtitles = function (tabId) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             let intervalId;
             let counter = 0;
-            console.log('[repeatCaptureSubtitles]Begin to capture subtitles... ');
+            console.log("[repeatCaptureSubtitles]Begin to capture subtitles... ");
             intervalId = setInterval(function () {
                 return __awaiter(this, void 0, void 0, function* () {
                     if (counter >= 10) {
@@ -1256,7 +1136,7 @@ const repeatCaptureSubtitles = function (tabId) {
                         clearInterval(intervalId);
                         reject([]);
                     }
-                    console.log('[repeatCaptureSubtitles] capture again...');
+                    console.log("[repeatCaptureSubtitles] capture again...");
                     const r = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
                         from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
                         to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.captureSubtitle,
@@ -1264,7 +1144,7 @@ const repeatCaptureSubtitles = function (tabId) {
                     });
                     if (r.subtitles !== undefined && r.subtitles.length) {
                         // Succeed
-                        console.log('[repeatCaptureSubtitles] Succeed to capture!');
+                        console.log("[repeatCaptureSubtitles] Succeed to capture!");
                         clearInterval(intervalId);
                         resolve(r.subtitles);
                     }
@@ -1361,6 +1241,24 @@ const state = (function () {
 //     },
 //   };
 // })();
+// /*****
+//  * Verify given url or current tab url
+//  * ________________________________________________________
+//  *
+//  * */
+// const handlerOfVerifyValidPage = async (_url?: string): Promise<boolean> => {
+//   try {
+//     let url: string = "";
+//     if (_url === undefined) {
+//       const tab: chrome.tabs.Tab = await tabsQuery();
+//       url = tab.url;
+//     } else url = _url;
+//     const result: RegExpMatchArray = url.match(urlPattern);
+//     return result && result.length ? true : false;
+//   } catch (err) {
+//     console.error(err.message);
+//   }
+// };
 
 })();
 

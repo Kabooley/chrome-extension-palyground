@@ -12,7 +12,17 @@
  *  必要ない
  *  order.resetに対応するときにおいて、
  *  DOM Manipulationは関数内部で実行時のみに行われるので
- *  イベントリスナなど付け替える必要がないため
+ *  イベントリスナなど付け替える必要がない
+ *
+ * 例外：
+ * capturingSubtitle()でSuntaxErrorが起こる可能性があるかも
+ *
+ *
+ * NOTE:
+ *
+ * このcontent scriptの機能が呼び出される状況は、DOMがページに
+ * ローディング済であることを前提とする
+ * なのであらゆるローディング待機の処理を持たない
  *
  *
  *********************************************************/
@@ -45,7 +55,7 @@ chrome.runtime.onMessage.addListener(
         if (to !== extensionNames.captureSubtitle) return;
         const r: iResponse = {
             from: extensionNames.captureSubtitle,
-            to: from
+            to: from,
         };
 
         if (order && order.length) {
@@ -53,14 +63,13 @@ chrome.runtime.onMessage.addListener(
                 try {
                     const chunks: subtitle_piece[] = mainProcess();
                     r.subtitles = chunks;
-                }
-                catch(err) {
-                    // TODO: error分類
-                }
-                finally {
+                    r.success = true;
+                } catch (e) {
+                    r.success = false;
+                    r.error = e;
+                } finally {
                     r.complete = true;
                     sendResponse(r);
-
                 }
             }
         }
@@ -69,18 +78,28 @@ chrome.runtime.onMessage.addListener(
 
 // -- Capture Methods -----------------------------------
 
+/**********************************************
+ * @return {subtitle_piece[]}
+ * @throws {SyntaxError}
+ *
+ * */
 const capturingSubtitle = (): subtitle_piece[] => {
-    const spans: NodeListOf<HTMLSpanElement> =
-        document.querySelectorAll<HTMLSpanElement>(
-            selectors.transcript.transcripts
-        );
+    try {
+        const spans: NodeListOf<HTMLSpanElement> =
+            document.querySelectorAll<HTMLSpanElement>(
+                selectors.transcript.transcripts
+            );
 
-    const subtitles: subtitle_piece[] = Array.from(spans).map(
-        (span, index): subtitle_piece => {
-            return { index: index, subtitle: span.innerText.trim() };
-        }
-    );
-    return subtitles;
+        const subtitles: subtitle_piece[] = Array.from(spans).map(
+            (span, index): subtitle_piece => {
+                return { index: index, subtitle: span.innerText.trim() };
+            }
+        );
+        return subtitles;
+    } catch (e) {
+        // Array.from(null)でSyntaxError. spansがnullだった可能性がある
+        throw e;
+    }
 };
 
 /*

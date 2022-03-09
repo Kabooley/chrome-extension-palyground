@@ -20,14 +20,6 @@ Injectタイミング:
 handlerOfControlbar()でコントロールバー上のクリックイベントを監視する
 moControlbarでコントロールバー上でトランスクリプト・トグルボタンが現れたか消えたかを監視する
 
-NOTE:
-
-エラーハンドリングと例外処理：
-
-エラーにすべきか、例外にすべきかは処理によるので
-各処理を吟味しないといかんかも
-
-
 ************************************************************/
 
 import * as selectors from '../utils/selectors';
@@ -42,7 +34,11 @@ import {
     delay,
     repeatActionPromise,
 } from '../utils/helpers';
-import { DomManipulationError, PageStatusNotReadyError, uError } from '../Error/Error';
+import {
+    DomManipulationError,
+    PageStatusNotReadyError,
+    uError,
+} from '../Error/Error';
 
 //
 // --- GLOBALS ---------------------------------------------------
@@ -56,7 +52,7 @@ let controlbar: HTMLElement = null;
 // --- chrome API Listeners -------------------------------------
 //
 
-/*********
+/******************************************************
  * @param {iMessage} message
  * @param {function} sendResponse:
  * Invoke this function to response. The function is required.
@@ -100,16 +96,10 @@ chrome.runtime.onMessage.addListener(
 
                     response.language = isEnglish;
                     response.isTranscriptDisplaying = isOpen;
+                    response.success = true;
                 } catch (err) {
                     response.success = false;
-                    // failureReasonを投げるよりも、
-                    // Errorインスタンスそのものを渡した方がいいかも？
-                    //   TODO: ErrorインスタンスをiResponseに含める
                     response.error = err;
-                    //   response.failureReason = err.message;
-                    // ここでエラースローしても受け取る相手がいない
-                    // 結局backgroundへ伝えるにはメッセージを送信するしかない
-                    // throw new PageStatusNotReadyError(err.message);
                 } finally {
                     response.complete = true;
                     sendResponse(response);
@@ -136,7 +126,7 @@ chrome.runtime.onMessage.addListener(
             // Require to make sure the page is including movie container or not.
             if (order.includes(orderNames.isPageIncludingMovie)) {
                 console.log('Order: Is this page including movie container?');
-                repeatQuerySelector(selectors.videoContainer)
+                repeatCheckQueryAcquired(selectors.videoContainer, true)
                     .then((r: boolean) => {
                         response.isPageIncludingMovie = r;
                         response.success = true;
@@ -166,7 +156,7 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-/***
+/*****************************************
  *  Sends status of injected page to background
  * @param order {object}
  * */
@@ -187,19 +177,15 @@ const sendToBackground = async (order: {
     if (isEnglish !== undefined) {
         m['language'] = isEnglish;
     }
-
-    try {
-        await sendMessagePromise(m);
-    } catch (err) {
-        console.error(err.message);
-    }
+    
+    await sendMessagePromise(m);
 };
 
 //
 // ---- Event Handlers -----------------------------------------
 //
 
-/****
+/*************************************************
  * Handler of RESET order.
  *
  * controlbar DOMを取得しなおす
@@ -211,46 +197,17 @@ const sendToBackground = async (order: {
 const handlerOfReset = async (): Promise<void> => {
     try {
         await initialize();
-    } catch (err) {
-        throw err;
+    } catch (e) {
+        throw e;
     }
 };
 
-/****
- * @param {selector} string : Selector for DOM about to capture.
- * @return {promise} HTMLElement : Resolved when matched, rejected when times out or not matched. 
- *
- * 取得元のwebページがローディング中などでなかなかすぐにDOMがロードされないときとかに使う
- * 指定のDOMが取得できるまで、繰り返し取得を試みる
- * １０回取得を試みても取得できなかったらnullを返す
- * */
-const repeatQueryDom = async (selector: string): Promise<HTMLElement> => {
-    return new Promise((resolve, reject): void => {
-        let intervalId: NodeJS.Timer;
-        let counter: number = 10;
 
-        intervalId = setInterval(function () {
-            if (counter <= 0) {
-                // Failed
-                console.log("[repeatQueryDom] Time out! It's over 10 times");
-                clearInterval(intervalId);
-                reject(null);
-            }
-
-            console.log('[repeatQueryDom] query dom');
-            const e: HTMLElement = document.querySelector(selector);
-            if (e) {
-                // Succeed
-                console.log('[repeatQueryDom] Succeeed to query dom!');
-                clearInterval(intervalId);
-                resolve(e);
-            } else counter--;
-        }, INTERVAL_TIME);
-    });
-};
-
-/****
+/**************************************************
  *  Handler of Click Event on Controlbar
+ * 
+ * @param {PointEvent} ev
+ *  
  *
  * setTimeout() callback will be fired after click event has been done immediately.
  *
@@ -297,7 +254,7 @@ const handlerOfControlbar = function (ev: PointerEvent): void {
     }, 200);
 };
 
-/**
+/*****************************************************
  * Check Transcript is opened or not.
  *
  * @returns {boolean}: true for open, false for not open.
@@ -311,7 +268,7 @@ const isTranscriptOpen = (): boolean => {
     return toggleButton.getAttribute('aria-expanded') === 'true' ? true : false;
 };
 
-/**
+/****************************************************
  * Check Subtitle language is English or not.
  *
  * @returns {boolean}: true if it's English, false if not.
@@ -408,7 +365,7 @@ const moCallback = (mr: MutationRecord[]): void => {
                     );
                 if (dataPurpose && dataPurpose === 'transcript-toggle') {
                     console.log(
-                        '[contentScript] Added Transcript Toggle Button'
+                        '[contentScript] Appeared Transcript Toggle Button'
                     );
                     sendToBackground({ isOpened: isTranscriptOpen() });
                 }
@@ -423,7 +380,7 @@ const moCallback = (mr: MutationRecord[]): void => {
                     );
                 if (dataPurpose && dataPurpose === 'transcript-toggle') {
                     console.log(
-                        '[contentScript] Removed Transcript Toggle Button'
+                        '[contentScript] Disappeared Transcript Toggle Button'
                     );
                     sendToBackground({ isOpened: false });
                 }
@@ -436,7 +393,7 @@ const moCallback = (mr: MutationRecord[]): void => {
 // ---- Other Methods -------------------------------------------
 //
 
-/********
+/************************************************
  *
  * 与えられたselectorからDOMが存在するかしらべて
  * 真偽値を返す
@@ -446,28 +403,55 @@ const investTheElementIncluded = (selector: string): boolean => {
     return e ? true : false;
 };
 
-/*******
- *
+/**************************************************
+ * Repeat checking if DOM has been acquired.
+ * @param {string} selector : selector for dom about to acquire.
+ * @param {boolean} timeoutAsResolve: If true, then timeout will not occure error.
+ * @return {boolean} : Return boolean result. True as dom acquired. False as not.
  *
  * */
-const repeatQuerySelector = async (selector: string): Promise<boolean> => {
+const repeatCheckQueryAcquired = async (
+    selector: string,
+    timeoutAsResolve: boolean = false
+): Promise<boolean> => {
     try {
         return await repeatActionPromise(
             function () {
                 return investTheElementIncluded(selector);
             },
-            true,
+            timeoutAsResolve,
             200,
             10
         );
-    } catch (err) {
-        console.error(err);
-        throw err;
+    } catch (e) {
+        throw e;
     }
 };
 
-/****
- *  Immediately initializes after injected
+/*************************************************
+ * Repeat to try query dom by given selector.
+ * @param {string} selector: Selector for dom about to acquire.
+ * @return {promise} represents HTMLElement as success.
+ * @throws {DomManipulationError}
+ *
+ * repeatCheckQueryAcquired()でDOMが現れるまで待つ
+ * 現れたらDOMを取得して返す
+ *
+ * 現れないでタイムアウトなら例外を投げる
+ * */
+const repeatQuerySelector = async (selector: string): Promise<HTMLElement> => {
+    try {
+        await repeatCheckQueryAcquired(selector);
+        return document.querySelector<HTMLElement>(selector);
+    } catch (err) {
+        throw new DomManipulationError(
+            `DomManipulationError: Could not get DOM by selector ${selector}`
+        );
+    }
+};
+
+/*****************************************
+ *  Initialize for detecting injected page status.
  *
  *  set up controlbar click event listener.
  *  set up MutationObserver of controlbar.
@@ -483,24 +467,33 @@ const initialize = async (): Promise<void> => {
         if (controlbar)
             controlbar.removeEventListener('click', handlerOfControlbar);
         controlbar = null;
-        controlbar = await repeatQueryDom(selectors.transcript.controlbar);
-        if (!controlbar) throw new DomManipulationError('Error: Failed to get controlbar DOM');
+        controlbar = await repeatQuerySelector(selectors.transcript.controlbar);
         controlbar.addEventListener('click', handlerOfControlbar);
         // 再度、更新済のDOMに対してMutationObserverを設置する
         moControlbar.observe(controlbar, config);
         console.log('content script initialize has been done');
     } catch (err) {
-        if(err instanceof DomManipulationError) 
+        if (err instanceof DomManipulationError)
             console.error(`DomManipulationError: ${err.message}`);
         throw err;
     }
 };
 
-// Entry point
-//
+
+/**********************************************
+ * Entry Point
+ * 
+ * */ 
 (function () {
-    // TODO: FIX 例外スローをキャッチする対象がいない
-    initialize();
+    initialize()
+    .catch(e => {
+        chrome.runtime.sendMessage({
+            from: extensionNames.contentScript,
+            to: extensionNames.background,
+            success: false,
+            error: e
+        });
+    })
 })();
 
 //
@@ -710,4 +703,37 @@ const initialize = async (): Promise<void> => {
 //       sendToBackground({ isEnglish: r });
 //       document.removeEventListener('click', ccPopupMenuClickHandler, true);
 //   }
+// };
+
+// /****
+//  * @param {selector} string : Selector for DOM about to capture.
+//  * @return {promise} HTMLElement : Resolved when matched, rejected when times out or not matched.
+//  *
+//  * 取得元のwebページがローディング中などでなかなかすぐにDOMがロードされないときとかに使う
+//  * 指定のDOMが取得できるまで、繰り返し取得を試みる
+//  * １０回取得を試みても取得できなかったらnullを返す
+//  * */
+//  const repeatQueryDom = async (selector: string): Promise<HTMLElement> => {
+//     return new Promise((resolve, reject): void => {
+//         let intervalId: NodeJS.Timer;
+//         let counter: number = 10;
+
+//         intervalId = setInterval(function () {
+//             if (counter <= 0) {
+//                 // Failed
+//                 console.log("[repeatQueryDom] Time out! It's over 10 times");
+//                 clearInterval(intervalId);
+//                 reject(null);
+//             }
+
+//             console.log('[repeatQueryDom] query dom');
+//             const e: HTMLElement = document.querySelector(selector);
+//             if (e) {
+//                 // Succeed
+//                 console.log('[repeatQueryDom] Succeeed to query dom!');
+//                 clearInterval(intervalId);
+//                 resolve(e);
+//             } else counter--;
+//         }, INTERVAL_TIME);
+//     });
 // };

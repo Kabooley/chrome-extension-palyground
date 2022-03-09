@@ -93,9 +93,7 @@ export const repeatActionPromise = async (
       } else if (triesLeft <= 1 && !timeoutAsResolve) {
         clearInterval(intervalId);
         // 例外エラーとしてcatchされる
-        reject(
-          "Error: Action callback fuction never returned true and time out.@repeatActionPromise"
-        );
+        reject();
       }
       triesLeft--;
     }, interval);

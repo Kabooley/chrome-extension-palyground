@@ -510,6 +510,8 @@ const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
     }
 
     // 字幕取得できるまで10回は繰り返す関数で取得する
+    // NOTE: 戻り値が空の配列でも受け入れることにする
+    // TODO: セレクタが一致するかどうか検査する関数を設ける
     const subtitles: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
 
     await state.set({ subtitles: subtitles });

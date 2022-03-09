@@ -387,7 +387,7 @@ try {
 上の例コードを見るとわかるけれど、
 その通りになる
 
-#### エラーvs例外
+#### エラー vs 例外
 
 参考：
 
@@ -401,12 +401,11 @@ https://blog.ohgaki.net/error-exception-secure-coding-programming
 
 > エラー処理と例外処理の違い
 
-> - **エラー処理は”起きることが期待される問題”で、多くの場合、プログラムの実行停止は行えない**
+> -   **エラー処理は”起きることが期待される問題”で、多くの場合、プログラムの実行停止は行えない**
 
-> - **例外処理は”起きることが期待されない問題”で、多くの場合、プログラムの実行を停止しても構わない**
+> -   **例外処理は”起きることが期待されない問題”で、多くの場合、プログラムの実行を停止しても構わない**
 
 これを理解していないとおかしな例外の使い方／エラー処理になります。
-
 
 プログラムを開発するときは
 起こりうる問題をすべて想定しておかなくてはならない
@@ -420,10 +419,9 @@ https://blog.ohgaki.net/error-exception-secure-coding-programming
 実現したいのは正常系の処理で
 エラー処理はなるべく分離したい！
 
-
-
-
 ### chrome API 知見まとめ
+
+-   content script で例外が発生しても background script へそのことを教えるには message-passing しかない
 
 #### icon が表示されないときは
 
@@ -4839,71 +4837,24 @@ finally {
 
 ##### RUN プロセスの最中のエラーハンドリング
 
-予測可能なエラー：
+RUN するタイミングによってはまだ Udemy 講義ページがローディングの可能性がある
 
--   backgruond.ts::chrome.runtime.onInstalled が実行されていないまま state へアクセスしたときのエラー（起こるとは考えづらい）
+となると
 
--   [DomManipulationError] contentScript.ts へ sendStatus したときに、contentScript で DOM 取得に失敗したことによるエラー
-    contentScript.ts::isSubtitleEnglish()では DOMmanipulation が失敗したときに例外をスローする。
-    chrome.runtime.onMessage でキャッチして response.error として sendResponse する
+contentScript.js が orderNames.sendStatus 対応中に時間を置くようにすればいいかも
 
--   [DomManipulationError] contentScript.ts へ reset おーだをしたとき、controlbar の DOM を取得できなかったら
+なにか重要な DOM が取得するときは`./utils/helpers.ts::repeatActionPromise()`を使うとか
 
-    `repeatQueryDom`DOM 取得に失敗しても null を返すだけ
-    null が返されたら DomManipulationError をスローして
-    呼び出し元の chrome.runtime.onMessage がキャッチして
-    response.error として sendResponse する
+1. 予測可能・起こっても対処可能なエラー
 
-...こんなに DOM 取得の失敗を心配するならばどこかのタイミングで DOM があるかチェックする関数でも呼出せばいいかしら？
+共通：ローディング中につき DOM が取得できない
 
-DOM 取得の失敗の原因...
+2. 予測できない・起こってはならないエラー
 
--   ローディングが間に合っていない
+NOTE: 共通：セレクタが不一致による問題はアプリ実行不可能
 
-再トライでどうにかなるかもなのでもう一度トライしてみてくださいとアラートする？
+なので素直にアプリ実行不可能にして開発者に連絡しろがいいのかもしれない
 
--   セレクタがマッチしない
-
-どうにもならない。利用しない方がいいと警告する
-
-セレクタがマッチするかどうか inject されたときにチェックする体制にする
-
-```TypeScript
-// contentScript.ts
-
-// inject時に(ローディングの問題以外で)必ず取得できるセレクタは？
-// controlbar
-// closed caption popup button
-// videoContainer
-// 条件がそろわないと取得できないセレクタ
-// transcriptToggle button
-// theatreToggle button
-//
-const checkDomsMatch = (): boolean => {
-  const selectors = [
-    selectors.transcript.controlbar,
-    selectors.videoContainer,
-    selectors.controlBar.cc.menuListParent,
-    selectors.controlBar.cc.menuCheckButtons,
-    selectors.controlBar.cc.menuList
-
-
-  ]
-}
-```
-
-
-contentScript.tsで起こっていい問題、起こってはならない問題
-
-when orderNames.sendStatus
-
-もしもセレクタが一致しないという理由ならば、起こってはならない問題
-DOMローディングが間に合っていないという理由ならば、起こっていいもんだい
-
-isSubtitleEnglish()でDOMが取得できない
-isTranscriptOpen()で〃
-
-
-when orderNames.reset
-
-initialize()でcontrolbarのDOMが取得できない
+TODO: CSS セレクタ不一致なら例外を起こす仕組み
+TODO: controller.ts, transcriptView 系のエラーの可能性のある場所の精査
+TODO: エラーまたは false 等を受け取った時の background.ts の挙動の決定、実装

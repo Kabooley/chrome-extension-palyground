@@ -30801,7 +30801,7 @@ const repeatActionPromise = (action, timeoutAsResolve = false, interval = 200, t
                 else if (triesLeft <= 1 && !timeoutAsResolve) {
                     clearInterval(intervalId);
                     // 例外エラーとしてcatchされる
-                    reject("Error: Action callback fuction never returned true and time out.@repeatActionPromise");
+                    reject();
                 }
                 triesLeft--;
             });

@@ -2,6 +2,50 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./src/Error/Error.ts":
+/*!****************************!*\
+  !*** ./src/Error/Error.ts ***!
+  \****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "ErrorBase": () => (/* binding */ ErrorBase),
+/* harmony export */   "DomManipulationError": () => (/* binding */ DomManipulationError),
+/* harmony export */   "PageStatusNotReadyError": () => (/* binding */ PageStatusNotReadyError)
+/* harmony export */ });
+class Err {
+    constructor(message) {
+        this.message = message;
+        this.name = 'Error'; // (組み込みのエラークラスごとに異なる名前)
+    }
+}
+class ErrorBase extends Err {
+    constructor(message) {
+        super(message);
+        this.name = this.constructor.name;
+    }
+}
+class DomManipulationError extends ErrorBase {
+    constructor(message) {
+        super(message);
+        this.name = 'DomManipulationError';
+    }
+}
+/***********
+ * Among contentScript.js
+ * Thrown if subtitle is not English, or Transcript is not opened
+ * */
+class PageStatusNotReadyError extends ErrorBase {
+    constructor(message) {
+        super(message);
+        this.name = 'PageStatusNotReadyError';
+    }
+}
+
+
+/***/ }),
+
 /***/ "./src/utils/constants.ts":
 /*!********************************!*\
   !*** ./src/utils/constants.ts ***!
@@ -289,7 +333,7 @@ const repeatActionPromise = (action, timeoutAsResolve = false, interval = 200, t
                 else if (triesLeft <= 1 && !timeoutAsResolve) {
                     clearInterval(intervalId);
                     // 例外エラーとしてcatchされる
-                    reject("Error: Action callback fuction never returned true and time out.@repeatActionPromise");
+                    reject();
                 }
                 triesLeft--;
             });
@@ -507,6 +551,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_selectors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/selectors */ "./src/utils/selectors.ts");
 /* harmony import */ var _utils_constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/constants */ "./src/utils/constants.ts");
 /* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
+/* harmony import */ var _Error_Error__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Error/Error */ "./src/Error/Error.ts");
 /***********************************************************
 static content script
 ___________________________________________________________
@@ -529,7 +574,6 @@ Injectタイミング:
 handlerOfControlbar()でコントロールバー上のクリックイベントを監視する
 moControlbarでコントロールバー上でトランスクリプト・トグルボタンが現れたか消えたかを監視する
 
-TODO:
 ************************************************************/
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -543,6 +587,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
 //
 // --- GLOBALS ---------------------------------------------------
 //
@@ -552,13 +597,10 @@ let controlbar = null;
 //
 // --- chrome API Listeners -------------------------------------
 //
-/*********
- * @message {iMessage} message
+/******************************************************
+ * @param {iMessage} message
  * @param {function} sendResponse:
  * Invoke this function to response. The function is required.
- *
- *
- *
  * @return {boolean} :
  * `return true` to wait for sendResponse() solved asynchronously.
  * DO NOT return Promise<boolean>.
@@ -569,7 +611,7 @@ let controlbar = null;
  * And every order should be responsed by invoking sendResponse with `{complete: true}`.
  * */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log("CONTENT SCRIPT GOT MESSAGE");
+    console.log('CONTENT SCRIPT GOT MESSAGE');
     const { from, order, to } = message;
     const response = {
         from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
@@ -581,96 +623,99 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (order && order.length) {
         // SEND STATUS
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.sendStatus)) {
-            console.log("Order: SEND STATUS");
-            const isEnglish = isSubtitleEnglish();
-            // トランスクリプトボタンがコントロールバー上にある
-            // かつ
-            // トランスクリプトが表示されてる
-            let isOpen = false;
-            const toggle = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
-            if (!toggle)
-                isOpen = false;
-            else
-                isOpen = isTranscriptOpen();
-            response.language = isEnglish;
-            response.isTranscriptDisplaying = isOpen;
-            response.complete = true;
-            sendResponse(response);
+            console.log('Order: SEND STATUS');
+            try {
+                const isEnglish = isSubtitleEnglish();
+                let isOpen = false;
+                const toggle = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
+                if (!toggle)
+                    isOpen = false;
+                else
+                    isOpen = isTranscriptOpen();
+                response.language = isEnglish;
+                response.isTranscriptDisplaying = isOpen;
+                response.success = true;
+            }
+            catch (err) {
+                response.success = false;
+                response.error = err;
+            }
+            finally {
+                response.complete = true;
+                sendResponse(response);
+            }
         }
         // RESET
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.reset)) {
-            console.log("Order: RESET");
+            console.log('Order: RESET');
             handlerOfReset()
                 .then(() => {
-                console.log("[contentScript] Reset resolved");
-                sendResponse({
-                    from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
-                    to: from,
-                    complete: true,
-                    success: true,
-                });
+                response.success = true;
             })
                 .catch((err) => {
-                console.error(err);
+                console.error(err.message);
+                response.success = false;
+                response.error = err;
+            })
+                .finally(() => {
+                response.complete = true;
+                sendResponse(response);
             });
         }
         // Require to make sure the page is including movie container or not.
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.isPageIncludingMovie)) {
-            console.log("Order: is this page including movie container?");
-            repeatQuerySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.videoContainer)
+            console.log('Order: Is this page including movie container?');
+            repeatCheckQueryAcquired(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.videoContainer, true)
                 .then((r) => {
-                console.log(`result: ${r}`);
-                sendResponse({
-                    complete: true,
-                    isPageIncludingMovie: r,
-                });
+                response.isPageIncludingMovie = r;
+                response.success = true;
             })
                 .catch((err) => {
                 console.error(err);
+                response.success = false;
+                response.error = err;
+            })
+                .finally(() => {
+                response.complete = true;
+                sendResponse(response);
             });
         }
         // TURN OFF
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.turnOff)) {
-            console.log("Order: Turn off");
+            console.log('Order: Turn off');
             moControlbar.disconnect();
-            controlbar.removeEventListener("click", handlerOfControlbar);
+            controlbar.removeEventListener('click', handlerOfControlbar);
             // moControlbarとcontrolbarはnullにしておく必要があるかな？
             // その後のorderによるなぁ
-            sendResponse({ complete: true });
+            response.complete = true;
+            sendResponse(response);
         }
     }
     return true;
 });
-/***
+/*****************************************
  *  Sends status of injected page to background
  * @param order {object}
  * */
 const sendToBackground = (order) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("SENDING MESSAGE TO BACKGROUND");
+    console.log('SENDING MESSAGE TO BACKGROUND');
     const { isOpened, isEnglish } = order;
-    const message = {
+    const m = {
         from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
         to: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.background,
     };
     if (isOpened !== undefined) {
-        message["isTranscriptDisplaying"] = isOpened;
+        m['isTranscriptDisplaying'] = isOpened;
     }
     if (isEnglish !== undefined) {
-        message["language"] = isEnglish;
+        m['language'] = isEnglish;
     }
-    console.log("DEBUG: make sure message object");
-    console.log(message);
-    try {
-        yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_2__.sendMessagePromise)(message);
-    }
-    catch (err) {
-        console.error(err.message);
-    }
+    yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_2__.sendMessagePromise)(m);
 });
 //
 // ---- Event Handlers -----------------------------------------
 //
-/****
+/*************************************************
  * Handler of RESET order.
  *
  * controlbar DOMを取得しなおす
@@ -683,42 +728,15 @@ const handlerOfReset = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield initialize();
     }
-    catch (err) {
-        console.error(err.message);
+    catch (e) {
+        throw e;
     }
 });
-/****
- *
- * 取得元のwebページがローディング中などでなかなかすぐにDOMがロードされないときとかに使う
- * 指定のDOMが取得できるまで、繰り返し取得を試みる
- * １０回取得を試みても取得できなかったらnullを返す
- * */
-const repeatQueryDom = (selector) => __awaiter(void 0, void 0, void 0, function* () {
-    return new Promise((resolve, reject) => {
-        let intervalId;
-        let counter = 10;
-        intervalId = setInterval(function () {
-            if (counter <= 0) {
-                // Failed
-                console.log("[repeatQueryDom] Time out! It's over 10 times");
-                clearInterval(intervalId);
-                reject(null);
-            }
-            console.log("[repeatQueryDom] query dom");
-            const e = document.querySelector(selector);
-            if (e) {
-                // Succeed
-                console.log("[repeatQueryDom] Succeeed to query dom!");
-                clearInterval(intervalId);
-                resolve(e);
-            }
-            else
-                counter--;
-        }, INTERVAL_TIME);
-    });
-});
-/****
+/**************************************************
  *  Handler of Click Event on Controlbar
+ *
+ * @param {PointEvent} ev
+ *
  *
  * setTimeout() callback will be fired after click event has been done immediately.
  *
@@ -756,7 +774,7 @@ const handlerOfControlbar = function (ev) {
         }
     }, 200);
 };
-/**
+/*****************************************************
  * Check Transcript is opened or not.
  *
  * @returns {boolean}: true for open, false for not open.
@@ -765,12 +783,14 @@ const handlerOfControlbar = function (ev) {
  * */
 const isTranscriptOpen = () => {
     const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
-    return toggleButton.getAttribute("aria-expanded") === "true" ? true : false;
+    return toggleButton.getAttribute('aria-expanded') === 'true' ? true : false;
 };
-/**
+/****************************************************
  * Check Subtitle language is English or not.
  *
  * @returns {boolean}: true if it's English, false if not.
+ * @throws {DomManipulationError} : When dom acquisition failes.
+ * Exception might be happen when selector is not matches.
  *
  * Get DOM everytime this function invoked.
  */
@@ -778,21 +798,25 @@ const isSubtitleEnglish = () => {
     const listParent = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuListParent);
     const checkButtons = listParent.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuCheckButtons);
     const menuList = listParent.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuList);
+    if (!listParent || !checkButtons || !menuList)
+        throw new _Error_Error__WEBPACK_IMPORTED_MODULE_3__.DomManipulationError('Failed to manipulate DOM');
     let counter = 0;
     let i = null;
     const els = Array.from(checkButtons);
     for (const btn of els) {
-        if (btn.getAttribute("aria-checked") === "true") {
+        if (btn.getAttribute('aria-checked') === 'true') {
             i = counter;
             break;
         }
         counter++;
     }
+    // NOTE: 字幕リストで何も選択されていないというのは起こりえないはず
+    // なのでこのチェック自体が無意味かも
     if (i === null) {
-        throw new Error("Error: [isSubtitleEnglish()] Something went wrong but No language is selected");
+        throw new Error('Error: [isSubtitleEnglish()] Something went wrong but No language is selected');
     }
     const currentLanguage = Array.from(menuList)[i].innerText;
-    if (currentLanguage.includes("English") || currentLanguage.includes("英語"))
+    if (currentLanguage.includes('English') || currentLanguage.includes('英語'))
         return true;
     else
         return false;
@@ -830,24 +854,24 @@ const config = {
 const moCallback = (mr) => {
     let guard = false;
     mr.forEach((record) => {
-        if (record.type === "childList" && !guard) {
+        if (record.type === 'childList' && !guard) {
             // NOTE: MutationRecord[0]だけしらべればいいので1週目だけでループを止める
             // じゃぁforEach()を使うなという話ではあるけど...
             guard = true;
             // Added Nodes
             record.addedNodes.forEach((node) => {
-                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute("data-purpose");
-                if (dataPurpose && dataPurpose === "transcript-toggle") {
-                    console.log("[contentScript] Added Transcript Toggle Button");
+                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute('data-purpose');
+                if (dataPurpose && dataPurpose === 'transcript-toggle') {
+                    console.log('[contentScript] Appeared Transcript Toggle Button');
                     sendToBackground({ isOpened: isTranscriptOpen() });
                 }
             });
             // Removed Nodes
             record.removedNodes.forEach((node) => {
                 // これで取得できた！！！
-                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute("data-purpose");
-                if (dataPurpose && dataPurpose === "transcript-toggle") {
-                    console.log("[contentScript] Removed Transcript Toggle Button");
+                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute('data-purpose');
+                if (dataPurpose && dataPurpose === 'transcript-toggle') {
+                    console.log('[contentScript] Disappeared Transcript Toggle Button');
                     sendToBackground({ isOpened: false });
                 }
             });
@@ -857,7 +881,7 @@ const moCallback = (mr) => {
 //
 // ---- Other Methods -------------------------------------------
 //
-/********
+/************************************************
  *
  * 与えられたselectorからDOMが存在するかしらべて
  * 真偽値を返す
@@ -866,28 +890,51 @@ const investTheElementIncluded = (selector) => {
     const e = document.querySelector(selector);
     return e ? true : false;
 };
-/*******
- *
+/**************************************************
+ * Repeat checking if DOM has been acquired.
+ * @param {string} selector : selector for dom about to acquire.
+ * @param {boolean} timeoutAsResolve: If true, then timeout will not occure error.
+ * @return {boolean} : Return boolean result. True as dom acquired. False as not.
  *
  * */
-const repeatQuerySelector = (selector) => __awaiter(void 0, void 0, void 0, function* () {
+const repeatCheckQueryAcquired = (selector, timeoutAsResolve = false) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         return yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_2__.repeatActionPromise)(function () {
             return investTheElementIncluded(selector);
-        }, true, 200, 10);
+        }, timeoutAsResolve, 200, 10);
     }
-    catch (err) {
-        console.error(err.message);
+    catch (e) {
+        throw e;
     }
 });
-/****
- *  Immediately initializes after injected
+/*************************************************
+ * Repeat to try query dom by given selector.
+ * @param {string} selector: Selector for dom about to acquire.
+ * @return {promise} represents HTMLElement as success.
+ * @throws {DomManipulationError}
+ *
+ * repeatCheckQueryAcquired()でDOMが現れるまで待つ
+ * 現れたらDOMを取得して返す
+ *
+ * 現れないでタイムアウトなら例外を投げる
+ * */
+const repeatQuerySelector = (selector) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield repeatCheckQueryAcquired(selector);
+        return document.querySelector(selector);
+    }
+    catch (err) {
+        throw new _Error_Error__WEBPACK_IMPORTED_MODULE_3__.DomManipulationError(`DomManipulationError: Could not get DOM by selector ${selector}`);
+    }
+});
+/*****************************************
+ *  Initialize for detecting injected page status.
  *
  *  set up controlbar click event listener.
  *  set up MutationObserver of controlbar.
  * */
 const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("CONTENT SCRIPT INITIALIZING...");
+    console.log('CONTENT SCRIPT INITIALIZING...');
     try {
         // いったんMutationObserverを停止してから...
         if (moControlbar)
@@ -896,24 +943,34 @@ const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
         moControlbar = new MutationObserver(moCallback);
         // controlbarのDOMを再取得
         if (controlbar)
-            controlbar.removeEventListener("click", handlerOfControlbar);
+            controlbar.removeEventListener('click', handlerOfControlbar);
         controlbar = null;
-        controlbar = yield repeatQueryDom(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.controlbar);
-        if (!controlbar)
-            throw new Error("Error: Failed to get controlbar DOM");
-        controlbar.addEventListener("click", handlerOfControlbar);
+        controlbar = yield repeatQuerySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.controlbar);
+        controlbar.addEventListener('click', handlerOfControlbar);
         // 再度、更新済のDOMに対してMutationObserverを設置する
         moControlbar.observe(controlbar, config);
-        console.log("content script initialize has been done");
+        console.log('content script initialize has been done');
     }
     catch (err) {
-        console.error(err.message);
+        if (err instanceof _Error_Error__WEBPACK_IMPORTED_MODULE_3__.DomManipulationError)
+            console.error(`DomManipulationError: ${err.message}`);
+        throw err;
     }
 });
-// Entry point
-//
+/**********************************************
+ * Entry Point
+ *
+ * */
 (function () {
-    initialize();
+    initialize()
+        .catch(e => {
+        chrome.runtime.sendMessage({
+            from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
+            to: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.background,
+            success: false,
+            error: e
+        });
+    });
 })();
 //
 // --- LEGACY CODE ---------------------------------------------
@@ -1108,6 +1165,36 @@ const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
 //       sendToBackground({ isEnglish: r });
 //       document.removeEventListener('click', ccPopupMenuClickHandler, true);
 //   }
+// };
+// /****
+//  * @param {selector} string : Selector for DOM about to capture.
+//  * @return {promise} HTMLElement : Resolved when matched, rejected when times out or not matched.
+//  *
+//  * 取得元のwebページがローディング中などでなかなかすぐにDOMがロードされないときとかに使う
+//  * 指定のDOMが取得できるまで、繰り返し取得を試みる
+//  * １０回取得を試みても取得できなかったらnullを返す
+//  * */
+//  const repeatQueryDom = async (selector: string): Promise<HTMLElement> => {
+//     return new Promise((resolve, reject): void => {
+//         let intervalId: NodeJS.Timer;
+//         let counter: number = 10;
+//         intervalId = setInterval(function () {
+//             if (counter <= 0) {
+//                 // Failed
+//                 console.log("[repeatQueryDom] Time out! It's over 10 times");
+//                 clearInterval(intervalId);
+//                 reject(null);
+//             }
+//             console.log('[repeatQueryDom] query dom');
+//             const e: HTMLElement = document.querySelector(selector);
+//             if (e) {
+//                 // Succeed
+//                 console.log('[repeatQueryDom] Succeeed to query dom!');
+//                 clearInterval(intervalId);
+//                 resolve(e);
+//             } else counter--;
+//         }, INTERVAL_TIME);
+//     });
 // };
 
 })();
