@@ -1368,7 +1368,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
  * controller
  * ____________________________________________
  *
- * 本家Udemy講義ページのトランスクリプト機能と同じものを生成する
+ * 本家Udemy講義ページのトランスクリプト機能と(ほぼ)同じものを生成する
  * 字幕データだけ、特別に生成された字幕データを取り扱う
  *
  * 機能：
@@ -1387,18 +1387,13 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
  *
  * NOTE:
  *
- * - 自動スクロール機能は要改善である
+ * - 自動スクロール機能は本家の自動スクロール・チェックボックスを実装しない。
+ * これは仕様とする
  *
- * TODO:
- * - ExTranscriptのrerenderingされたら自動スクロール機能消えるのでそれのリセット
- * - RESET機能
- *  あとはウィンドウが小さくなったりそこから戻ったときの表示非表示の制御
- *  実際に表示・非表示の命令はbackground scriptから送信されるorderに従うので
- *  こちらはその境界をまたぐ時は何もしないようにすること
  *
- * - [済] Stateの外部モジュール化
- * - [済] 自動スクロール機能の発火条件の発見とそれに伴う修正
- * - [済] 字幕データは受動的に取得する仕様にする
+ * TODO: コード中の'TODO'を確認して修正のこと
+ *
+ *
  * *******************************************************/
 
 
@@ -1408,7 +1403,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 
 
 const statusBase = {
-    // position, viewの初期値は意味をなさず、
+    // NOTE: position, viewの初期値は意味をなさず、
     // すぐに変更されることが前提である
     position: null,
     view: null,
@@ -1433,6 +1428,19 @@ const moConfig = {
     subtree: false,
     attributeOldValue: true,
 };
+/*************************************************************************
+ * Callback for MutationObserver.
+ *
+ * guard: 以下の理由で設けている変数
+ *
+ * NOTE: Udemyの字幕はまったく同じ字幕要素が2個も3個も生成されている
+ *
+ * つまりまったく同じ要素が同時に複数存在する状況が発生してしまっている
+ * 多分バグだけど、同じ要素が何個も生成されてしまうとリスナが何度も
+ * 反応してしまう可能性がある
+ *
+ *
+ * */
 const moCallback = function (mr) {
     let guard = false;
     mr.forEach((record) => {
@@ -1442,92 +1450,137 @@ const moCallback = function (mr) {
             !guard) {
             console.log("OBSERVED");
             guard = true;
-            updateHighlightIndexes();
-            updateExTranscriptHighlight();
-            scrollToHighlight();
+            try {
+                updateHighlightIndexes();
+                updateExTranscriptHighlight();
+                scrollToHighlight();
+            }
+            catch (e) {
+                chrome.runtime.sendMessage({
+                    from: _utils_constants__WEBPACK_IMPORTED_MODULE_3__.extensionNames.controller,
+                    to: _utils_constants__WEBPACK_IMPORTED_MODULE_3__.extensionNames.background,
+                    error: e
+                });
+            }
         }
     });
 };
 //
-// --- CHROME LISTENERS -------------------
+// --- CHROME LISTENERS ----------------------------------------
 //
-/**
- *  Chrome API: On Message Handler
+/***************************************************************
+ * On Message Handler
  *
+ * @return {boolean} Return true to indicate that it will respond asynchronously.
  * */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        if (message.to !== _utils_constants__WEBPACK_IMPORTED_MODULE_3__.extensionNames.controller)
-            return;
-        console.log("[controller] CONTROLLER GOT MESSAGE");
-        const { order } = message, rest = __rest(message, ["order"]);
-        if (order && order.length) {
-            if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.orderNames.reset)) {
-                console.log("[controller] order: RESET");
+    const { from, to, order } = message, rest = __rest(message, ["from", "to", "order"]);
+    if (to !== _utils_constants__WEBPACK_IMPORTED_MODULE_3__.extensionNames.controller)
+        return;
+    const response = { from: to, to: from };
+    console.log('[controller] CONTROLLER GOT MESSAGE');
+    if (order && order.length) {
+        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.orderNames.reset)) {
+            console.log('[controller] order: RESET');
+            try {
                 handlerOfReset();
-                sendResponse({ complete: true, success: true });
+                response.success = true;
             }
-            if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.orderNames.turnOff)) {
-                console.log("[controller] order: TURN OFF ExTranscript");
+            catch (e) {
+                response.success = false;
+                response.error = e;
+            }
+            finally {
+                response.complete = true;
+                sendResponse(response);
+            }
+        }
+        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.orderNames.turnOff)) {
+            console.log('[controller] order: TURN OFF ExTranscript');
+            try {
                 handlerOfTurnOff();
-                sendResponse({ complete: true, success: true });
+                response.success = true;
+            }
+            catch (e) {
+                response.success = false;
+                response.error = e;
+            }
+            finally {
+                response.complete = true;
+                sendResponse(response);
             }
         }
-        // 字幕データが送られてきたら
-        if (rest.subtitles) {
-            console.log("[controller] [controller] got subtitles");
-            console.log(rest.subtitles);
-            //  setStateのnotify()がこの変更に必要な関数を実行してくれる
+    }
+    // 字幕データが送られてきたら
+    if (rest.subtitles) {
+        console.log('[controller] Got subtitles');
+        try {
             sSubtitles.setState({ subtitles: rest.subtitles });
-            sendResponse({ complete: true });
+            response.success = true;
         }
-        return true;
+        catch (e) {
+            response.success = false;
+            response.error = e;
+        }
+        finally {
+            response.complete = true;
+            sendResponse(response);
+        }
     }
-    catch (err) {
-        console.error(err.message);
-    }
+    return true;
 }));
 //
-// --- REPLACE & INSERT VIEW METHODS ----------------------------
+// --- VIEW METHODS ------------------------------------------
 //
+/************************************************
+ * Insert sidebar ExTranscript
+ * And clear previoud ExTranscript.
+ * */
 const renderSidebarTranscript = () => {
-    console.log("[controller] Rerender sidebar ExTranscript");
+    console.log('[controller] Rerender sidebar ExTranscript');
     const { subtitles } = sSubtitles.getState();
     _bottomTranscriptView__WEBPACK_IMPORTED_MODULE_1__["default"].clear();
     _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].clear();
     _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].render(subtitles);
     _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateContentHeight();
     // sidebarの時だけに必要
-    window.addEventListener("scroll", onWindowScrollHandler);
+    window.addEventListener('scroll', onWindowScrollHandler);
 };
+/************************************************
+ * Insert bttom ExTranscript
+ * And clear previoud ExTranscript.
+ * */
 const renderBottomTranscript = () => {
-    console.log("[controller] Rerender bottom ExTranscript");
+    console.log('[controller] Rerender bottom ExTranscript');
     const { subtitles } = sSubtitles.getState();
     _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].clear();
     _bottomTranscriptView__WEBPACK_IMPORTED_MODULE_1__["default"].clear();
     _bottomTranscriptView__WEBPACK_IMPORTED_MODULE_1__["default"].render(subtitles);
     // noSidebarの時は不要
-    window.removeEventListener("scroll", onWindowScrollHandler);
+    window.removeEventListener('scroll', onWindowScrollHandler);
 };
 //
-// --- Handlers ----------------------------------------------
+// --- HANDLERS ----------------------------------------------
 //
-/****
+/************************************************
+ * Reduction of onWindowResizeHandler()
  *
- *
+ * Delays reaction of window resize.
  * */
 const reductionOfwindowResizeHandler = () => {
     clearTimeout(timerQueue);
     timerQueue = setTimeout(onWindowResizeHandler, _utils_constants__WEBPACK_IMPORTED_MODULE_3__.RESIZE_TIMER);
 };
-/****
+/************************************************
+ * Handler of Turning off ExTranscript.
+ *
  *
  * */
 const handlerOfTurnOff = () => {
-    console.log("[controller] handlerOfTurnOff()");
+    console.log('[controller] handlerOfTurnOff()');
     // REMOVAL Listeners
-    window.removeEventListener("resize", reductionOfwindowResizeHandler);
-    window.removeEventListener("scroll", onWindowScrollHandler);
+    window.removeEventListener('resize', reductionOfwindowResizeHandler);
+    window.removeEventListener('scroll', onWindowScrollHandler);
     // CLEAR ExTranscript
     const { position } = sStatus.getState();
     if (position === _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.sidebar) {
@@ -1542,12 +1595,13 @@ const handlerOfTurnOff = () => {
     sStatus.setState(Object.assign({}, statusBase));
     sSubtitles.setState(Object.assign({}, subtitleBase));
 };
-/****
+/**************************************************
+ * Handler of Reset ExTranscript.
  *
  *
  * */
 const handlerOfReset = () => {
-    console.log("[controller] handlerOfReset()");
+    console.log('[controller] handlerOfReset()');
     handlerOfTurnOff();
     // NOTE: 以下はMAINの後半の処理と同じである
     const w = document.documentElement.clientWidth;
@@ -1560,31 +1614,30 @@ const handlerOfReset = () => {
                 : _utils_constants__WEBPACK_IMPORTED_MODULE_3__.viewStatusNames.middleView,
         });
     }
-    window.addEventListener("resize", reductionOfwindowResizeHandler);
+    window.addEventListener('resize', reductionOfwindowResizeHandler);
 };
-/**
- * Update ExTranscript View hight while it is sidebar.
+/**********************************************************
+ * OnScroll handler for sidebar ExTranscript.
  *
  * */
 const onWindowScrollHandler = () => {
-    console.log("[controller] onWindowScrollHandler()");
+    console.log('[controller] onWindowScrollHandler()');
     const y = window.scrollY;
     y < 56
         ? _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateContentTop(56 - y)
         : _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateContentTop(0);
 };
-/*
-    onWindowResizeHandler()
-  
-  window.onresizeで境界条件を指定する
-  
-  exTranscriptの配置換え：RESIZE_BOUNDARYをまたいだ時だけ更新する
-  updateContentHeight(): position === sidebarが真のときは必ず実行
-  
-  
-  */
+/*************************************************************
+ * window onResize handler.
+ *
+ * Checks...
+ * If window clientWidth straddle the MINIMUM_BOUNDARY, update state.
+ * If window clientWidth straddle the RESIZE_BOUNDARY, update state.
+ * If ExTranscript is sidebar, check if window clientWidth straddble
+ * the SIDEBAR_WIDTH_BOUNDARY to update view state.
+ * */
 const onWindowResizeHandler = () => {
-    console.log("[controller] onWindowResizeHandler()");
+    console.log('[controller] onWindowResizeHandler()');
     const w = document.documentElement.clientWidth;
     const { position, view, isWindowTooSmall } = sStatus.getState();
     //  MINIMUM_BOUNDARYの境界値をまたいだ時は何もしない
@@ -1628,54 +1681,83 @@ const onWindowResizeHandler = () => {
     }
 };
 //
-// ----- DETECT AUTO SCROLL METHODS -----------------------------
+// ----- METHODS RELATED TO AUTO SCROLL -----------------------------
 //
-/****
- * 字幕データのindex番号からなる配列をsStatus.indexListとして更新する
+/***********************************************************************
+ * Initialize sStatus.indexList
+ *
+ * sSubtitles.subtitlesのindex番号からなる配列を
+ * sStatus.indexListとして保存する
  *
  * */
 const initializeIndexList = () => {
-    console.log("[controller] initializeIndexList()");
+    console.log('[controller] initializeIndexList()');
     const { subtitles } = sSubtitles.getState();
     const indexes = subtitles.map((s) => s.index);
-    console.log(indexes);
     sStatus.setState({ indexList: indexes });
 };
-/*
-      字幕要素群の中から、引数の要素が何番目にあるのかを探してその順番を返す
-  */
+/************************************************************************
+ * Returns the index number if the list contains an element.
+ *
+ * @param {NodeListOf<Element>} from: List of subtitles data.
+ * @param {Element} lookFor: Check whether the element is contained in the array.
+ * @return {number} Return -1 as element was not contained.
+ *
+ * @throws {Error}
+ * If "lookFor" param was null, then an exception is thrown to prevent next step.
+ *
+ * TODO: -1を返す以外の方法ないかしら
+ * もしくは-1をenumでラベル付けにするとか
+ * */
+/**
+ * 例外発生検証結果：
+ * 1. lookForがnullでfromが空でない配列だと、-1を返して、例外は発生しない
+ * 2. 逆にfromがnullだとTypeErrorがgetElementIndexOfList()で発生する
+ *
+ *  */
 const getElementIndexOfList = (from, lookFor) => {
-    console.log("[controller] getElementIndexOfList()");
+    console.log('[controller] getElementIndexOfList()');
     var num = 0;
     for (const el of Array.from(from)) {
         if (el === lookFor)
             return num;
         num++;
     }
-    // 一致するものがなかった場合
+    // NOTE: ありえない値　一致するものがなかった場合
     return -1;
 };
-/*
-      updateHighlistIndexes()
-      ____________________________
-  
-      state._ExHighlightを更新するための関数
-      本家のTranscriptのハイライト要素を取得して
-      それを基にExTranscriptのハイライトする要素の番号を更新する
-  
-      updaeExTranscriptHighlight()を呼び出す前に必ず呼び出すこと
-  
-  
-      まずcurrentHighlightが取得できていない
-      理由はこのセレクターだと
-      動画が再生する前の状態の時(再生画面が動画の真ん中に表示されている状態)はこのセレクタはどの要素にも追加されていないからである
-  */
+/*********************************************************************
+ * Update sStatus.ExHighlight.
+ * Invoked by MutationObserver
+ * when Udemy highlighted element changed.
+ *
+ * 1. Get latest original highlighted element index.
+ * 2. Check if the index number includes in sStaus.indexList.
+ *    If not included,
+ *    Sets the index closest to the current index number
+ *    that is less than the "current highlight.
+ *
+ * NOTE: ExTranscript index list is different from Original index list.
+ *
+ * この関数はsStatus.ExHighlightを更新するための関数
+ * sStatus更新内容をもとにレンダリング要素を更新するのは以下の関数で行う
+ * updateExTranscriptHighlight()
+ *
+ * @throws {SyntaxError}:
+ * SyntaxError possibly occures if DOM unable to caught.
+ * @throws {RangeError}:
+ * Thrown if getElementIndexOfList() returned -1 not to steps next.
+ *
+ *
+ * */
 const updateHighlightIndexes = () => {
-    console.log("[controller] updateHighlightIndexes()");
+    console.log('[controller] updateHighlightIndexes()');
     // １．本家のハイライト要素を取得して、その要素群の中での「順番」を保存する
     const nextHighlight = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.transcript.highlight);
     const list = document.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.transcript.transcripts);
     const next = getElementIndexOfList(list, nextHighlight);
+    if (next < 0)
+        throw new RangeError("Returned value is out of range.");
     sStatus.setState({ highlight: next });
     // 2. 1で取得した「順番」がstate._subtitlesのindexと一致するか比較して、
     // ExTranscriptのハイライト要素の番号を保存する
@@ -1686,7 +1768,7 @@ const updateHighlightIndexes = () => {
     else {
         // 一致するindexがない場合
         // currentHighlightの番号に最も近い、currentHighlightより小さいindexをsetする
-        var prev = null;
+        let prev = null;
         for (let i of indexList) {
             if (i > next) {
                 sStatus.setState({ ExHighlight: prev });
@@ -1696,19 +1778,17 @@ const updateHighlightIndexes = () => {
         }
     }
 };
-/*
-  
-      updaeExTranscriptHighlight()
-      ________________________________________
-  
-      ExTranscriptの字幕要素のハイライトを更新する
-      前回のハイライト要素のハイライトを消し
-      次のハイライト要素にハイライトを付ける
-  
-      どれをハイライトさせるかは`state._ExHighlight`に依存する
-  */
+/***************************************************************************
+ * Update ExTranscript highlighted element.
+ * Invoked by MutationObserver
+ * just after updateHighlightIndexes().
+ *
+ * Update based on sStatus.ExHighlight.
+ *
+ * TODO: (対応)currentもnextもnullであってはならない場面でnullだとsyntaxerrorになる
+ * */
 const updateExTranscriptHighlight = () => {
-    console.log("[controller] updateExTranscriptHighlight()");
+    console.log('[controller] updateExTranscriptHighlight()');
     // 次ハイライトする要素のdata-idの番号
     const { ExHighlight, position } = sStatus.getState();
     const next = position === _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.sidebar
@@ -1720,29 +1800,31 @@ const updateExTranscriptHighlight = () => {
         : document.querySelector(`${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.dashboardTranscriptCueContainer}${_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.highlight}`);
     if (!current) {
         //   初期化時
-        console.log("---- INITIALIZE -----");
+        console.log('---- INITIALIZE -----');
         next.classList.add(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.highlight.slice(1));
         console.log(next);
     }
     else {
         //   更新時
-        const currentIndex = parseInt(current.getAttribute("data-id"));
+        const currentIndex = parseInt(current.getAttribute('data-id'));
         // もしも変わらないなら何もしない
         if (currentIndex === ExHighlight) {
-            console.log("--- NO UPDATE ---");
+            console.log('--- NO UPDATE ---');
             return;
         }
         // 更新ならば、前回のハイライト要素を解除して次の要素をハイライトさせる
         else {
-            console.log("--- UPDATE ---");
+            console.log('--- UPDATE ---');
             current.classList.remove(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.highlight.slice(1));
             next.classList.add(_utils_selectors__WEBPACK_IMPORTED_MODULE_2__.EX.highlight.slice(1));
             console.log(next);
         }
     }
 };
-/***
- *  set detect scroll
+/********************************************************************
+ * Reset MutationObserver API for detect scroll system.
+ *
+ * Reset based on sStatus.isAutroscrollInitialized.
  *
  * Udemyの自動スクロール機能と同じ機能をセットアップする関数
  *
@@ -1751,18 +1833,16 @@ const updateExTranscriptHighlight = () => {
  * つまりまったく同じ要素が同時に複数存在する状況が発生してしまっている
  * 多分バグだけど、同じ要素が何個も生成されてしまうとリスナが何度も
  * 反応してしまう可能性がある
+ * MutationObserverのコールバック関数にはこれを避けるための仕組みを設けている
  *
- * これに伴って
- * MutationObserverのMutationRecordも複数ある要素のすべてを記録するので
- * 1度だけ行いたい処理を2回以上行わなってしまう危険性がある
  *
- *  これを避けるために`guard`でループ処理が既に完了しているのかどうかを
- *  確認するようにしている
+ * TODO: DOM transcriptList が取得できなくてもスルーされちゃうかも？
  *
+ * 確認：`new MutationObserver()`の時にnullを渡したらSyntaxErrorになるかな？
  *
  * ***/
 const resetDetectScroll = () => {
-    console.log("[controller] reset Autro Scroll System");
+    console.log('[controller] reset Autro Scroll System');
     const { isAutoscrollInitialized } = sStatus.getState();
     if (!isAutoscrollInitialized) {
         // 初期化処理
@@ -1786,15 +1866,15 @@ const resetDetectScroll = () => {
         transcriptListObserver.observe();
     }
 };
-/**
- *  Scroll to Highlight
- * ______________________________
+/*****************************************************************
+ * Scroll to Highlight
  *
- * ExTranscriptの自動スクロールを更新内容に反映する
+ * Make ExTranscript subtitle panel scroll to latest highlighted element.
  *
+ * TODO: (対応) DOMが取得できなかったらSyntaxErrorが発生する
  * */
 const scrollToHighlight = () => {
-    console.log("[controller] scrollToHighlight()");
+    console.log('[controller] scrollToHighlight()');
     // そのたびにいまハイライトしている要素を取得する
     const { ExHighlight, position } = sStatus.getState();
     const current = position === _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.sidebar
@@ -1837,14 +1917,14 @@ const updateSubtitle = (prop, prev) => {
         return;
     // 字幕データのアップデート
     const { position, view } = sStatus.getState();
-    if (position === "sidebar") {
+    if (position === 'sidebar') {
         renderSidebarTranscript();
         _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateContentHeight();
-        view === "middleView"
+        view === 'middleView'
             ? _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateWidth(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.SIGNAL.widthStatus.middleview)
             : _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateWidth(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.SIGNAL.widthStatus.wideview);
     }
-    if (position === "noSidebar") {
+    if (position === 'noSidebar') {
         renderBottomTranscript();
     }
     initializeIndexList();
@@ -1854,9 +1934,9 @@ const updatePosition = (prop, prev) => {
     const { position } = prop;
     if (position === undefined)
         return;
-    if (position === "sidebar")
+    if (position === 'sidebar')
         renderSidebarTranscript();
-    else if (position === "noSidebar")
+    else if (position === 'noSidebar')
         renderBottomTranscript();
     // 必須：自動スクロール機能のリセット
     resetDetectScroll();
@@ -1865,29 +1945,29 @@ const updateSidebarView = (prop, prev) => {
     const { view } = prop;
     if (view === undefined)
         return;
-    if (view === "middleView")
+    if (view === 'middleView')
         _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateWidth(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.SIGNAL.widthStatus.middleview);
-    else if (view === "wideView")
+    else if (view === 'wideView')
         _sidebarTranscriptView__WEBPACK_IMPORTED_MODULE_0__["default"].updateWidth(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.SIGNAL.widthStatus.wideview);
 };
-const updateHighlight = (prop, prev) => {
-    const { highlight } = prop;
-    if (highlight === undefined)
-        return;
-    console.log("[controller] UPDATED Highlight");
-};
-const updateExHighlight = (prop, prev) => {
-    const { highlight } = prop;
-    if (highlight === undefined)
-        return;
-    console.log("[controller] UPDATED ExHighlight");
-};
-/**
- *  MAIN
+// NOTE: リファクタリング未定...
+// const updateHighlight = (prop, prev): void => {
+//   const { highlight } = prop;
+//   if (highlight === undefined) return;
+//   console.log("[controller] UPDATED Highlight");
+// };
+// NOTE: リファクタリング未定...
+// const updateExHighlight = (prop, prev): void => {
+//   const { highlight } = prop;
+//   if (highlight === undefined) return;
+//   console.log("[controller] UPDATED ExHighlight");
+// };
+/******************************************************
+ * Entry Point
  *
  * */
 (function () {
-    console.log("[controller] Initializing...");
+    console.log('[controller] Initializing...');
     const oStatus = new _utils_Observable__WEBPACK_IMPORTED_MODULE_4__["default"]();
     const oSubtitle = new _utils_Observable__WEBPACK_IMPORTED_MODULE_4__["default"]();
     sStatus = new _utils_contentScript_State__WEBPACK_IMPORTED_MODULE_5__["default"](statusBase, oStatus);
@@ -1895,8 +1975,9 @@ const updateExHighlight = (prop, prev) => {
     sSubtitles.observable.register(updateSubtitle);
     sStatus.observable.register(updatePosition);
     sStatus.observable.register(updateSidebarView);
-    sStatus.observable.register(updateHighlight);
-    sStatus.observable.register(updateExHighlight);
+    //   TODO: (未定)下記update関数が機能するようにリファクタリングするかも...
+    //   sStatus.observable.register(updateHighlight);
+    //   sStatus.observable.register(updateExHighlight);
     // 初期のExTranscriptの展開場所に関するステータスを取得する
     const w = document.documentElement.clientWidth;
     const s = w > _utils_constants__WEBPACK_IMPORTED_MODULE_3__.RESIZE_BOUNDARY ? _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.sidebar : _utils_constants__WEBPACK_IMPORTED_MODULE_3__.positionStatus.noSidebar;
@@ -1909,8 +1990,8 @@ const updateExHighlight = (prop, prev) => {
         });
     }
     sStatus.setState({ isWindowTooSmall: w < MINIMUM_BOUNDARY ? true : false });
-    window.removeEventListener("resize", reductionOfwindowResizeHandler);
-    window.addEventListener("resize", reductionOfwindowResizeHandler);
+    window.removeEventListener('resize', reductionOfwindowResizeHandler);
+    window.addEventListener('resize', reductionOfwindowResizeHandler);
 })();
 //
 // ---- LEGACY ----------------------------------------

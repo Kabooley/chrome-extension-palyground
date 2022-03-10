@@ -50,6 +50,7 @@ import {
 import Observable from '../utils/Observable';
 import State from '../utils/contentScript/State';
 import MutationObserver_ from '../utils/MutationObserver_';
+import { DomManipulationError } from '../Error/Error';
 // import { sendMessagePromise } from "../utils/helpers";
 
 //
@@ -123,27 +124,36 @@ const moConfig: MutationObserverInit = {
  *
  *
  * */
-const moCallback = function (
+ const moCallback = function (
     this: MutationObserver_,
     mr: MutationRecord[]
-): void {
+  ): void {
     let guard: boolean = false;
     mr.forEach((record: MutationRecord) => {
-        if (
-            record.type === 'attributes' &&
-            record.attributeName === 'class' &&
-            record.oldValue === '' &&
-            !guard
-        ) {
-            console.log('OBSERVED');
-            guard = true;
-            updateHighlightIndexes();
-            updateExTranscriptHighlight();
-            scrollToHighlight();
+      if (
+        record.type === "attributes" &&
+        record.attributeName === "class" &&
+        record.oldValue === "" &&
+        !guard
+      ) {
+        console.log("OBSERVED");
+        guard = true;
+        try {
+          updateHighlightIndexes();
+          updateExTranscriptHighlight();
+          scrollToHighlight();
         }
+        catch(e) {
+          chrome.runtime.sendMessage({
+            from: extensionNames.controller,
+            to: extensionNames.background,
+            error: e
+          });
+        }
+      }
     });
-};
-
+  };
+  
 //
 // --- CHROME LISTENERS ----------------------------------------
 //
@@ -173,6 +183,7 @@ chrome.runtime.onMessage.addListener(
                     response.success = true;
                 } catch (e) {
                     response.success = false;
+                    response.error = e;
                 } finally {
                     response.complete = true;
                     sendResponse(response);
@@ -185,6 +196,7 @@ chrome.runtime.onMessage.addListener(
                     response.success = true;
                 } catch (e) {
                     response.success = false;
+                    response.error = e;
                 } finally {
                     response.complete = true;
                     sendResponse(response);
@@ -199,6 +211,7 @@ chrome.runtime.onMessage.addListener(
                 response.success = true;
             } catch (e) {
                 response.success = false;
+                response.error = e;
             } finally {
                 response.complete = true;
                 sendResponse(response);
@@ -409,17 +422,18 @@ const initializeIndexList = (): void => {
  * @param {NodeListOf<Element>} from: List of subtitles data.
  * @param {Element} lookFor: Check whether the element is contained in the array.
  * @return {number} Return -1 as element was not contained.
+ * 
+ * @throws {Error} 
+ * If "lookFor" param was null, then an exception is thrown to prevent next step. 
  *
  * TODO: -1を返す以外の方法ないかしら
+ * もしくは-1をenumでラベル付けにするとか
  * */
 /**
  * 例外発生検証結果：
  * 1. lookForがnullでfromが空でない配列だと、-1を返して、例外は発生しない
  * 2. 逆にfromがnullだとTypeErrorがgetElementIndexOfList()で発生する
- *
- * では-1を返された対象はどう対処しているか...
- * そのままsetStateしているので、これはまずい
- * なので呼び出し側で検査することにする
+ * 
  *  */
 const getElementIndexOfList = (
     from: NodeListOf<Element>,
@@ -431,7 +445,7 @@ const getElementIndexOfList = (
         if (el === lookFor) return num;
         num++;
     }
-    // 一致するものがなかった場合
+    // NOTE: ありえない値　一致するものがなかった場合
     return -1;
 };
 
@@ -454,8 +468,10 @@ const getElementIndexOfList = (
  *
  * @throws {SyntaxError}:
  * SyntaxError possibly occures if DOM unable to caught.
- * This exception caught by no one so far.
- * TODO: Fix if exception occured among MutationObserver.
+ * @throws {RangeError}:
+ * Thrown if getElementIndexOfList() returned -1 not to steps next.
+ * 
+ * 
  * */
 const updateHighlightIndexes = (): void => {
     console.log('[controller] updateHighlightIndexes()');
@@ -467,6 +483,8 @@ const updateHighlightIndexes = (): void => {
         selectors.transcript.transcripts
     );
     const next: number = getElementIndexOfList(list, nextHighlight);
+    if(next < 0) throw new RangeError("Returned value is out of range.");
+
     sStatus.setState({ highlight: next });
 
     // 2. 1で取得した「順番」がstate._subtitlesのindexと一致するか比較して、
