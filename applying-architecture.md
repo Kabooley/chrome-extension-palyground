@@ -126,7 +126,49 @@ catch は同期呼出なのでキャッチされない
 }
 ```
 
-tyr...catch の利用：
+tyr...catch の利用方法：
+
+- スローエラーは一番近いcatchが捕まえる
+
+つまり次の状況では...
+
+
+```JavaScript
+
+function c () {
+  throw new Error("Will this error caught?");
+}
+
+function b() {
+  c();
+}
+
+function a() {
+  try {
+    b();
+  }
+  catch(e) {
+    console.log(`Error caught ${e}`);
+  }
+}
+
+a();
+// output: `Error caught Error: Will this error caught? `
+```
+
+b()でcatchしなかったらa()でキャッチしないでグローバルな例外処理に移る...
+
+ということはなく
+
+一番近いcatchtが捕まえてくれる
+
+なので呼出が深いところで例外がスローされたら、
+
+例外を次の呼び出し元、次の呼び出し元...とバケツリレーしなくていい
+
+捕まえたいところでtry...catchを定義すればいい
+
+
 
 -   `throw`演算子でエラーオブジェクトを生成しよう
 
@@ -4862,73 +4904,63 @@ TODO: エラーまたは false 等を受け取った時の background.ts の挙�
 
 #### controller.tsのエラー精査
 
-- insertSidebarTranscript()
-- insertBottomTranscript()
-- onWindowScrollHandler()
+TODO: MutationObserverの例外処理の実装
+TODO: 字幕データ配列が空だった時におかしな挙動が発生し得ないか検証
 
-- onWindowResizeHandler()
+やっぱり気を付けるべきはDOM取得の失敗である
+
+例外スローはもっとも近いcatchが捕まえるのが仕様なので
+
+基本的に`chrome.runtime.onMessage.addListener()`でcatchすることとする
+
+各関数は、DOM取得が失敗したら例外を必ず投げるようにリファクタリングする
+
+MutationObserverはどうすべきか？
+
+MOはorderに基づいて動くものではない
+
+なので`chrome.runtime.onMessage.addListener()`でcatchするものではない
 
 ```TypeScript
-chrome.runtime.onMessage.addListener(
-  async (
-    message: iMessage,
-    sender: chrome.runtime.MessageSender,
-    sendResponse: (response: iResponse) => void
-  ): Promise<boolean> => {
-      const { from, to, order, ...rest } = message;
-      if (to !== extensionNames.controller) return;
-      const response: iResponse = {from: to, to: from};
+// controller.ts
 
-      console.log("[controller] CONTROLLER GOT MESSAGE");
+// getElementIndexOfList()を呼出すのはupdateHighlightIndexes()だけ
+// updateHighlightIndexes()を呼び出すのはmoCallback()だけ
+// updateExTranscriptHighlight()を呼び出すのはmoCallback()だけ
+// 
+// ということでこれらの関数が投げる例外はmoCallbackがcatchすべき
 
-      if (order && order.length) {
-        if (order.includes(orderNames.reset)) {
-          console.log("[controller] order: RESET");
-            try {
-                handlerOfReset();
-                response.success = true;
-            }
-            catch(e) {
-                response.success = false;
-            }
-            finally {
-                response.complete = true;
-                sendResponse(response);
-            }
-        }
-        if (order.includes(orderNames.turnOff)) {
-          console.log("[controller] order: TURN OFF ExTranscript");
-            try {
-                handlerOfTurnOff();
-                response.success = true;
-            }
-            catch(e) {
-                response.success = false;
-            }
-            finally {
-                response.complete = true;
-                sendResponse(response);
-            }
-        }
+
+// MutationObserverの実行中の例外はコールバック関数でキャッチする
+const moCallback = function (
+  this: MutationObserver_,
+  mr: MutationRecord[]
+): void {
+  let guard: boolean = false;
+  mr.forEach((record: MutationRecord) => {
+    if (
+      record.type === "attributes" &&
+      record.attributeName === "class" &&
+      record.oldValue === "" &&
+      !guard
+    ) {
+      console.log("OBSERVED");
+      guard = true;
+      try {
+        updateHighlightIndexes();
+        updateExTranscriptHighlight();
+        scrollToHighlight();
       }
-      // 字幕データが送られてきたら
-      if (rest.subtitles) {
-        console.log("[controller] Got subtitles");
-                    try {
-        sSubtitles.setState({ subtitles: rest.subtitles });
-                response.success = true;
-            }
-            catch(e) {
-                response.success = false;
-            }
-            finally {
-                response.complete = true;
-                sendResponse(response);
-            }
+      catch(e) {
+        chrome.runtime.sendMessage({
+          from: extensionNames.controller,
+          to: extensionNames.background,
+          error: e
+        });
       }
-      return true;
+    }
+  });
+};
 
-  }
-);
 
 ```
