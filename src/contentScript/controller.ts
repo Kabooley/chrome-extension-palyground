@@ -180,12 +180,11 @@ chrome.runtime.onMessage.addListener(
                 console.log('[controller] order: RESET');
                 try {
                     handlerOfReset();
-                    response.success = true;
-                } catch (e) {
-                    response.success = false;
-                    response.error = e;
-                } finally {
                     response.complete = true;
+                } catch (e) {
+                    response.error = e;
+                    response.complete = false;
+                } finally {
                     sendResponse(response);
                 }
             }
@@ -194,11 +193,12 @@ chrome.runtime.onMessage.addListener(
                 try {
                     handlerOfTurnOff();
                     response.success = true;
+                    response.complete = true;
                 } catch (e) {
                     response.success = false;
                     response.error = e;
+                    response.complete = false;
                 } finally {
-                    response.complete = true;
                     sendResponse(response);
                 }
             }
@@ -209,11 +209,12 @@ chrome.runtime.onMessage.addListener(
             try {
                 sSubtitles.setState({ subtitles: rest.subtitles });
                 response.success = true;
+                response.complete = true;
             } catch (e) {
                 response.success = false;
                 response.error = e;
+                response.complete = false;
             } finally {
-                response.complete = true;
                 sendResponse(response);
             }
         }

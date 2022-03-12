@@ -63,12 +63,11 @@ chrome.runtime.onMessage.addListener(
                 try {
                     const chunks: subtitle_piece[] = mainProcess();
                     r.subtitles = chunks;
-                    r.success = true;
+                    r.complete = true;
                 } catch (e) {
-                    r.success = false;
+                    r.complete = false;
                     r.error = e;
                 } finally {
-                    r.complete = true;
                     sendResponse(r);
                 }
             }

@@ -1,4 +1,4 @@
-/***********************************************************
+j/***********************************************************
 static content script
 ___________________________________________________________
 
@@ -96,12 +96,13 @@ chrome.runtime.onMessage.addListener(
 
                     response.language = isEnglish;
                     response.isTranscriptDisplaying = isOpen;
-                    response.success = true;
-                } catch (err) {
-                    response.success = false;
-                    response.error = err;
-                } finally {
+                    // response.success = true;
                     response.complete = true;
+                } catch (err) {
+                    // response.success = false;
+                    response.error = err;
+                    response.complete = false;
+                } finally {
                     sendResponse(response);
                 }
             }
@@ -111,14 +112,15 @@ chrome.runtime.onMessage.addListener(
                 handlerOfReset()
                     .then(() => {
                         response.success = true;
+                        response.complete = true;
                     })
-                    .catch((err: uError) => {
-                        console.error(err.message);
+                    .catch((e: uError) => {
+                        console.error(e.message);
                         response.success = false;
-                        response.error = err;
+                        response.complete = false;
+                        response.error = e;
                     })
                     .finally(() => {
-                        response.complete = true;
                         sendResponse(response);
                     });
             }
@@ -129,15 +131,14 @@ chrome.runtime.onMessage.addListener(
                 repeatCheckQueryAcquired(selectors.videoContainer, true)
                     .then((r: boolean) => {
                         response.isPageIncludingMovie = r;
-                        response.success = true;
+                        response.complete = true;
                     })
                     .catch((err) => {
                         console.error(err);
-                        response.success = false;
+                        response.complete = false;
                         response.error = err;
                     })
                     .finally(() => {
-                        response.complete = true;
                         sendResponse(response);
                     });
             }
@@ -146,8 +147,7 @@ chrome.runtime.onMessage.addListener(
                 console.log('Order: Turn off');
                 moControlbar.disconnect();
                 controlbar.removeEventListener('click', handlerOfControlbar);
-                // moControlbarとcontrolbarはnullにしておく必要があるかな？
-                // その後のorderによるなぁ
+                // TODO: moControlbar, controlbarはnullにする必要があるか？
                 response.complete = true;
                 sendResponse(response);
             }

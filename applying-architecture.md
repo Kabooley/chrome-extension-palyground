@@ -8,15 +8,37 @@ MVC と DDD の設計思想を取り入れたい
 
 ## 目次
 
+[デイリータスク](#デイリータスク)
 [課題](#課題)
 [成果記録](#成果記録)
 [1/25:処理についておさらい](#1/25:処理についておさらい)
 [chrome-extension-API](#chrome-extension-API)
 [TEST](#TEST)
 
+## デイリータスク
+
+3/12
+
+- [update: `sendMessageToTabsPromise`と例外処理](#update: `sendMessageToTabsPromise`と例外処理)
+
+sendMessageToTabsPromiseと使用箇所のリファクタリング
+
+- background scriptの例外処理機能の実装
+
 ## 課題
 
 更新は豆に！
+
+- 例外/Errorダイアグラムの作成
+
+やっぱり視覚的にわかりやすいのを作った方がいいね
+まず紙とペンですわ
+
+
+- [`setTimeout`, `setInterval`をbackground scriptで使うな](#`setTimeout`, `setInterval`をbackground scriptで使うな)
+
+専用のAPIが用意されているのでそちらに切り替えること
+https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/#alarms
 
 -   どのタブ ID でどの window なのかは区別しないといかんかも
     たとえば複数タブで展開するときに、おそらく今のままだと
@@ -90,14 +112,22 @@ MVC と DDD の設計思想を取り入れたい
 
 ## 成果記録
 
+記事にしていない成果:
+
 -   chrome.tabs.onUpdated.addListener には filter が付けられない
 
-### 普遍的な知見まとめ
+- 普遍的な知見
 
-[JavaScript エラーハンドリング](#JavaScriptエラーハンドリング)
+[All_about_JavaScript エラーハンドリング](#All_about_JavaScriptエラーハンドリング)
 [Return-false-vs.-throw-exception](#Return-false-vs.-throw-exception)
 
-#### JavaScript エラーハンドリング
+### All_about_JavaScript エラーハンドリング
+
+
+[try...catch](#try...catch)
+[promise](#promise)
+[](#)
+[](#)
 
 https://ja.javascript.info/try-catch
 
@@ -428,6 +458,41 @@ try {
 
 上の例コードを見るとわかるけれど、
 その通りになる
+
+#### promiseでのエラーハンドリング
+
+https://ja.javascript.info/promise-error-handling 
+
+知りたいのはPromiseがrejectされたときの挙動がどうなのかとどうすべきかである
+
+
+- 暗黙のtry...catch rejctの意味
+
+次は、
+
+```JavaScript
+new Promise(function(resolve, reject) {
+  throw new Error("Whoops!");
+}).catch(alert); // Error: Whoops!
+```
+
+次と同じ
+
+```JavaScript
+new Promise(function(resolve, reject) {
+  reject(new Error("Whoops!"));
+}).catch(alert); // Error: Whoops!
+```
+つまり`reject`は例外を投げているのと同じである
+
+(そして、暗黙にtry...catchが設置されている)
+
+ここからわかること：
+
+1. `reject()`を実行した時点でそれは例外である
+2. try...catchは同期的なエラー検出・取得機能なので、非同期に投げられるエラーはキャッチできない
+
+
 
 #### エラー vs 例外
 
@@ -4962,5 +5027,187 @@ const moCallback = function (
   });
 };
 
+
+```
+
+
+#### backgrond Exception Handling
+
+実装するもの：
+
+
+例外ハンドラ（最終的な例外スロー先）
+iResponse.errorで拡張機能の例外を取得したあとの処理
+background script自身の例外を処理する
+
+実装するにあたって：
+
+エラーと例外を分類するここと
+
+-  `chrome.runtime.onInstalled.addListener()`
+
+state.clear(), state.set()の失敗
+  chrome.storage.local.set()起因
+  chrome.storage.local.get()起因
+  ただし、どんなエラーが起こるのか不明...
+  起こる可能性がほぼない（経験したことない）
+
+万が一起こった場合：
+
+`chrome.runtime.onInstalled.addListener()`でcatchしてalertする
+  
+
+  ```TypeScript
+// background.ts
+
+chrome.runtime.onInstalled.addListener(
+  async (details: chrome.runtime.InstalledDetails): Promise<void> => {
+    console.log(`[background] onInstalled: ${details.reason}`);
+    try {
+      state.clearAll();
+      state.set(modelBase);
+    } catch (err) {
+      console.error(err.message);
+      alert()
+    }
+  }
+);
+
+
+
+ const state: iStateModule<iModel> = (function () {
+  const _getLocalStorage = async function (key): Promise<iModel> {
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.get(key, (s: iModel): void => {
+        if (chrome.runtime.lastError) reject(chrome.runtime.lastError);
+        resolve(s);
+      });
+    });
+  };
+
+  return {
+    // 本来ローカルストレージに保存しておくデータの一部だけでも
+    // 保存することを可能とする
+    //
+    set: async (prop: {
+      [Property in keyof iModel]?: iModel[Property];
+    }): Promise<void> => {
+      try {
+        const s: iModel = await _getLocalStorage(KEY_LOCALSTORAGE);
+        const newState = {
+          ...s[KEY_LOCALSTORAGE],
+          ...prop,
+        };
+        await chrome.storage.local.set({
+          [KEY_LOCALSTORAGE]: newState,
+        });
+      } catch (e) {
+        console.error(`Error: Problem ocurreud while chrome.storage`);
+        throw e;
+      }
+    },
+
+    get: async (): Promise<iModel> => {
+      try {
+        const s: iModel = await _getLocalStorage(KEY_LOCALSTORAGE);
+        return { ...s[KEY_LOCALSTORAGE] };
+      } catch (err) {
+        console.error(`Error: Problem ocurreud while chrome.storage`);
+        throw e;
+      }
+    },
+
+    clearAll: async (): Promise<void> => {
+      try {
+        await chrome.storage.local.remove(KEY_LOCALSTORAGE);
+      } catch (err) {
+        console.error(`Error: Problem ocurreud while chrome.storage`);
+        throw e;
+      }
+    },
+  };
+})();
+
+  ```
+
+
+#### update: `sendMessageToTabsPromise`と例外処理
+
+いま`sendMessageToTabsPromise`は`{complete: true}`が返されないとrejectされる
+
+一方、拡張機能はたとエラーを返す場面であっても`{complete: true}`を返している
+
+これはおかしな状況なので、
+
+message-passingでエラーをやり取りするときは、
+
+それは`reject`として扱う
+
+こうすればメッセージパシンでエラーを受け取った時点ですぐに処理を異常系に
+移動できる
+
+あと成功と失敗を明確にできる
+
+
+TODO: 全体にリファクタリング...これは大変だぞ...
+
+```TypeScript
+// helpers.ts
+
+export const sendMessageToTabsPromise = async (
+  tabId: number,
+  message: iMessage
+): Promise<iResponse> => {
+  return new Promise(async (resolve, reject) => {
+    chrome.tabs.sendMessage(tabId, message, async (response: iResponse) => {
+      const { complete, error, ...rest } = response;
+      complete ? resolve(rest) : reject(error);
+    });
+  });
+};
+
+export const sendMessagePromise = async (
+  message: iMessage
+): Promise<iResponse> => {
+  return new Promise(async (resolve, reject) => {
+    chrome.runtime.sendMessage(message, async (response: iResponse) => {
+      const { complete, error, ...rest } = response;
+      complete ? resolve(rest) : reject(error);
+    });
+  });
+};
+
+
+// 呼び出し側
+function() {
+  try {
+    // This might throw error.
+    const res: iResponse = await sendMessageToTabsPromise(tabId, {
+      from: extensionNames.background,
+      to: extensionNames.contentScript,
+      order: [orderNames.isPageIncludingMovie],
+    });
+  }
+  // sendMessageToTabsPromise()呼出には必ずtry...catchをつけること
+  catch(e) {
+    // error handling
+  }
+}
+
+// 返事する側
+function() {
+  // ....
+
+  // If process succeed
+  sendResponse({
+    complete: true,   // Required and specified true as succeed.
+    // ...
+    })
+  // else if not
+  sendResponse({
+    complete: false,    // Required and specified false as fail.
+    error: new Error("error message"),  // required.
+  })
+}
 
 ```

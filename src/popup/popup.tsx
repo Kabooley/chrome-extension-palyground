@@ -84,7 +84,11 @@ const Popup = (): JSX.Element => {
                     setCorrectUrl(false);
                 }
             })
-            .catch((err) => console.error(err.message));
+            .catch((err) => {
+                console.error(err.message);
+                // ここで例外が発生する状況が想定できない
+                // TODO: 実行不可能であることをViewで示す
+            });
     };
 
     const handlerOfRun = (): void => {
@@ -98,25 +102,21 @@ const Popup = (): JSX.Element => {
             order: [orderNames.run],
             tabInfo: tabInfo,
         })
+            // NOTE: !res.successはRUNするためのページ環境になっていないことを示し、アプリケーションのエラーではない
             .then((res) => {
                 const { success } = res;
                 console.log('[popup] Rebuilding Successfully Complete!');
                 setBuilt(success);
                 setBuilding(false);
                 setDisableSlider(false);
-                if (!success) {
-                    throw new Error(
-                        'Error: something went wrong while extension building'
-                    );
-                }
             })
-            .catch((err) => {
+            .catch((e) => {
                 setBuilt(false);
                 setBuilding(false);
                 setTurningOn(false);
                 setDisableSlider(false);
-                console.error(err.message);
-                // TODO: alert
+                console.error(e.message);
+                // TODO: 実行不可能であることをViewで示す
             });
     };
 
@@ -126,19 +126,19 @@ const Popup = (): JSX.Element => {
             to: extensionNames.background,
             order: [orderNames.turnOff],
         })
-            .then((res) => {
-                if (!res.success)
-                    throw new Error(
-                        `Error: Failed to turn off extension. ${res.failureReason}`
-                    );
+            .then(() => {
+                // if (!res.success)
+                //     throw new Error(
+                //         `Error: Failed to turn off extension. ${res.failureReason}`
+                //     );
                 setBuilt(false);
                 setBuilding(false);
                 setTurningOn(false);
                 setDisableSlider(false);
             })
-            .catch((err) => {
-                // TODO: alert to getpage reloaded or disable extension
-                console.error(err);
+            .catch((e) => {
+                // TODO: 実行不可能であることをViewで示す
+                console.error(e);
             });
     };
 
