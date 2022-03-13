@@ -72,19 +72,19 @@ __webpack_require__.r(__webpack_exports__);
  * ________________________________________________
  *
  * ************************************************/
-const _key_of_model_state__ = '_key_of_model_state__@&%8=8';
+const _key_of_model_state__ = "_key_of_model_state__@&%8=8";
 const urlPattern = /https:\/\/www.udemy.com\/course\/*/gm;
 const extensionStatus = {
-    working: 'working',
-    notWorking: 'notWorking',
-    idle: 'idle',
+    working: "working",
+    notWorking: "notWorking",
+    idle: "idle",
 };
 const extensionNames = {
-    popup: 'popup',
-    contentScript: 'contentScript',
-    controller: 'controller',
-    captureSubtitle: 'captureSubtitle',
-    background: 'background',
+    popup: "popup",
+    contentScript: "contentScript",
+    controller: "controller",
+    captureSubtitle: "captureSubtitle",
+    background: "background",
 };
 //
 // Updated
@@ -94,24 +94,27 @@ const orderNames = {
     // injectCaptureSubtitleScript: 'injectCaptureSubtitleScript',
     // injectExTranscriptScript: 'injectExTranscriptScript',
     // From background to contentScript
-    sendStatus: 'sendStatus',
+    sendStatus: "sendStatus",
     // from controller to background
-    sendSubtitles: 'sendSubtitles',
+    sendSubtitles: "sendSubtitles",
     // order to disconnect port
-    disconnect: 'disconnect',
+    disconnect: "disconnect",
     // from popup inquire the url is correct
-    inquireUrl: 'inquireUrl',
+    inquireUrl: "inquireUrl",
     // from popup, run process
-    run: 'run',
+    run: "run",
     // reset content script
-    reset: 'reset',
+    reset: "reset",
     // Turn Off ExTranscript
-    turnOff: 'turnOff',
+    turnOff: "turnOff",
     // something succeeded
-    success: 'success',
+    success: "success",
     // NOTE: new added
     // Is the page moved to text page?
-    isPageIncludingMovie: 'isPageIncludingMovie'
+    isPageIncludingMovie: "isPageIncludingMovie",
+    // NOTE: new added
+    // Alert
+    alert: "alert",
 };
 // --- constants for controller.js -------------------------------
 // // To pass to setTimeout
@@ -130,17 +133,17 @@ const SIGNAL = {
     },
 };
 const positionStatus = {
-    sidebar: 'sidebar',
-    noSidebar: 'noSidebar',
+    sidebar: "sidebar",
+    noSidebar: "noSidebar",
 };
 const viewStatusNames = {
-    wideView: 'wideView',
-    middleView: 'middleView',
+    wideView: "wideView",
+    middleView: "middleView",
 };
 // ---- ABOUT PORT ----------------------------------
 const port_names = {
-    _requiring_subtitles: '_port_name_require_subtitles',
-    _injected_contentScript: '_port_name_injected_contentScript',
+    _requiring_subtitles: "_port_name_require_subtitles",
+    _injected_contentScript: "_port_name_injected_contentScript",
 };
 // // Usage
 // type _order = orderTypes[];
@@ -611,7 +614,7 @@ let controlbar = null;
  * And every order should be responsed by invoking sendResponse with `{complete: true}`.
  * */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('CONTENT SCRIPT GOT MESSAGE');
+    console.log("CONTENT SCRIPT GOT MESSAGE");
     const { from, order, to } = message;
     const response = {
         from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
@@ -623,7 +626,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (order && order.length) {
         // SEND STATUS
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.sendStatus)) {
-            console.log('Order: SEND STATUS');
+            console.log("Order: SEND STATUS");
             try {
                 const isEnglish = isSubtitleEnglish();
                 let isOpen = false;
@@ -634,59 +637,65 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     isOpen = isTranscriptOpen();
                 response.language = isEnglish;
                 response.isTranscriptDisplaying = isOpen;
-                response.success = true;
+                // response.success = true;
+                response.complete = true;
             }
             catch (err) {
-                response.success = false;
+                // response.success = false;
                 response.error = err;
+                response.complete = false;
             }
             finally {
-                response.complete = true;
                 sendResponse(response);
             }
         }
         // RESET
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.reset)) {
-            console.log('Order: RESET');
+            console.log("Order: RESET");
             handlerOfReset()
                 .then(() => {
                 response.success = true;
+                response.complete = true;
             })
-                .catch((err) => {
-                console.error(err.message);
+                .catch((e) => {
+                console.error(e.message);
                 response.success = false;
-                response.error = err;
+                response.complete = false;
+                response.error = e;
             })
                 .finally(() => {
-                response.complete = true;
                 sendResponse(response);
             });
         }
         // Require to make sure the page is including movie container or not.
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.isPageIncludingMovie)) {
-            console.log('Order: Is this page including movie container?');
+            console.log("Order: Is this page including movie container?");
             repeatCheckQueryAcquired(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.videoContainer, true)
                 .then((r) => {
                 response.isPageIncludingMovie = r;
-                response.success = true;
+                response.complete = true;
             })
                 .catch((err) => {
                 console.error(err);
-                response.success = false;
+                response.complete = false;
                 response.error = err;
             })
                 .finally(() => {
-                response.complete = true;
                 sendResponse(response);
             });
         }
         // TURN OFF
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.turnOff)) {
-            console.log('Order: Turn off');
+            console.log("Order: Turn off");
             moControlbar.disconnect();
-            controlbar.removeEventListener('click', handlerOfControlbar);
-            // moControlbarとcontrolbarはnullにしておく必要があるかな？
-            // その後のorderによるなぁ
+            controlbar.removeEventListener("click", handlerOfControlbar);
+            // TODO: moControlbar, controlbarはnullにする必要があるか？
+            response.complete = true;
+            sendResponse(response);
+        }
+        //   ALERT
+        if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_1__.orderNames.alert)) {
+            displayAlert(message.alertMessage);
             response.complete = true;
             sendResponse(response);
         }
@@ -698,17 +707,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  * @param order {object}
  * */
 const sendToBackground = (order) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('SENDING MESSAGE TO BACKGROUND');
+    console.log("SENDING MESSAGE TO BACKGROUND");
     const { isOpened, isEnglish } = order;
     const m = {
         from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
         to: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.background,
     };
     if (isOpened !== undefined) {
-        m['isTranscriptDisplaying'] = isOpened;
+        m["isTranscriptDisplaying"] = isOpened;
     }
     if (isEnglish !== undefined) {
-        m['language'] = isEnglish;
+        m["language"] = isEnglish;
     }
     yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_2__.sendMessagePromise)(m);
 });
@@ -783,7 +792,7 @@ const handlerOfControlbar = function (ev) {
  * */
 const isTranscriptOpen = () => {
     const toggleButton = document.querySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.transcript.toggleButton);
-    return toggleButton.getAttribute('aria-expanded') === 'true' ? true : false;
+    return toggleButton.getAttribute("aria-expanded") === "true" ? true : false;
 };
 /****************************************************
  * Check Subtitle language is English or not.
@@ -799,12 +808,12 @@ const isSubtitleEnglish = () => {
     const checkButtons = listParent.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuCheckButtons);
     const menuList = listParent.querySelectorAll(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.controlBar.cc.menuList);
     if (!listParent || !checkButtons || !menuList)
-        throw new _Error_Error__WEBPACK_IMPORTED_MODULE_3__.DomManipulationError('Failed to manipulate DOM');
+        throw new _Error_Error__WEBPACK_IMPORTED_MODULE_3__.DomManipulationError("Failed to manipulate DOM");
     let counter = 0;
     let i = null;
     const els = Array.from(checkButtons);
     for (const btn of els) {
-        if (btn.getAttribute('aria-checked') === 'true') {
+        if (btn.getAttribute("aria-checked") === "true") {
             i = counter;
             break;
         }
@@ -813,10 +822,10 @@ const isSubtitleEnglish = () => {
     // NOTE: 字幕リストで何も選択されていないというのは起こりえないはず
     // なのでこのチェック自体が無意味かも
     if (i === null) {
-        throw new Error('Error: [isSubtitleEnglish()] Something went wrong but No language is selected');
+        throw new Error("Error: [isSubtitleEnglish()] Something went wrong but No language is selected");
     }
     const currentLanguage = Array.from(menuList)[i].innerText;
-    if (currentLanguage.includes('English') || currentLanguage.includes('英語'))
+    if (currentLanguage.includes("English") || currentLanguage.includes("英語"))
         return true;
     else
         return false;
@@ -854,24 +863,24 @@ const config = {
 const moCallback = (mr) => {
     let guard = false;
     mr.forEach((record) => {
-        if (record.type === 'childList' && !guard) {
+        if (record.type === "childList" && !guard) {
             // NOTE: MutationRecord[0]だけしらべればいいので1週目だけでループを止める
             // じゃぁforEach()を使うなという話ではあるけど...
             guard = true;
             // Added Nodes
             record.addedNodes.forEach((node) => {
-                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute('data-purpose');
-                if (dataPurpose && dataPurpose === 'transcript-toggle') {
-                    console.log('[contentScript] Appeared Transcript Toggle Button');
+                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute("data-purpose");
+                if (dataPurpose && dataPurpose === "transcript-toggle") {
+                    console.log("[contentScript] Appeared Transcript Toggle Button");
                     sendToBackground({ isOpened: isTranscriptOpen() });
                 }
             });
             // Removed Nodes
             record.removedNodes.forEach((node) => {
                 // これで取得できた！！！
-                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute('data-purpose');
-                if (dataPurpose && dataPurpose === 'transcript-toggle') {
-                    console.log('[contentScript] Disappeared Transcript Toggle Button');
+                const dataPurpose = node.childNodes[0].parentElement.firstElementChild.getAttribute("data-purpose");
+                if (dataPurpose && dataPurpose === "transcript-toggle") {
+                    console.log("[contentScript] Disappeared Transcript Toggle Button");
                     sendToBackground({ isOpened: false });
                 }
             });
@@ -927,6 +936,13 @@ const repeatQuerySelector = (selector) => __awaiter(void 0, void 0, void 0, func
         throw new _Error_Error__WEBPACK_IMPORTED_MODULE_3__.DomManipulationError(`DomManipulationError: Could not get DOM by selector ${selector}`);
     }
 });
+/************************************************
+ * alert() on injected page.
+ *
+ * */
+const displayAlert = (message) => {
+    alert(message);
+};
 /*****************************************
  *  Initialize for detecting injected page status.
  *
@@ -934,7 +950,7 @@ const repeatQuerySelector = (selector) => __awaiter(void 0, void 0, void 0, func
  *  set up MutationObserver of controlbar.
  * */
 const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('CONTENT SCRIPT INITIALIZING...');
+    console.log("CONTENT SCRIPT INITIALIZING...");
     try {
         // いったんMutationObserverを停止してから...
         if (moControlbar)
@@ -943,13 +959,13 @@ const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
         moControlbar = new MutationObserver(moCallback);
         // controlbarのDOMを再取得
         if (controlbar)
-            controlbar.removeEventListener('click', handlerOfControlbar);
+            controlbar.removeEventListener("click", handlerOfControlbar);
         controlbar = null;
         controlbar = yield repeatQuerySelector(_utils_selectors__WEBPACK_IMPORTED_MODULE_0__.transcript.controlbar);
-        controlbar.addEventListener('click', handlerOfControlbar);
+        controlbar.addEventListener("click", handlerOfControlbar);
         // 再度、更新済のDOMに対してMutationObserverを設置する
         moControlbar.observe(controlbar, config);
-        console.log('content script initialize has been done');
+        console.log("content script initialize has been done");
     }
     catch (err) {
         if (err instanceof _Error_Error__WEBPACK_IMPORTED_MODULE_3__.DomManipulationError)
@@ -962,13 +978,12 @@ const initialize = () => __awaiter(void 0, void 0, void 0, function* () {
  *
  * */
 (function () {
-    initialize()
-        .catch(e => {
+    initialize().catch((e) => {
         chrome.runtime.sendMessage({
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.contentScript,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_1__.extensionNames.background,
             success: false,
-            error: e
+            error: e,
         });
     });
 })();

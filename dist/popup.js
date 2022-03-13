@@ -30540,19 +30540,19 @@ __webpack_require__.r(__webpack_exports__);
  * ________________________________________________
  *
  * ************************************************/
-const _key_of_model_state__ = '_key_of_model_state__@&%8=8';
+const _key_of_model_state__ = "_key_of_model_state__@&%8=8";
 const urlPattern = /https:\/\/www.udemy.com\/course\/*/gm;
 const extensionStatus = {
-    working: 'working',
-    notWorking: 'notWorking',
-    idle: 'idle',
+    working: "working",
+    notWorking: "notWorking",
+    idle: "idle",
 };
 const extensionNames = {
-    popup: 'popup',
-    contentScript: 'contentScript',
-    controller: 'controller',
-    captureSubtitle: 'captureSubtitle',
-    background: 'background',
+    popup: "popup",
+    contentScript: "contentScript",
+    controller: "controller",
+    captureSubtitle: "captureSubtitle",
+    background: "background",
 };
 //
 // Updated
@@ -30562,24 +30562,27 @@ const orderNames = {
     // injectCaptureSubtitleScript: 'injectCaptureSubtitleScript',
     // injectExTranscriptScript: 'injectExTranscriptScript',
     // From background to contentScript
-    sendStatus: 'sendStatus',
+    sendStatus: "sendStatus",
     // from controller to background
-    sendSubtitles: 'sendSubtitles',
+    sendSubtitles: "sendSubtitles",
     // order to disconnect port
-    disconnect: 'disconnect',
+    disconnect: "disconnect",
     // from popup inquire the url is correct
-    inquireUrl: 'inquireUrl',
+    inquireUrl: "inquireUrl",
     // from popup, run process
-    run: 'run',
+    run: "run",
     // reset content script
-    reset: 'reset',
+    reset: "reset",
     // Turn Off ExTranscript
-    turnOff: 'turnOff',
+    turnOff: "turnOff",
     // something succeeded
-    success: 'success',
+    success: "success",
     // NOTE: new added
     // Is the page moved to text page?
-    isPageIncludingMovie: 'isPageIncludingMovie'
+    isPageIncludingMovie: "isPageIncludingMovie",
+    // NOTE: new added
+    // Alert
+    alert: "alert",
 };
 // --- constants for controller.js -------------------------------
 // // To pass to setTimeout
@@ -30598,17 +30601,17 @@ const SIGNAL = {
     },
 };
 const positionStatus = {
-    sidebar: 'sidebar',
-    noSidebar: 'noSidebar',
+    sidebar: "sidebar",
+    noSidebar: "noSidebar",
 };
 const viewStatusNames = {
-    wideView: 'wideView',
-    middleView: 'middleView',
+    wideView: "wideView",
+    middleView: "middleView",
 };
 // ---- ABOUT PORT ----------------------------------
 const port_names = {
-    _requiring_subtitles: '_port_name_require_subtitles',
-    _injected_contentScript: '_port_name_injected_contentScript',
+    _requiring_subtitles: "_port_name_require_subtitles",
+    _injected_contentScript: "_port_name_injected_contentScript",
 };
 // // Usage
 // type _order = orderTypes[];
@@ -30935,7 +30938,7 @@ __webpack_require__.r(__webpack_exports__);
  *  POPUP
  * _____________________________________________________
  *
- *  NOTE:  state never retain its value!!
+ * NOTE:  state never retain its value!!
  * Popup refreshes itself everytime opened same as html page reloaded.
  * So state must be stored background script and
  * everytime opened, popup must require background script to send state.
@@ -31004,7 +31007,11 @@ const Popup = () => {
                 setCorrectUrl(false);
             }
         })
-            .catch((err) => console.error(err.message));
+            .catch((err) => {
+            console.error(err.message);
+            // ここで例外が発生する状況が想定できない
+            // TODO: 実行不可能であることをViewで示す
+        });
     };
     const handlerOfRun = () => {
         if (!tabInfo)
@@ -31017,23 +31024,21 @@ const Popup = () => {
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_2__.orderNames.run],
             tabInfo: tabInfo,
         })
+            // NOTE: !res.successはRUNするためのページ環境になっていないことを示し、アプリケーションのエラーではない
             .then((res) => {
             const { success } = res;
             console.log('[popup] Rebuilding Successfully Complete!');
             setBuilt(success);
             setBuilding(false);
             setDisableSlider(false);
-            if (!success) {
-                throw new Error('Error: something went wrong while extension building');
-            }
         })
-            .catch((err) => {
+            .catch((e) => {
             setBuilt(false);
             setBuilding(false);
             setTurningOn(false);
             setDisableSlider(false);
-            console.error(err.message);
-            // TODO: alert
+            console.error(e.message);
+            // TODO: 実行不可能であることをViewで示す
         });
     };
     const handlerOfTurnOff = () => {
@@ -31042,17 +31047,19 @@ const Popup = () => {
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_2__.orderNames.turnOff],
         })
-            .then((res) => {
-            if (!res.success)
-                throw new Error(`Error: Failed to turn off extension. ${res.failureReason}`);
+            .then(() => {
+            // if (!res.success)
+            //     throw new Error(
+            //         `Error: Failed to turn off extension. ${res.failureReason}`
+            //     );
             setBuilt(false);
             setBuilding(false);
             setTurningOn(false);
             setDisableSlider(false);
         })
-            .catch((err) => {
-            // TODO: alert to getpage reloaded or disable extension
-            console.error(err);
+            .catch((e) => {
+            // TODO: 実行不可能であることをViewで示す
+            console.error(e);
         });
     };
     const handlerOfToggle = () => {
@@ -31085,41 +31092,6 @@ const root = document.createElement('div');
 document.body.appendChild(root);
 react_dom__WEBPACK_IMPORTED_MODULE_1__.render(react__WEBPACK_IMPORTED_MODULE_0__.createElement(Popup, null), root);
 // legacy code -------------
-//   useEffect(() => {
-//     chrome.runtime.onMessage.removeListener(messageHandler);
-//     chrome.runtime.onMessage.addListener(messageHandler);
-//     return () => {
-//       chrome.runtime.onMessage.removeListener(messageHandler);
-//     };
-//   }, []);
-//   const buttonClickHandler = (): void => {
-//     if (!tabInfo) throw new Error("Error: tabInfo is null");
-//     setBuilding(true);
-//     console.log("[popup] RUNNING...");
-//     sendMessagePromise({
-//       from: extensionNames.popup,
-//       to: extensionNames.background,
-//       order: [orderNames.run],
-//       tabInfo: tabInfo,
-//     })
-//       .then((res) => {
-//         const { success } = res;
-//         console.log("[popup] Successfully Complete!");
-//         setBuilt(success);
-//         setBuilding(false);
-//         if (!success) {
-//           throw new Error(
-//             "Error: something went wrong while extension building"
-//           );
-//         }
-//       })
-//       .catch((err) => {
-//         setBuilt(false);
-//         setBuilding(false);
-//         console.error(err.message);
-//         // alert出した方がいいかな？
-//       });
-//   };
 
 })();
 

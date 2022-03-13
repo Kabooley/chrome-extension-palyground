@@ -2,6 +2,30 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./src/Error/templates.ts":
+/*!********************************!*\
+  !*** ./src/Error/templates.ts ***!
+  \********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "alertMessages": () => (/* binding */ alertMessages)
+/* harmony export */ });
+/*****************************************
+ * 今のところ日本人向けに公開するから、
+ * 本当はここ日本語にするんですけどね...
+ *
+ *
+ * */
+const alertMessages = {
+    failedOnInstall: "Failed to install/update chrome extension. Please try again or contact to developer",
+    pageIsNotReady: "Extensions require subtitles to be in English and transcripts to be turned on",
+};
+
+
+/***/ }),
+
 /***/ "./src/background/annotations.ts":
 /*!***************************************!*\
   !*** ./src/background/annotations.ts ***!
@@ -73,19 +97,19 @@ __webpack_require__.r(__webpack_exports__);
  * ________________________________________________
  *
  * ************************************************/
-const _key_of_model_state__ = '_key_of_model_state__@&%8=8';
+const _key_of_model_state__ = "_key_of_model_state__@&%8=8";
 const urlPattern = /https:\/\/www.udemy.com\/course\/*/gm;
 const extensionStatus = {
-    working: 'working',
-    notWorking: 'notWorking',
-    idle: 'idle',
+    working: "working",
+    notWorking: "notWorking",
+    idle: "idle",
 };
 const extensionNames = {
-    popup: 'popup',
-    contentScript: 'contentScript',
-    controller: 'controller',
-    captureSubtitle: 'captureSubtitle',
-    background: 'background',
+    popup: "popup",
+    contentScript: "contentScript",
+    controller: "controller",
+    captureSubtitle: "captureSubtitle",
+    background: "background",
 };
 //
 // Updated
@@ -95,24 +119,27 @@ const orderNames = {
     // injectCaptureSubtitleScript: 'injectCaptureSubtitleScript',
     // injectExTranscriptScript: 'injectExTranscriptScript',
     // From background to contentScript
-    sendStatus: 'sendStatus',
+    sendStatus: "sendStatus",
     // from controller to background
-    sendSubtitles: 'sendSubtitles',
+    sendSubtitles: "sendSubtitles",
     // order to disconnect port
-    disconnect: 'disconnect',
+    disconnect: "disconnect",
     // from popup inquire the url is correct
-    inquireUrl: 'inquireUrl',
+    inquireUrl: "inquireUrl",
     // from popup, run process
-    run: 'run',
+    run: "run",
     // reset content script
-    reset: 'reset',
+    reset: "reset",
     // Turn Off ExTranscript
-    turnOff: 'turnOff',
+    turnOff: "turnOff",
     // something succeeded
-    success: 'success',
+    success: "success",
     // NOTE: new added
     // Is the page moved to text page?
-    isPageIncludingMovie: 'isPageIncludingMovie'
+    isPageIncludingMovie: "isPageIncludingMovie",
+    // NOTE: new added
+    // Alert
+    alert: "alert",
 };
 // --- constants for controller.js -------------------------------
 // // To pass to setTimeout
@@ -131,17 +158,17 @@ const SIGNAL = {
     },
 };
 const positionStatus = {
-    sidebar: 'sidebar',
-    noSidebar: 'noSidebar',
+    sidebar: "sidebar",
+    noSidebar: "noSidebar",
 };
 const viewStatusNames = {
-    wideView: 'wideView',
-    middleView: 'middleView',
+    wideView: "wideView",
+    middleView: "middleView",
 };
 // ---- ABOUT PORT ----------------------------------
 const port_names = {
-    _requiring_subtitles: '_port_name_require_subtitles',
-    _injected_contentScript: '_port_name_injected_contentScript',
+    _requiring_subtitles: "_port_name_require_subtitles",
+    _injected_contentScript: "_port_name_injected_contentScript",
 };
 // // Usage
 // type _order = orderTypes[];
@@ -449,6 +476,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/constants */ "./src/utils/constants.ts");
 /* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
 /* harmony import */ var _annotations__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./annotations */ "./src/background/annotations.ts");
+/* harmony import */ var _Error_templates__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Error/templates */ "./src/Error/templates.ts");
 /***************************************************************
  * background.ts
  * _____________________________________________________________
@@ -457,7 +485,10 @@ __webpack_require__.r(__webpack_exports__);
  *
  *
  * chrome.runtime.onInstalled: Stateを初期化してstateへ保存する
- *  ***************************************************************/
+ *
+ *
+ *
+ * Exception Handling ***************************************************************/
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -478,6 +509,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
         }
     return t;
 };
+
 
 
 
@@ -505,6 +537,7 @@ chrome.runtime.onInstalled.addListener((details) => __awaiter(void 0, void 0, vo
     }
     catch (err) {
         console.error(err.message);
+        alert(_Error_templates__WEBPACK_IMPORTED_MODULE_3__.alertMessages.failedOnInstall);
     }
 }));
 /**
@@ -563,22 +596,16 @@ chrome.tabs.onUpdated.addListener((tabIdUpdatedOccured, changeInfo, Tab) => __aw
         // NOTE: Compare URL WITHOUT below hash.
         else if (changeInfo.url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.urlPattern) &&
             (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.exciseBelowHash)(changeInfo.url) !== (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.exciseBelowHash)(url)) {
-            // ページが切り替わった
-            // NOTE: MUST Update URL
+            //NOTE: MUST Update URL. ページが切り替わったから
             console.log("[background] page moved");
             yield state.set({ url: (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.exciseBelowHash)(changeInfo.url) });
-            // 動画ページ以外に切り替わったのか？
+            // 動画ページ以外に切り替わった？
+            // TODO: sendMessageToTabsPromiseのスローするエラーのcatch
             const res = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
                 from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
                 to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
                 order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.isPageIncludingMovie],
             });
-            // TODO: Fix Udemyで動画ページに切り替わったのに
-            // 動画ページじゃない判定してくる...
-            // これの対処
-            // DEBUG:
-            //
-            console.log(res);
             res.isPageIncludingMovie
                 ? // 次の動画に移った
                     yield handlerOfReset(tabIdUpdatedOccured)
@@ -644,10 +671,12 @@ const sortMessage = (message, sender, sendResponse) => {
 //
 // --- Message Handlers ----------------------------------------
 //
-/**
+/*********************************************
  * Handler of message from POPUP
- *______________________________________________________
-
+ *
+ * TODO: response.errorを送信する必要があるかは未検討
+ * 私見では必要ないのでは？
+ * エラーを取得してどうするか考えるのはbackground scriptの役目であるから...
  * */
 const handlerOfPopupMessage = (message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("[background] Message from Popup");
@@ -665,41 +694,51 @@ const handlerOfPopupMessage = (message, sender, sendResponse) => __awaiter(void 
                     isSubtitleCapturing: isSubtitleCapturing,
                     isExTranscriptStructured: isExTranscriptStructured,
                 };
+                response.complete = true;
             }
-            catch (err) {
-                // TODO: stateが取得できなかったときの挙動
+            catch (e) {
+                // TODO: stateが取得できなかったときの挙動 alertだす
+                response.complete = false;
+                response.error = e;
             }
             finally {
-                response.complete = true;
                 sendResponse(response);
             }
         }
         // RUN
+        /*
+          - falseが返される理由
+            字幕がONじゃない、トランスクリプトがONじゃない、字幕が英語じゃない
+            
+          - RUN処理中、起こりうる可能性がきわめて低い問題
+            chrome.scripting.execute()中のエラー
+            字幕が取得できない（条件がそろってから実行するから、取得できないのはおかしい）
+            
+          - 起こったら終了な問題(例外判定)
+            DOMが取得できない（DOMの種類による）
+            chrome.runtime.onInstalledが実行されていないことによる、stateの未初期化
+        */
         if (order.includes(_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.run)) {
             console.log("[background] RUN");
             try {
-                // - falseが返される理由
-                // 字幕がONじゃない、トランスクリプトがONじゃない、字幕が英語じゃない
-                // 
-                // - RUN処理中、起こりうる可能性がきわめて低い問題
-                // chrome.scripting.execute()中のエラー
-                // 字幕が取得できない（条件がそろってから実行するから、取得できないのはおかしい）
-                // 
-                // - 起こったら終了な問題(例外判定)
-                // DOMが取得できない（DOMの種類による）
-                // chrome.runtime.onInstalledが実行されていないことによる、stateの未初期化
+                // True as successfully done. False as page status is not ready.(Not error)
                 const r = yield handlerOfRun(rest.tabInfo);
                 response.success = r ? true : false;
-                // TODO: 失敗理由を追加しないとアラート出せない
+                response.complete = true;
+                // TODO: ページ環境を実行できるものにしてくれとアラート
+                if (!r)
+                    chrome.tabs.sendMessage(rest.tabInfo.id, {
+                        from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
+                        to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
+                        order: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.alert,
+                        alertMessage: _Error_templates__WEBPACK_IMPORTED_MODULE_3__.alertMessages.pageIsNotReady
+                    });
             }
-            catch (err) {
-                // 起こったら終了な代物
-                // RUNプロセスの状況によっていろいろリセットが必要か？
-                response.success = false;
-                response.error = err;
+            catch (e) {
+                response.complete = false;
+                response.error = e;
             }
             finally {
-                response.complete = true;
                 sendResponse(response);
             }
         }
@@ -712,22 +751,20 @@ const handlerOfPopupMessage = (message, sender, sendResponse) => __awaiter(void 
                 const { isContentScriptInjected, isCaptureSubtitleInjected, isControllerInjected, } = yield state.get();
                 // content scriptのinject状況だけ反映させてstateを初期値に戻す
                 yield state.set(Object.assign(Object.assign({}, _annotations__WEBPACK_IMPORTED_MODULE_2__.modelBase), { isContentScriptInjected: isContentScriptInjected, isCaptureSubtitleInjected: isCaptureSubtitleInjected, isControllerInjected: isControllerInjected }));
-                response.success = true;
+                response.complete = true;
             }
-            catch (err) {
-                // TODO: TURN OFFで例外が発生したときの挙動
-                response.success = false;
+            catch (e) {
+                response.complete = false;
+                response.error = e;
             }
             finally {
-                response.complete = true;
                 sendResponse(response);
             }
         }
     }
 });
-/******
+/**************************************
  * Handler of message from contentScrip.js
- * ________________________________________________________
  *
  * */
 const handlerOfContentScriptMessage = (message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
@@ -758,12 +795,12 @@ const handlerOfContentScriptMessage = (message, sender, sendResponse) => __await
                 s["isEnglish"] = rest.language;
             }
             yield state.set(s);
+            response.complete = true;
         }
-        catch (err) {
-            // TODO: Hide処理中に例外が発生したときの挙動
+        catch (e) {
+            response.complete = false;
         }
         finally {
-            response.complete = true;
             sendResponse(response);
         }
     }
@@ -774,12 +811,12 @@ const handlerOfContentScriptMessage = (message, sender, sendResponse) => __await
             try {
                 yield handlerOfReset(tabId);
                 yield state.set({ isTranscriptDisplaying: true });
+                response.complete = true;
             }
-            catch (err) {
-                // TODO: Reset処理中に例外が発生したときの挙動
+            catch (e) {
+                response.complete = false;
             }
             finally {
-                response.complete = true;
                 sendResponse(response);
             }
         }
@@ -794,47 +831,45 @@ const handlerOfContentScriptMessage = (message, sender, sendResponse) => __await
                     isTranscriptDisplaying: true,
                     isEnglish: true,
                 });
+                response.complete = true;
             }
-            catch (err) {
-                // TODO: Reset処理中に例外が発生したときの挙動
+            catch (e) {
+                response.complete = false;
             }
             finally {
-                response.complete = true;
                 sendResponse(response);
             }
         }
     }
 });
-/**
+/**********************************************
  * Handler of message from captureSubtitle.js
- *______________________________________________________
+ *
  *
  * */
 const handlerOfCaptureSubtitleMessage = (message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
     try {
     }
-    catch (err) {
-        console.error(err.message);
+    catch (e) {
+        console.error(e.message);
     }
 });
-/**
+/**********************************************
  *  Handler of message from controller.js
- *______________________________________________________
  *
  * */
 const handlerOfControllerMessage = (message, sender, sendResponse) => __awaiter(void 0, void 0, void 0, function* () {
     try {
     }
-    catch (err) {
-        console.error(err.message);
+    catch (e) {
+        console.error(e.message);
     }
 });
 //
 // --- Order Handlers -------------------------------------------
 //
-/**
- * handler of RUN order.
- * _______________________________________________
+/*****************************************************
+ * Handler of RUN order.
  *
  *
  * */
@@ -858,36 +893,26 @@ const handlerOfRun = (tabInfo) => __awaiter(void 0, void 0, void 0, function* ()
             yield state.set({ isContentScriptInjected: true });
         }
         else {
-            const r = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
+            yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
                 from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
                 to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
                 order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.reset],
             });
-            if (!r.success) {
-                throw r.error;
-            }
         }
         const currentPageStatus = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.sendStatus],
         });
-        if (currentPageStatus.success) {
-            // 結果がどうあれ現状の状態を保存する
-            yield state.set({
-                isEnglish: currentPageStatus.language,
-                isTranscriptDisplaying: currentPageStatus.isTranscriptDisplaying,
-            });
-            // 字幕が英語じゃない、またはトランスクリプトがONでないならば
-            // キャンセル
-            if (!currentPageStatus.language || !currentPageStatus.isTranscriptDisplaying) {
-                // TODO: 失敗またはキャンセルの方法未定義...
-                // ひとまずfalseを返している
-                return false;
-            }
+        yield state.set({
+            isEnglish: currentPageStatus.language,
+            isTranscriptDisplaying: currentPageStatus.isTranscriptDisplaying,
+        });
+        if (!currentPageStatus.language ||
+            !currentPageStatus.isTranscriptDisplaying) {
+            // TODO: RUNしたけどページステータスのせいで実行できないときの挙動の実装...alert()する
+            return false;
         }
-        else
-            throw currentPageStatus.error;
         // <phase 3> inject captureSubtitle.js
         // 字幕データを取得する
         if (!isCaptureSubtitleInjected) {
@@ -898,8 +923,7 @@ const handlerOfRun = (tabInfo) => __awaiter(void 0, void 0, void 0, function* ()
             yield state.set({ isCaptureSubtitleInjected: true });
         }
         // 字幕取得できるまで10回は繰り返す関数で取得する
-        // NOTE: 戻り値が空の配列でも受け入れることにする
-        // TODO: セレクタが一致するかどうか検査する関数を設ける
+        // NOTE: 戻り値が空の配列でも受け入れる
         const subtitles = yield repeatCaptureSubtitles(tabId);
         yield state.set({ subtitles: subtitles });
         // <phase 4> inject controller.js
@@ -911,14 +935,11 @@ const handlerOfRun = (tabInfo) => __awaiter(void 0, void 0, void 0, function* ()
             yield state.set({ isControllerInjected: true });
         }
         else {
-            const r = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
+            yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
                 from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
                 to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.controller,
                 order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.reset],
             });
-            // TODO: FIX successの値ではなくて例外スローを受け取ること
-            if (!r.success)
-                throw new Error(`Error: Failed to reset controller.${r.failureReason}`);
         }
         const s = yield state.get();
         yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
@@ -927,17 +948,20 @@ const handlerOfRun = (tabInfo) => __awaiter(void 0, void 0, void 0, function* ()
             subtitles: s.subtitles,
         });
         yield state.set({ isExTranscriptStructured: true });
+        // NOTE: MUST RETURN TRUE
         return true;
     }
-    catch (err) {
-        console.error(err.message);
+    catch (e) {
+        console.error(e.message);
         // TODO: Errorの種類を確認して必要に応じて再スロー
-        throw err;
+        // TODO: stack traceを追跡できるならば、どこの段階でエラーが起こったのか取得できるので、
+        // 段階に合わせてstateを初期化する
+        // またはそんな面倒はすっ飛ばして、ページのリロードを強制させるか？
+        throw e;
     }
 });
-/**
- * handler of RESET
- * ________________________________________________
+/**************************************************
+ * Handler of RESET
  *
  * ExTranscriptを再生成する
  * 本家トランスくリプトが表示されているかどうか、
@@ -969,18 +993,14 @@ const handlerOfReset = (tabId) => __awaiter(void 0, void 0, void 0, function* ()
         });
         // reset 処理: 各content scritpのリセットを実施する
         yield resetEachContentScript(tabId);
-        // 成功したとして、
-        // データ再取得処理
         const newSubtitles = yield repeatCaptureSubtitles(tabId);
-        if (!newSubtitles.length)
-            throw new Error("Error: Failed to capture subtitles");
         // If okay, then save subtitles data.
         yield state.set({
             isSubtitleCaptured: true,
             isSubtitleCapturing: false,
             subtitles: newSubtitles,
         });
-        // NOTE: 一旦resetオーダーを出してから字幕を送ること
+        // NOTE: 必ずresetオーダーを出してから字幕を送ること
         const resetOrder = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.controller,
@@ -991,26 +1011,17 @@ const handlerOfReset = (tabId) => __awaiter(void 0, void 0, void 0, function* ()
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.controller,
             subtitles: newSubtitles,
         });
-        if (!resetOrder.success || !resetSubtitle) {
-            throw new Error(`Error: Failed to reset controller. ${resetOrder.success
-                ? ""
-                : resetOrder.failureReason + resetSubtitle.success
-                    ? ""
-                    : resetSubtitle.failureReason} `);
-        }
         yield state.set({
             isTranscriptDisplaying: true,
         });
-        // ここまで何も問題なければRESET成功
         console.log("[background] RESET Complete!");
     }
-    catch (err) {
-        console.error(err.message);
+    catch (e) {
+        throw e;
     }
 });
-/******
- * handler of hide ExTranscript
- * ____________________________________________________________
+/*****************************************************
+ * Handler of hide ExTranscript
  *
  * NOTE: これは拡張機能をOFFにするハンドラではない
  * 実際には隠すのではなくて、ExTranscriptを消す処理を実行する
@@ -1031,17 +1042,15 @@ const handlerOfHide = (tabId) => __awaiter(void 0, void 0, void 0, function* () 
             subtitles: [],
         });
         // reset 処理: 各content scritpのリセットを実施する
-        const r = yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
+        yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_1__.sendMessageToTabsPromise)(tabId, {
             from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.controller,
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.turnOff],
         });
-        if (!r.success) {
-            throw new Error("Failed to hide ExTranscript");
-        }
     }
-    catch (err) {
-        console.error(err.message);
+    catch (e) {
+        console.error(e.message);
+        throw e;
     }
 });
 /**
@@ -1061,21 +1070,24 @@ const resetEachContentScript = (tabId) => __awaiter(void 0, void 0, void 0, func
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.controller,
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.reset],
         });
-        const r = yield Promise.all([contentScript, controller]);
-        const failureReasons = r
-            .filter((_) => {
-            if (!_.success) {
-                return _.failureReason;
-            }
-        })
-            .join(" ");
-        if (failureReasons) {
-            throw new Error(`Error: failed to reset content script. ${failureReasons}`);
-        }
+        // const r: iResponse[] = await Promise.all([contentScript, controller]);
+        yield Promise.all([contentScript, controller]);
+        // const failureReasons: string = r
+        //     .filter((_) => {
+        //         if (!_.success) {
+        //             return _.failureReason;
+        //         }
+        //     })
+        //     .join(' ');
+        // if (failureReasons) {
+        //     throw new Error(
+        //         `Error: While reset content script. ${failureReasons}`
+        //     );
+        // }
         console.log("[background] DONE resetEachContentScript()");
     }
-    catch (err) {
-        console.error(err.message);
+    catch (e) {
+        throw e;
     }
 });
 /**********
@@ -1096,21 +1108,24 @@ const turnOffEachContentScripts = (tabId) => __awaiter(void 0, void 0, void 0, f
             to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.controller,
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.turnOff],
         });
-        const r = yield Promise.all([contentScript, controller]);
-        const failureReasons = r
-            .filter((_) => {
-            if (!_.success) {
-                return _.failureReason;
-            }
-        })
-            .join(" ");
-        if (failureReasons) {
-            throw new Error(`Error: failed to turn off content script. ${failureReasons}`);
-        }
+        // const r: iResponse[] = await Promise.all([contentScript, controller]);
+        yield Promise.all([contentScript, controller]);
+        // const failureReasons: string = r
+        //     .filter((_) => {
+        //         if (!_.success) {
+        //             return _.failureReason;
+        //         }
+        //     })
+        //     .join(' ');
+        // if (failureReasons) {
+        //     throw new Error(
+        //         `Error: failed to turn off content script. ${failureReasons}`
+        //     );
+        // }
         console.log("[background] Done turning off each content scripts");
     }
-    catch (err) {
-        console.error(err.message);
+    catch (e) {
+        throw e;
     }
 });
 //
@@ -1188,8 +1203,9 @@ const state = (function () {
                     [KEY_LOCALSTORAGE]: newState,
                 });
             }
-            catch (err) {
-                console.error(err.message);
+            catch (e) {
+                console.error(`Error: Problem ocurreud while chrome.storage`);
+                throw e;
             }
         }),
         get: () => __awaiter(this, void 0, void 0, function* () {
@@ -1197,16 +1213,18 @@ const state = (function () {
                 const s = yield _getLocalStorage(KEY_LOCALSTORAGE);
                 return Object.assign({}, s[KEY_LOCALSTORAGE]);
             }
-            catch (err) {
-                console.error(err.message);
+            catch (e) {
+                console.error(`Error: Problem ocurreud while chrome.storage`);
+                throw e;
             }
         }),
         clearAll: () => __awaiter(this, void 0, void 0, function* () {
             try {
                 yield chrome.storage.local.remove(KEY_LOCALSTORAGE);
             }
-            catch (err) {
-                console.error(err.message);
+            catch (e) {
+                console.error(`Error: Problem ocurreud while chrome.storage`);
+                throw e;
             }
         }),
     };

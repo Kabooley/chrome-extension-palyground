@@ -2,7 +2,7 @@
  *  POPUP
  * _____________________________________________________
  *
- *  NOTE:  state never retain its value!!
+ * NOTE:  state never retain its value!!
  * Popup refreshes itself everytime opened same as html page reloaded.
  * So state must be stored background script and
  * everytime opened, popup must require background script to send state.
@@ -190,41 +190,3 @@ document.body.appendChild(root);
 ReactDOM.render(<Popup />, root);
 
 // legacy code -------------
-
-//   useEffect(() => {
-//     chrome.runtime.onMessage.removeListener(messageHandler);
-//     chrome.runtime.onMessage.addListener(messageHandler);
-//     return () => {
-//       chrome.runtime.onMessage.removeListener(messageHandler);
-//     };
-//   }, []);
-
-//   const buttonClickHandler = (): void => {
-//     if (!tabInfo) throw new Error("Error: tabInfo is null");
-//     setBuilding(true);
-//     console.log("[popup] RUNNING...");
-
-//     sendMessagePromise({
-//       from: extensionNames.popup,
-//       to: extensionNames.background,
-//       order: [orderNames.run],
-//       tabInfo: tabInfo,
-//     })
-//       .then((res) => {
-//         const { success } = res;
-//         console.log("[popup] Successfully Complete!");
-//         setBuilt(success);
-//         setBuilding(false);
-//         if (!success) {
-//           throw new Error(
-//             "Error: something went wrong while extension building"
-//           );
-//         }
-//       })
-//       .catch((err) => {
-//         setBuilt(false);
-//         setBuilding(false);
-//         console.error(err.message);
-//         // alert出した方がいいかな？
-//       });
-//   };

@@ -28,19 +28,19 @@ __webpack_require__.r(__webpack_exports__);
  * ________________________________________________
  *
  * ************************************************/
-const _key_of_model_state__ = '_key_of_model_state__@&%8=8';
+const _key_of_model_state__ = "_key_of_model_state__@&%8=8";
 const urlPattern = /https:\/\/www.udemy.com\/course\/*/gm;
 const extensionStatus = {
-    working: 'working',
-    notWorking: 'notWorking',
-    idle: 'idle',
+    working: "working",
+    notWorking: "notWorking",
+    idle: "idle",
 };
 const extensionNames = {
-    popup: 'popup',
-    contentScript: 'contentScript',
-    controller: 'controller',
-    captureSubtitle: 'captureSubtitle',
-    background: 'background',
+    popup: "popup",
+    contentScript: "contentScript",
+    controller: "controller",
+    captureSubtitle: "captureSubtitle",
+    background: "background",
 };
 //
 // Updated
@@ -50,24 +50,27 @@ const orderNames = {
     // injectCaptureSubtitleScript: 'injectCaptureSubtitleScript',
     // injectExTranscriptScript: 'injectExTranscriptScript',
     // From background to contentScript
-    sendStatus: 'sendStatus',
+    sendStatus: "sendStatus",
     // from controller to background
-    sendSubtitles: 'sendSubtitles',
+    sendSubtitles: "sendSubtitles",
     // order to disconnect port
-    disconnect: 'disconnect',
+    disconnect: "disconnect",
     // from popup inquire the url is correct
-    inquireUrl: 'inquireUrl',
+    inquireUrl: "inquireUrl",
     // from popup, run process
-    run: 'run',
+    run: "run",
     // reset content script
-    reset: 'reset',
+    reset: "reset",
     // Turn Off ExTranscript
-    turnOff: 'turnOff',
+    turnOff: "turnOff",
     // something succeeded
-    success: 'success',
+    success: "success",
     // NOTE: new added
     // Is the page moved to text page?
-    isPageIncludingMovie: 'isPageIncludingMovie'
+    isPageIncludingMovie: "isPageIncludingMovie",
+    // NOTE: new added
+    // Alert
+    alert: "alert",
 };
 // --- constants for controller.js -------------------------------
 // // To pass to setTimeout
@@ -86,17 +89,17 @@ const SIGNAL = {
     },
 };
 const positionStatus = {
-    sidebar: 'sidebar',
-    noSidebar: 'noSidebar',
+    sidebar: "sidebar",
+    noSidebar: "noSidebar",
 };
 const viewStatusNames = {
-    wideView: 'wideView',
-    middleView: 'middleView',
+    wideView: "wideView",
+    middleView: "middleView",
 };
 // ---- ABOUT PORT ----------------------------------
 const port_names = {
-    _requiring_subtitles: '_port_name_require_subtitles',
-    _injected_contentScript: '_port_name_injected_contentScript',
+    _requiring_subtitles: "_port_name_require_subtitles",
+    _injected_contentScript: "_port_name_injected_contentScript",
 };
 // // Usage
 // type _order = orderTypes[];
@@ -393,14 +396,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             try {
                 const chunks = mainProcess();
                 r.subtitles = chunks;
-                r.success = true;
+                r.complete = true;
             }
             catch (e) {
-                r.success = false;
+                r.complete = false;
                 r.error = e;
             }
             finally {
-                r.complete = true;
                 sendResponse(r);
             }
         }

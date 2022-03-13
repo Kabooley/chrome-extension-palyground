@@ -1,136 +1,23 @@
 # 私を読んで
 
-## About this directory
+#### NOTE: ひとまずメモ 仕様と制約
 
-ここは chrome extension の動作確認用のディレクトリである
+- 制約：Popup 上の実行ボタンを押す前に、講義ページの字幕を ON にすること、字幕を英語にすること、トランスクリプトを ON にすることが実行条件である
+- 制約：Udemy のトランスクリプトの各字幕をクリックしたら講義動画のシークバーが該当箇所まで移動する機能はない
+- 制約：Udemy のフッターにある自動スクロールのチェックボタンとそれがもたらす機能はこの拡張機能にはない
 
-## 環境
+テンプレート参考:
 
--   Webpack
--   Node.js
--   TypeScript
+https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
 
-## 環境開発手順
+https://qiita.com/KamataRyo/items/466255fc33da12274c72
 
-```bash
-npm init
-# May omit.
-git init
-git add .
-git commit -m "npm init"
+## Project Title
 
-# install TypeScript
-npm i -D typescript
-touch tsconfig.json
-vi tsconfig.json
-# ... edit json file
+## Getting Started
 
-# install React
-npm i -D react
+## Prerequisites
 
-#webpack
-npm i -D webpack
-npm i -D webpack-cli
-touch webpack.config.js
-# ...edit webpack.config.js
+## Installing
 
-# webpack.config.jsでのoutputで指定された出力先
-mkdir dist/
-# webpack.config.jsでのentryで指定された入力先
-mkdir src/
-
-# install plugins
-npm i -D copy-webapck-plugin
-npm i -D html-webapck-plugin
-
-```
-
-tsconfig.json
-
-```JSON
-{
-    "compilerOptions": {
-        "jsx": "react",
-        "module": "es6",
-        "target": "es6",
-        "moduleResolution": "node",
-        "esModuleInterop": true,
-    },
-    "inlcude": ["src/**/*.ts", "src/**/*.tsx"],
-    "exclude": ["node_modules"]
-}
-```
-
-webpack.config.js
-
-```JavaScript
-const path = require("path");
-// plugins
-const CopyPlugin = require("copy-webpack-plugin");
-const HtmlPlugin = require("html-webpack-plugin");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
-
-module.exports = {
-  mode: "development",
-  devtool: "cheap-module-source-map",
-  entry: {
-    //   src/以下のファイルを指定する
-    // プロパティ名が出力のファイルの名前になる
-    // 一例
-    popup: path.resolve("src/popup/popup.tsx"),
-    options: path.resolve("src/options/options.tsx"),
-    background: path.resolve("src/background/background.ts"),
-    contentScript: path.resolve("src/contentScript/contentScript.ts"),
-    controller: path.resolve("src/contentScript/controller.ts"),
-    captureSubtitle: path.resolve("src/contentScript/captureSubtitle.ts"),
-  },
-  module: {
-    rules: [
-      {
-        use: "ts-loader",
-        test: /\.tsx?$/,
-        exclude: /node_modules/,
-      },
-      {
-        use: ["style-loader", "css-loader"],
-        test: /\.css$/i,
-      },
-      {
-        type: "asset/resource",
-        test: /\.(jpg|jpeg|png|woff|woff2|eot|ttf|svg)$/,
-      },
-    ],
-  },
-  plugins: [
-    new CopyPlugin({
-        {
-      patterns: [
-          from: path.resolve("src/static"),
-          to: path.resolve("dist"),
-        },
-      ],
-    }),
-    // htmlファイルを出力させる
-    ...getHtmlPlugins(["popup", "options"]),
-  ],
-  resolve: {
-    extensions: [".tsx", ".ts", ".js", ".css"],
-  },
-  output: {
-    filename: "[name].js",
-    path: path.resolve(__dirname, "dist"),
-  },
-};
-
-function getHtmlPlugins(chunks) {
-  return chunks.map(
-    (chunk) =>
-      new HtmlPlugin({
-        title: "React Extension",
-        filename: `${chunk}.html`,
-        chunks: [chunk],
-      })
-  );
-}
-
-```
+## だんだんだるくなってきた
