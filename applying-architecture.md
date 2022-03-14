@@ -4235,6 +4235,8 @@ chrome.runtime.onMessage.addListener(
 
 進捗：slider を設けた、ある程度のデザインは決まった、拡張機能 OFF 機能を実装し終わったらまた手を付ける
 
+**やっぱりMaterial-uiを使うことにした！**
+
 drawio にアイディアを書き出した 確認のこと
 (./design-image.drawio)
 
@@ -4245,6 +4247,16 @@ https://stackoverflow.com/questions/20424425/recommended-size-of-icon-for-google
 
 svg を自作した:
 `./src/statics/udmey-re-transcript.svg`
+
+Material-Uiをwebpackで使うときの注意点
+
+とりあえずなさそう
+
+公式のチュートリアル通りにinstallする
+
+```bash
+$ npm install @mui/material @emotion/react @emotion/styled
+```
 
 ##### chrome API Tips: icon が表示されないときは
 
