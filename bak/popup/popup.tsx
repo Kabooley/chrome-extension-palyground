@@ -17,9 +17,9 @@ import {
     urlPattern,
 } from '../utils/constants';
 import { sendMessagePromise } from '../utils/helpers';
-// import './popup.css';
+import './popup.css';
 import MainContent from './MainContent';
-import { StyledEngineProvider } from '@mui/material/styles';
+import Switch from './switch';
 
 const Popup = (): JSX.Element => {
     // popupが開かれたときのURLが、拡張機能が有効になるべきURLなのか
@@ -159,16 +159,29 @@ const Popup = (): JSX.Element => {
     };
 
     return (
-        <StyledEngineProvider injectFirst>
-            <MainCard
-                built={built}
-                building={building}
-                correctUrl={correctUrl}
-                turningOn={turningOn}
-                disable={disableSlider}
-                handlerOfToggle={handlerOfToggle}
-            />
-        </StyledEngineProvider>
+        <div className="container">
+            <div className="header">
+                <div className="container-image">
+                    <img
+                        className="image-icon"
+                        src="udemy-re-transcript-512.svg"
+                    />
+                </div>
+                <div className="extension-title-container">
+                    <span>Udemy Re</span>
+                    <br />
+                    <span> Transcript</span>
+                </div>
+            </div>
+            <div className="middle">
+                <MainContent  built={built} building={building} correctUrl={correctUrl} turningOn={turningOn} disable={disableSlider} handlerOfToggle={handlerOfToggle} />
+                {/* <div className="middle-message-container">
+                  {generateRunning()}
+                  {generateComplete()}
+                </div>
+                {correctUrl ? generateFooter() : null} */}
+            </div>
+        </div>
     );
 };
 
