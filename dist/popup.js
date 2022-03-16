@@ -45456,14 +45456,14 @@ handlerOfToggle: 実行ボタンが押されたときに発火する関数
  * */
 function Content(props) {
     const generateRunButton = () => {
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Button__WEBPACK_IMPORTED_MODULE_1__["default"], { sx: { backgroundColor: "purple", width: "80%" }, variant: "contained", onClick: props.handlerOfToggle }, "REBUILD"));
+        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Button__WEBPACK_IMPORTED_MODULE_1__["default"], { sx: { backgroundColor: 'purple', width: '80%' }, variant: "contained", onClick: props.handlerOfToggle }, "REBUILD"));
     };
     const generateLoadingButton = () => {
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_2__["default"], { sx: { width: "80%" }, loading: props.building, loadingPosition: "start", startIcon: react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_3__["default"], null), variant: "outlined" }, "REBUILDING..."));
+        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_2__["default"], { sx: { width: '80%' }, loading: props.building, loadingPosition: "start", startIcon: react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_3__["default"], null), variant: "outlined", disabled: true }, "REBUILDING..."));
     };
     //   "COMPLETE!"は短い間だけ表示して、あとは"展開中"みたいな表示にしたい
     const generateSuccess = () => {
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_4__["default"], { sx: { width: "80%" }, variant: "filled", severity: "success" }, "COMPLETE!"));
+        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_4__["default"], { sx: { width: '80%' }, variant: "filled", severity: "success" }, "COMPLETE!"));
     };
     const content = () => {
         let generated = null;
@@ -45481,7 +45481,7 @@ function Content(props) {
     const generateNotice = () => {
         return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_4__["default"], { variant: "outlined", severity: "info" }, "Extension is available on the Udemy lecture page"));
     };
-    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Box__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: "flex", alignItems: "center", pl: 1, pb: 1 } }, props.correctUrl ? content() : generateNotice()));
+    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Box__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', alignItems: 'center', pl: 1, pb: 1 } }, props.correctUrl ? content() : generateNotice()));
 }
 /*
 MainContent ...ネーミングセンスなさすぎ問題あとで変える
@@ -45508,6 +45508,11 @@ TODO:
     コンポーネントの分割
     字大きすぎる小さくする
     併せて全体の幅狭くして
+
+    OFFボタンを実装していない
+    ともなって完了の表示と展開中であること示すviewとOFFボタンをどうやって両立させるか...
+
+    完了、
 
 */
 

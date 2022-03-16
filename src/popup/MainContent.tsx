@@ -45,46 +45,6 @@ import Content from "./Content";
 export default function MainContent(props): JSX.Element {
   const theme = useTheme();
 
-  useEffect(() => {
-    console.log(props);
-  });
-
-  const generateRunButton = (): JSX.Element => {
-    return (
-      <Button
-        sx={{ backgroundColor: "purple", width: "80%" }}
-        variant="contained"
-        onClick={props.handlerOfToggle}
-        disabled={props.disable}
-      >
-        REBUILD
-      </Button>
-    );
-  };
-
-  const generatorLoadingButton = (): JSX.Element => {
-    return (
-      <LoadingButton
-        sx={{ width: "80%" }}
-        loading={props.building}
-        loadingPosition="start"
-        startIcon={<SaveIcon />}
-        variant="outlined"
-        disabled={props.disable}
-      >
-        REBUILDING...
-      </LoadingButton>
-    );
-  };
-
-  const generateNotice = (): JSX.Element => {
-    return (
-      <Alert variant="outlined" severity="info">
-        Extension is available on the Udemy lecture page
-      </Alert>
-    );
-  };
-
   return (
     <Card sx={{ display: "flex" }}>
       <Box sx={{ display: "flex", flexDirection: "column" }}>
@@ -101,14 +61,6 @@ export default function MainContent(props): JSX.Element {
             sentences by the translation app
           </Typography>
         </CardContent>
-        {/* <Box sx={{ display: "flex", alignItems: "center", pl: 1, pb: 1 }}>
-          <Content
-            correctUrl={props.correctUrl}
-            built={props.built}
-            building={props.building}
-            handlerOfToggle={props.handlerOfToggle}
-          />
-        </Box> */}
         <Content
           correctUrl={props.correctUrl}
           built={props.built}
