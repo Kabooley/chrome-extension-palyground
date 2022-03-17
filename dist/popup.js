@@ -45439,6 +45439,19 @@ built: 拡張機能が実行中ならばtrue
 building: 拡張機能がRUNされて構築中ならばtrue
 correctUrl: Popupが開かれたときのURLが許可URLなのかどうか
 handlerOfToggle: 実行ボタンが押されたときに発火する関数
+
+
+TODO:
+
+props.built === trueを受け取った時に
+COMPLETEを表示する機能の実装
+
+問題はその仕様だと、毎回popupを開くたびに
+COMPLETEを表示してしまうこと
+
+監視する値はpreviousBuildingであるべきかも
+props.built && previous.buildingならば
+COMPLETEを
 */
 
 
@@ -45455,6 +45468,32 @@ handlerOfToggle: 実行ボタンが押されたときに発火する関数
  *
  * */
 function Content(props) {
+    const [timer, setTimer] = react__WEBPACK_IMPORTED_MODULE_0__.useState(false);
+    const [built, setBuilt] = react__WEBPACK_IMPORTED_MODULE_0__.useState(false);
+    const _ref = react__WEBPACK_IMPORTED_MODULE_0__.useRef(null);
+    const prev = usePrevious(props.built);
+    /*****************************
+     * 以前のpropsの状態を保持して返す関数
+     *
+     * 参考:
+     * https://stackoverflow.com/questions/53446020/how-to-compare-oldvalues-and-newvalues-on-react-hooks-useeffect
+     * https://blog.logrocket.com/accessing-previous-props-state-react-hooks/
+     * */
+    function usePrevious(value) {
+        const ref = react__WEBPACK_IMPORTED_MODULE_0__.useRef();
+        react__WEBPACK_IMPORTED_MODULE_0__.useEffect(() => {
+            ref.current = value;
+        });
+        return ref.current;
+    }
+    react__WEBPACK_IMPORTED_MODULE_0__.useEffect(function () {
+        const wasThisAlreadyBuild = prev;
+        if (wasThisAlreadyBuild === undefined)
+            return;
+        if (props.built && !wasThisAlreadyBuild) {
+            // TODO: 
+        }
+    }, [props.built]);
     const generateRunButton = () => {
         return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Button__WEBPACK_IMPORTED_MODULE_1__["default"], { sx: { backgroundColor: 'purple', width: '80%' }, variant: "contained", onClick: props.handlerOfToggle }, "REBUILD"));
     };
@@ -45468,7 +45507,21 @@ function Content(props) {
     const content = () => {
         let generated = null;
         if (props.built) {
-            generated = generateSuccess();
+            // setTimer(true);
+            // generated = (
+            //     <Slide
+            //         in={timer}
+            //         direction="right"
+            //         container={_ref.current}
+            //         easing={'ease-out'}
+            //         timeout={600}
+            //     >
+            //         {generateSuccess()}
+            //     </Slide>
+            // );
+            // setTimeout(function () {
+            //     setTimer(false);
+            // }, 3000);
         }
         else if (props.building) {
             generated = generateLoadingButton();
@@ -45479,9 +45532,9 @@ function Content(props) {
         return generated;
     };
     const generateNotice = () => {
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_4__["default"], { variant: "outlined", severity: "info" }, "Extension is available on the Udemy lecture page"));
+        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_4__["default"], { variant: "outlined", severity: "info", sx: { width: "300px" } }, "Extension is available on the Udemy lecture page"));
     };
-    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Box__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', alignItems: 'center', pl: 1, pb: 1 } }, props.correctUrl ? content() : generateNotice()));
+    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Box__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', alignItems: 'center', pl: 1, pb: 1 }, ref: _ref }, props.correctUrl ? content() : generateNotice()));
 }
 /*
 MainContent ...ネーミングセンスなさすぎ問題あとで変える
@@ -45532,15 +45585,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var _mui_material_styles__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @mui/material/styles */ "./node_modules/@mui/material/styles/useTheme.js");
-/* harmony import */ var _mui_material_Button__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @mui/material/Button */ "./node_modules/@mui/material/Button/Button.js");
-/* harmony import */ var _mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @mui/lab/LoadingButton */ "./node_modules/@mui/lab/LoadingButton/LoadingButton.js");
-/* harmony import */ var _mui_material_Box__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @mui/material/Box */ "./node_modules/@mui/material/Box/Box.js");
-/* harmony import */ var _mui_material_Card__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @mui/material/Card */ "./node_modules/@mui/material/Card/Card.js");
-/* harmony import */ var _mui_material_CardContent__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @mui/material/CardContent */ "./node_modules/@mui/material/CardContent/CardContent.js");
-/* harmony import */ var _mui_material_CardMedia__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @mui/material/CardMedia */ "./node_modules/@mui/material/CardMedia/CardMedia.js");
-/* harmony import */ var _mui_material_Typography__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @mui/material/Typography */ "./node_modules/@mui/material/Typography/Typography.js");
-/* harmony import */ var _mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @mui/icons-material/Save */ "./node_modules/@mui/icons-material/Save.js");
-/* harmony import */ var _mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @mui/material/Alert */ "./node_modules/@mui/material/Alert/Alert.js");
+/* harmony import */ var _mui_material_Box__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @mui/material/Box */ "./node_modules/@mui/material/Box/Box.js");
+/* harmony import */ var _mui_material_Card__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @mui/material/Card */ "./node_modules/@mui/material/Card/Card.js");
+/* harmony import */ var _mui_material_CardContent__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @mui/material/CardContent */ "./node_modules/@mui/material/CardContent/CardContent.js");
+/* harmony import */ var _mui_material_CardMedia__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @mui/material/CardMedia */ "./node_modules/@mui/material/CardMedia/CardMedia.js");
+/* harmony import */ var _mui_material_Typography__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @mui/material/Typography */ "./node_modules/@mui/material/Typography/Typography.js");
 /* harmony import */ var _Content__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Content */ "./src/popup/Content.tsx");
 /*********************************************************
  *
@@ -45577,32 +45626,15 @@ handlerOfToggle: 実行ボタンが押されたときに発火する関数
 
 
 
-
-
-
-
-
 function MainContent(props) {
     const theme = (0,_mui_material_styles__WEBPACK_IMPORTED_MODULE_2__["default"])();
-    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        console.log(props);
-    });
-    const generateRunButton = () => {
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], { sx: { backgroundColor: "purple", width: "80%" }, variant: "contained", onClick: props.handlerOfToggle, disabled: props.disable }, "REBUILD"));
-    };
-    const generatorLoadingButton = () => {
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_4__["default"], { sx: { width: "80%" }, loading: props.building, loadingPosition: "start", startIcon: react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_5__["default"], null), variant: "outlined", disabled: props.disable }, "REBUILDING..."));
-    };
-    const generateNotice = () => {
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "outlined", severity: "info" }, "Extension is available on the Udemy lecture page"));
-    };
-    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Card__WEBPACK_IMPORTED_MODULE_7__["default"], { sx: { display: "flex" } },
-        react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Box__WEBPACK_IMPORTED_MODULE_8__["default"], { sx: { display: "flex", flexDirection: "column" } },
-            react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_CardContent__WEBPACK_IMPORTED_MODULE_9__["default"], { sx: { flex: "1 0 auto" } },
-                react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_10__["default"], { component: "div", variant: "h5" }, "Udemy Re Transcript"),
-                react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_10__["default"], { variant: "subtitle1", color: "text.secondary", component: "div" }, "Udemy transcript subtitles are reconstructed into easy-to-translate sentences by the translation app")),
+    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Card__WEBPACK_IMPORTED_MODULE_3__["default"], { sx: { display: "flex" } },
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Box__WEBPACK_IMPORTED_MODULE_4__["default"], { sx: { display: "flex", flexDirection: "column" } },
+            react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_CardContent__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { flex: "1 0 auto" } },
+                react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_6__["default"], { component: "div", variant: "h5" }, "Udemy Re Transcript"),
+                react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "subtitle1", color: "text.secondary", component: "div" }, "Udemy transcript subtitles are reconstructed into easy-to-translate sentences by the translation app")),
             react__WEBPACK_IMPORTED_MODULE_0__.createElement(_Content__WEBPACK_IMPORTED_MODULE_1__["default"], { correctUrl: props.correctUrl, built: props.built, building: props.building, handlerOfToggle: props.handlerOfToggle })),
-        react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_CardMedia__WEBPACK_IMPORTED_MODULE_11__["default"], { component: "img", 
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_CardMedia__WEBPACK_IMPORTED_MODULE_7__["default"], { component: "img", 
             // heightを指定しないと表示されないよとのこと
             sx: { width: 180, height: 180 }, image: "../static/udemy-re-transcript-512.svg", alt: "Udemy Re Transcript icon" })));
 }

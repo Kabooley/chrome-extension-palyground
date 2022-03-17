@@ -4258,6 +4258,32 @@ Material-Uiをwebpackで使うときの注意点
 $ npm install @mui/material @emotion/react @emotion/styled
 ```
 
+
+RUNしてからのviewのアイディア
+
+- RUNするまえ
+
+REBUILDボタンが表示されているだけ
+
+- RUNおしたら
+
+REBUILDボタンを消してLOADINGボタンを表示
+
+- COMPLETEしたら
+
+LOADINGボタンをfadeするか、透明に近くする
+それで
+COMPLETE alertをスライドさせる（左から右へ）
+alertは3秒表示したらひっこめる
+それで
+OFFボタンとRUNNING...を表示する
+
+
+アイディアの実装
+
+
+
+
 ##### chrome API Tips: icon が表示されないときは
 
 次を確認して
