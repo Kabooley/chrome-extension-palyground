@@ -3,10 +3,19 @@
  * _____________________________________________________
  *
  * NOTE:  state never retain its value!!
- * Popup refreshes itself everytime opened same as html page reloaded.
- * So state must be stored background script and
- * everytime opened, popup must require background script to send state.
- ****************************************************** */
+ * 
+ *******************************************************/
+
+/*
+TODO: 
+    - Button hoverしたときの色を変更する
+    - Alertのボックスの大きさとButtonの大きさ一致していない。変。
+    - Errorメッセージの表示
+    - themeの統一
+    - 後回しでいい LoadingButtonのLoadingの色を薄くしない
+
+
+*/ 
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import {
@@ -19,7 +28,7 @@ import {
 import { sendMessagePromise } from "../utils/helpers";
 import "./popup.css";
 import MainContent from "./MainContent";
-import { StyledEngineProvider } from "@mui/material/styles";
+import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
 const Popup = (): JSX.Element => {
   // popupが開かれたときのURLが、拡張機能が有効になるべきURLなのか
@@ -30,10 +39,30 @@ const Popup = (): JSX.Element => {
   const [built, setBuilt] = useState<boolean>(false);
   // Saves Tab いらないかも...
   const [tabInfo, setTabInfo] = useState<chrome.tabs.Tab>(null);
-  //   NOTE: new added. スライダーをONにしたらtrue
+  // toggleボタンがonならtrue
   const [turningOn, setTurningOn] = useState<boolean>(false);
-  //   NOTE: new added. スライダーを動かしたら、処理が完了するまでtrue
-  const [disableSlider, setDisableSlider] = useState<boolean>(false);
+
+// //   MUI custom theme
+//     const paletteTheme = createTheme({
+//         palette: {
+//             // purple base
+//             primary: {
+//               main: "6f006f",
+//               light: "a200a2",
+//               dark: "5e005e"
+//             },
+//             // Udemy theme color
+//             secondary: {
+//                 main: "5624d0",
+//                 light: "6939dd",
+//                 dark: "4a1fb3"
+//             }
+//           },
+//     });
+
+//     const buttonTheme = createTheme({
+
+//     })
 
   useEffect(() => {
     // NOTE: DON'T USE AWAIT inside of useEffect().
@@ -100,19 +129,18 @@ const Popup = (): JSX.Element => {
       order: [orderNames.run],
       tabInfo: tabInfo,
     })
-      // NOTE: !res.successはRUNするためのページ環境になっていないことを示し、アプリケーションのエラーではない
+      // NOTE: !res.successはRUNするためのページ環境になっていないことを示し、実行不可能のエラーではない
       .then((res) => {
         const { success } = res;
         console.log("[popup] Rebuilding Successfully Complete!");
         setBuilt(success);
         setBuilding(false);
-        setDisableSlider(false);
+        ;
       })
       .catch((e) => {
         setBuilt(false);
         setBuilding(false);
         setTurningOn(false);
-        setDisableSlider(false);
         console.error(e.message);
         // TODO: 実行不可能であることをViewで示す
       });
@@ -125,14 +153,9 @@ const Popup = (): JSX.Element => {
       order: [orderNames.turnOff],
     })
       .then(() => {
-        // if (!res.success)
-        //     throw new Error(
-        //         `Error: Failed to turn off extension. ${res.failureReason}`
-        //     );
         setBuilt(false);
         setBuilding(false);
         setTurningOn(false);
-        setDisableSlider(false);
       })
       .catch((e) => {
         // TODO: 実行不可能であることをViewで示す
@@ -145,28 +168,24 @@ const Popup = (): JSX.Element => {
       ? (function () {
           console.log("[popup] Turning off...");
           setTurningOn(false);
-          setDisableSlider(true);
           handlerOfTurnOff();
         })()
       : (function () {
           console.log("[popup] Turning on...");
           setTurningOn(true);
-          setDisableSlider(true);
           handlerOfRun();
         })();
   };
 
   return (
-    <StyledEngineProvider injectFirst>
+    <div>
       <MainContent
         built={built}
         building={building}
         correctUrl={correctUrl}
-        turningOn={turningOn}
-        disable={disableSlider}
         handlerOfToggle={handlerOfToggle}
       />
-    </StyledEngineProvider>
+    </div>
   );
 };
 

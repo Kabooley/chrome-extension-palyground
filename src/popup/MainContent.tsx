@@ -6,54 +6,44 @@
 /* DEVELOPMENT NOTE
 
 props:
-
-<MainContent  
-    built={built} 
-    building={building} 
-    correctUrl={correctUrl} 
-    turningOn={turningOn} 
-    disable={disableSlider} 
-    handlerOfToggle={handlerOfToggle} 
-/>
-
-built: 拡張機能が実行中ならばtrue
-building: 拡張機能がRUNされて構築中ならばtrue
-correctUrl: Popupが開かれたときのURLが許可URLなのかどうか
-
-
-turningOn: スライダーがONならばtrue(存在意義がbuiltとかぶっている)
-disableSlider: スライダーを無効にしたいとき。構築中とOFF処理中の時とか
-
-handlerOfToggle: 実行ボタンが押されたときに発火する関数
+    built: 拡張機能が実行中ならばtrue
+    building: 拡張機能がRUNされて構築中ならばtrue
+    correctUrl: Popupが開かれたときのURLが許可URLなのかどうか
+    handlerOfToggle: 実行ボタンが押されたときに発火する関数
 */
 
 import * as React from "react";
-import { useState, useEffect } from "react";
 import { useTheme } from "@mui/material/styles";
-import Button from "@mui/material/Button";
-import LoadingButton from "@mui/lab/LoadingButton";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
-import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import SaveIcon from "@mui/icons-material/Save";
-import Alert from "@mui/material/Alert";
 import Content from "./Content";
+import { Check, CheckCircle } from "@mui/icons-material";
 
 export default function MainContent(props): JSX.Element {
   const theme = useTheme();
+
+  const generateStateMessage = (): JSX.Element => {
+    if (props.built && props.correctUrl) {
+      return (
+        <Typography variant="button" display="block" gutterBottom sx={{paddingLeft: "16px" }}>
+          Now Running...
+        </Typography>
+      );
+    } else return null;
+  };
 
   return (
     <Card sx={{ display: "flex" }}>
       <Box sx={{ display: "flex", flexDirection: "column" }}>
         <CardContent sx={{ flex: "1 0 auto" }}>
-          <Typography component="div" variant="h5">
+          <Typography component="div" variant="h6">
             Udemy Re Transcript
           </Typography>
           <Typography
-            variant="subtitle1"
+            variant="subtitle2"
             color="text.secondary"
             component="div"
           >
@@ -61,6 +51,7 @@ export default function MainContent(props): JSX.Element {
             sentences by the translation app
           </Typography>
         </CardContent>
+        {generateStateMessage()}
         <Content
           correctUrl={props.correctUrl}
           built={props.built}

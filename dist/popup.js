@@ -5459,6 +5459,311 @@ const circularProgressClasses = (0,_mui_base__WEBPACK_IMPORTED_MODULE_1__["defau
 
 /***/ }),
 
+/***/ "./node_modules/@mui/material/Grow/Grow.js":
+/*!*************************************************!*\
+  !*** ./node_modules/@mui/material/Grow/Grow.js ***!
+  \*************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/extends */ "./node_modules/@babel/runtime/helpers/esm/extends.js");
+/* harmony import */ var _babel_runtime_helpers_esm_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/esm/objectWithoutPropertiesLoose */ "./node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var _mui_utils__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @mui/utils */ "./node_modules/@mui/utils/esm/elementAcceptingRef.js");
+/* harmony import */ var react_transition_group__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react-transition-group */ "./node_modules/react-transition-group/esm/Transition.js");
+/* harmony import */ var _styles_useTheme__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../styles/useTheme */ "./node_modules/@mui/material/styles/useTheme.js");
+/* harmony import */ var _transitions_utils__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../transitions/utils */ "./node_modules/@mui/material/transitions/utils.js");
+/* harmony import */ var _utils_useForkRef__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils/useForkRef */ "./node_modules/@mui/material/utils/useForkRef.js");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+
+
+const _excluded = ["addEndListener", "appear", "children", "easing", "in", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting", "style", "timeout", "TransitionComponent"];
+
+
+
+
+
+
+
+
+
+function getScale(value) {
+  return `scale(${value}, ${value ** 2})`;
+}
+
+const styles = {
+  entering: {
+    opacity: 1,
+    transform: getScale(1)
+  },
+  entered: {
+    opacity: 1,
+    transform: 'none'
+  }
+};
+/**
+ * The Grow transition is used by the [Tooltip](/components/tooltips/) and
+ * [Popover](/components/popover/) components.
+ * It uses [react-transition-group](https://github.com/reactjs/react-transition-group) internally.
+ */
+
+const Grow = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2__.forwardRef(function Grow(props, ref) {
+  const {
+    addEndListener,
+    appear = true,
+    children,
+    easing,
+    in: inProp,
+    onEnter,
+    onEntered,
+    onEntering,
+    onExit,
+    onExited,
+    onExiting,
+    style,
+    timeout = 'auto',
+    // eslint-disable-next-line react/prop-types
+    TransitionComponent = react_transition_group__WEBPACK_IMPORTED_MODULE_4__["default"]
+  } = props,
+        other = (0,_babel_runtime_helpers_esm_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_1__["default"])(props, _excluded);
+
+  const timer = react__WEBPACK_IMPORTED_MODULE_2__.useRef();
+  const autoTimeout = react__WEBPACK_IMPORTED_MODULE_2__.useRef();
+  const theme = (0,_styles_useTheme__WEBPACK_IMPORTED_MODULE_5__["default"])();
+  const nodeRef = react__WEBPACK_IMPORTED_MODULE_2__.useRef(null);
+  const foreignRef = (0,_utils_useForkRef__WEBPACK_IMPORTED_MODULE_6__["default"])(children.ref, ref);
+  const handleRef = (0,_utils_useForkRef__WEBPACK_IMPORTED_MODULE_6__["default"])(nodeRef, foreignRef);
+
+  const normalizedTransitionCallback = callback => maybeIsAppearing => {
+    if (callback) {
+      const node = nodeRef.current; // onEnterXxx and onExitXxx callbacks have a different arguments.length value.
+
+      if (maybeIsAppearing === undefined) {
+        callback(node);
+      } else {
+        callback(node, maybeIsAppearing);
+      }
+    }
+  };
+
+  const handleEntering = normalizedTransitionCallback(onEntering);
+  const handleEnter = normalizedTransitionCallback((node, isAppearing) => {
+    (0,_transitions_utils__WEBPACK_IMPORTED_MODULE_7__.reflow)(node); // So the animation always start from the start.
+
+    const {
+      duration: transitionDuration,
+      delay,
+      easing: transitionTimingFunction
+    } = (0,_transitions_utils__WEBPACK_IMPORTED_MODULE_7__.getTransitionProps)({
+      style,
+      timeout,
+      easing
+    }, {
+      mode: 'enter'
+    });
+    let duration;
+
+    if (timeout === 'auto') {
+      duration = theme.transitions.getAutoHeightDuration(node.clientHeight);
+      autoTimeout.current = duration;
+    } else {
+      duration = transitionDuration;
+    }
+
+    node.style.transition = [theme.transitions.create('opacity', {
+      duration,
+      delay
+    }), theme.transitions.create('transform', {
+      duration: duration * 0.666,
+      delay,
+      easing: transitionTimingFunction
+    })].join(',');
+
+    if (onEnter) {
+      onEnter(node, isAppearing);
+    }
+  });
+  const handleEntered = normalizedTransitionCallback(onEntered);
+  const handleExiting = normalizedTransitionCallback(onExiting);
+  const handleExit = normalizedTransitionCallback(node => {
+    const {
+      duration: transitionDuration,
+      delay,
+      easing: transitionTimingFunction
+    } = (0,_transitions_utils__WEBPACK_IMPORTED_MODULE_7__.getTransitionProps)({
+      style,
+      timeout,
+      easing
+    }, {
+      mode: 'exit'
+    });
+    let duration;
+
+    if (timeout === 'auto') {
+      duration = theme.transitions.getAutoHeightDuration(node.clientHeight);
+      autoTimeout.current = duration;
+    } else {
+      duration = transitionDuration;
+    }
+
+    node.style.transition = [theme.transitions.create('opacity', {
+      duration,
+      delay
+    }), theme.transitions.create('transform', {
+      duration: duration * 0.666,
+      delay: delay || duration * 0.333,
+      easing: transitionTimingFunction
+    })].join(',');
+    node.style.opacity = '0';
+    node.style.transform = getScale(0.75);
+
+    if (onExit) {
+      onExit(node);
+    }
+  });
+  const handleExited = normalizedTransitionCallback(onExited);
+
+  const handleAddEndListener = next => {
+    if (timeout === 'auto') {
+      timer.current = setTimeout(next, autoTimeout.current || 0);
+    }
+
+    if (addEndListener) {
+      // Old call signature before `react-transition-group` implemented `nodeRef`
+      addEndListener(nodeRef.current, next);
+    }
+  };
+
+  react__WEBPACK_IMPORTED_MODULE_2__.useEffect(() => {
+    return () => {
+      clearTimeout(timer.current);
+    };
+  }, []);
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(TransitionComponent, (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({
+    appear: appear,
+    in: inProp,
+    nodeRef: nodeRef,
+    onEnter: handleEnter,
+    onEntered: handleEntered,
+    onEntering: handleEntering,
+    onExit: handleExit,
+    onExited: handleExited,
+    onExiting: handleExiting,
+    addEndListener: handleAddEndListener,
+    timeout: timeout === 'auto' ? null : timeout
+  }, other, {
+    children: (state, childProps) => {
+      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2__.cloneElement(children, (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({
+        style: (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({
+          opacity: 0,
+          transform: getScale(0.75),
+          visibility: state === 'exited' && !inProp ? 'hidden' : undefined
+        }, styles[state], style, children.props.style),
+        ref: handleRef
+      }, childProps));
+    }
+  }));
+});
+ true ? Grow.propTypes
+/* remove-proptypes */
+= {
+  // ----------------------------- Warning --------------------------------
+  // | These PropTypes are generated from the TypeScript type definitions |
+  // |     To update them edit the d.ts file and run "yarn proptypes"     |
+  // ----------------------------------------------------------------------
+
+  /**
+   * Add a custom transition end trigger. Called with the transitioning DOM
+   * node and a done callback. Allows for more fine grained transition end
+   * logic. Note: Timeouts are still used as a fallback if provided.
+   */
+  addEndListener: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().func),
+
+  /**
+   * Perform the enter transition when it first mounts if `in` is also `true`.
+   * Set this to `false` to disable this behavior.
+   * @default true
+   */
+  appear: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().bool),
+
+  /**
+   * A single child content element.
+   */
+  children: _mui_utils__WEBPACK_IMPORTED_MODULE_9__["default"].isRequired,
+
+  /**
+   * The transition timing function.
+   * You may specify a single easing or a object containing enter and exit values.
+   */
+  easing: prop_types__WEBPACK_IMPORTED_MODULE_8___default().oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_8___default().shape({
+    enter: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().string),
+    exit: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().string)
+  }), (prop_types__WEBPACK_IMPORTED_MODULE_8___default().string)]),
+
+  /**
+   * If `true`, the component will transition in.
+   */
+  in: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().bool),
+
+  /**
+   * @ignore
+   */
+  onEnter: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().func),
+
+  /**
+   * @ignore
+   */
+  onEntered: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().func),
+
+  /**
+   * @ignore
+   */
+  onEntering: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().func),
+
+  /**
+   * @ignore
+   */
+  onExit: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().func),
+
+  /**
+   * @ignore
+   */
+  onExited: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().func),
+
+  /**
+   * @ignore
+   */
+  onExiting: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().func),
+
+  /**
+   * @ignore
+   */
+  style: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().object),
+
+  /**
+   * The duration for the transition, in milliseconds.
+   * You may specify a single timeout for all transitions, or individually with an object.
+   *
+   * Set to 'auto' to automatically calculate transition time based on height.
+   * @default 'auto'
+   */
+  timeout: prop_types__WEBPACK_IMPORTED_MODULE_8___default().oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_8___default().oneOf(['auto']), (prop_types__WEBPACK_IMPORTED_MODULE_8___default().number), prop_types__WEBPACK_IMPORTED_MODULE_8___default().shape({
+    appear: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().number),
+    enter: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().number),
+    exit: (prop_types__WEBPACK_IMPORTED_MODULE_8___default().number)
+  })])
+} : 0;
+Grow.muiSupportAuto = true;
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Grow);
+
+/***/ }),
+
 /***/ "./node_modules/@mui/material/IconButton/IconButton.js":
 /*!*************************************************************!*\
   !*** ./node_modules/@mui/material/IconButton/IconButton.js ***!
@@ -12387,7 +12692,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\nbody {\r\n  width: 600px;\r\n}\r\n\r\n/*\r\n.container {\r\n    display: flex;\r\n    flex-direction: column;\r\n}\r\n\r\n.header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    width: auto;\r\n    background-color: #000;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n    width: 128px;\r\n    height: auto;\r\n    background: black;\r\n    padding-left: 20px;\r\n}\r\n\r\n.extension-title-container {\r\n    background-color: #000;\r\n    height: 118px;\r\n    flex: 2;\r\n    padding-left: 30px;\r\n    padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n    color: #fff;\r\n    font-size: 36px;\r\n}\r\n\r\n.middle {\r\n    display: flex;\r\n    flex-direction: row;\r\n    height: 24px;\r\n}\r\n\r\n.middle-message-container {\r\n    flex: 4;\r\n}\r\n\r\n.message-middle {\r\n}\r\n\r\n.footer {\r\n    flex: 3;\r\n    display: flex;\r\n    flex-direction: row;\r\n    height: auto;\r\n    width: 40%;\r\n} */\r\n", "",{"version":3,"sources":["webpack://./src/popup/popup.css"],"names":[],"mappings":"AAAA;;;;;uCAKuC;;AAEvC;EACE,SAAS;EACT,UAAU;AACZ;;AAEA;EACE,YAAY;AACd;;AAEA;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;GAuDG","sourcesContent":["/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\nbody {\r\n  width: 600px;\r\n}\r\n\r\n/*\r\n.container {\r\n    display: flex;\r\n    flex-direction: column;\r\n}\r\n\r\n.header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    width: auto;\r\n    background-color: #000;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n    width: 128px;\r\n    height: auto;\r\n    background: black;\r\n    padding-left: 20px;\r\n}\r\n\r\n.extension-title-container {\r\n    background-color: #000;\r\n    height: 118px;\r\n    flex: 2;\r\n    padding-left: 30px;\r\n    padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n    color: #fff;\r\n    font-size: 36px;\r\n}\r\n\r\n.middle {\r\n    display: flex;\r\n    flex-direction: row;\r\n    height: 24px;\r\n}\r\n\r\n.middle-message-container {\r\n    flex: 4;\r\n}\r\n\r\n.message-middle {\r\n}\r\n\r\n.footer {\r\n    flex: 3;\r\n    display: flex;\r\n    flex-direction: row;\r\n    height: auto;\r\n    width: 40%;\r\n} */\r\n"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, "/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\nbody {\r\n  width: 500px;\r\n}\r\n\r\n/*\r\n.container {\r\n    display: flex;\r\n    flex-direction: column;\r\n}\r\n\r\n.header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    width: auto;\r\n    background-color: #000;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n    width: 128px;\r\n    height: auto;\r\n    background: black;\r\n    padding-left: 20px;\r\n}\r\n\r\n.extension-title-container {\r\n    background-color: #000;\r\n    height: 118px;\r\n    flex: 2;\r\n    padding-left: 30px;\r\n    padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n    color: #fff;\r\n    font-size: 36px;\r\n}\r\n\r\n.middle {\r\n    display: flex;\r\n    flex-direction: row;\r\n    height: 24px;\r\n}\r\n\r\n.middle-message-container {\r\n    flex: 4;\r\n}\r\n\r\n.message-middle {\r\n}\r\n\r\n.footer {\r\n    flex: 3;\r\n    display: flex;\r\n    flex-direction: row;\r\n    height: auto;\r\n    width: 40%;\r\n} */\r\n", "",{"version":3,"sources":["webpack://./src/popup/popup.css"],"names":[],"mappings":"AAAA;;;;;uCAKuC;;AAEvC;EACE,SAAS;EACT,UAAU;AACZ;;AAEA;EACE,YAAY;AACd;;AAEA;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;GAuDG","sourcesContent":["/***************************************\r\n\r\nTODO: あとで比率で長さを取得できるように修正すること\r\n\r\n\r\n***************************************/\r\n\r\n* {\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\nbody {\r\n  width: 500px;\r\n}\r\n\r\n/*\r\n.container {\r\n    display: flex;\r\n    flex-direction: column;\r\n}\r\n\r\n.header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    width: auto;\r\n    background-color: #000;\r\n}\r\n\r\n.container-image {\r\n}\r\n\r\n.image-icon {\r\n    width: 128px;\r\n    height: auto;\r\n    background: black;\r\n    padding-left: 20px;\r\n}\r\n\r\n.extension-title-container {\r\n    background-color: #000;\r\n    height: 118px;\r\n    flex: 2;\r\n    padding-left: 30px;\r\n    padding-top: 10px;\r\n}\r\n\r\n.extension-title-container span {\r\n    color: #fff;\r\n    font-size: 36px;\r\n}\r\n\r\n.middle {\r\n    display: flex;\r\n    flex-direction: row;\r\n    height: 24px;\r\n}\r\n\r\n.middle-message-container {\r\n    flex: 4;\r\n}\r\n\r\n.message-middle {\r\n}\r\n\r\n.footer {\r\n    flex: 3;\r\n    display: flex;\r\n    flex-direction: row;\r\n    height: auto;\r\n    width: 40%;\r\n} */\r\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -46654,7 +46959,7 @@ __webpack_require__.r(__webpack_exports__);
  * @param props
  *  props.ref: Object of React.useRef();
  *  props.show: boolean;
- * props.timer: number;
+ *  props.timer: number;
  *
  * */
 const AlertMessage = (props) => {
@@ -46705,38 +47010,22 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var _mui_material_Button__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @mui/material/Button */ "./node_modules/@mui/material/Button/Button.js");
 /* harmony import */ var _mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @mui/lab/LoadingButton */ "./node_modules/@mui/lab/LoadingButton/LoadingButton.js");
-/* harmony import */ var _mui_material_Box__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @mui/material/Box */ "./node_modules/@mui/material/Box/Box.js");
+/* harmony import */ var _mui_material_Box__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @mui/material/Box */ "./node_modules/@mui/material/Box/Box.js");
 /* harmony import */ var _mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @mui/icons-material/Save */ "./node_modules/@mui/icons-material/Save.js");
 /* harmony import */ var _mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @mui/material/Alert */ "./node_modules/@mui/material/Alert/Alert.js");
+/* harmony import */ var _mui_material_Grow__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @mui/material/Grow */ "./node_modules/@mui/material/Grow/Grow.js");
 /* harmony import */ var _AlertMessage__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AlertMessage */ "./src/popup/AlertMessage.tsx");
 
 /*********************************************************
+ * Content
  *
+ *
+ * 仕様：
+ * alertがtrueだとAlertMessageコンポーネントを表示する
+ * alertは一旦trueになると指定時間(TIMERS.alertLifeTimer)後自動的にfalseに戻る
+ * alertはpros.built && previousBuildingの時にtrueになる
  *
  * ********************************************************/
-/* DEVELOPMENT NOTE
-
-props:
-
-built: 拡張機能が実行中ならばtrue
-building: 拡張機能がRUNされて構築中ならばtrue
-correctUrl: Popupが開かれたときのURLが許可URLなのかどうか
-handlerOfToggle: 実行ボタンが押されたときに発火する関数
-
-
-TODO:
-
-props.built === trueを受け取った時に
-COMPLETEを表示する機能の実装
-
-問題はその仕様だと、毎回popupを開くたびに
-COMPLETEを表示してしまうこと
-
-監視する値はpreviousBuildingであるべきかも
-props.built && previous.buildingならば
-COMPLETEをアニメーション表示にする
-という仕様にすればいいかも
-*/
 
 
 
@@ -46744,23 +47033,45 @@ COMPLETEをアニメーション表示にする
 
 
 
-// NOTE: alertTimer > slideTimer (+ slide timeout time)
+
+// NOTE: alertTimer MUST BE OVER slideTimer + Slide timeout time
 const TIMERS = {
-    alertLifeTimer: 5000,
-    slideTimer: 3000,
+    alertLifeTimer: 10200,
+    slideTimer: 9000,
 };
-/*********************************
+/*********************************************************************
  * @param props
- * correctUrl
- * built
- * building
- *
+ * @param props.built: 拡張機能が実行中ならばtrue
+ * @param props.building: 拡張機能がRUNされて構築中ならばtrue
+ * @param props.correctUrl: Popupが開かれたときのURLが許可URLなのかどうか
+ * @param props.handlerOfToggle: 実行/OFFボタンが押されたときに発火する関数
  *
  * */
 function Content(props) {
+    // True as displaying Alert
     const [alert, setAlert] = react__WEBPACK_IMPORTED_MODULE_1__.useState(false);
+    //   Ref is required by Slide component in AlertMessage.
     const _ref = react__WEBPACK_IMPORTED_MODULE_1__.useRef(null);
+    // Save previous props.building value
     const previousBuilding = usePrevious(props.building);
+    // もしもREBUILDINGが終わった瞬間ならばアラートをかける
+    react__WEBPACK_IMPORTED_MODULE_1__.useEffect(function () {
+        if (props.built && previousBuilding) {
+            setAlert(true);
+        }
+    });
+    // alertがtrueなら指定時間後にfalseに戻す
+    react__WEBPACK_IMPORTED_MODULE_1__.useEffect(function () {
+        let timer = null;
+        if (alert) {
+            timer = setTimeout(function () {
+                setAlert(false);
+            }, TIMERS.alertLifeTimer);
+            return () => {
+                clearTimeout(timer);
+            };
+        }
+    }, [alert]);
     /*****************************
      * 以前のpropsの状態を保持して返す関数
      *
@@ -46775,42 +47086,25 @@ function Content(props) {
         });
         return ref.current;
     }
-    // もしもREBUILDINGが終わった瞬間ならばアラートをかける
-    react__WEBPACK_IMPORTED_MODULE_1__.useEffect(function () {
-        if (props.built && previousBuilding) {
-            console.log('?????');
-            setAlert(true);
-        }
-    });
-    // alertがtrueなら指定時間後にfalseに戻す
-    react__WEBPACK_IMPORTED_MODULE_1__.useEffect(function () {
-        let timer = null;
-        if (alert) {
-            console.log('!!!!!');
-            timer = setTimeout(function () {
-                setAlert(false);
-            }, TIMERS.alertLifeTimer);
-            return () => {
-                clearTimeout(timer);
-            };
-        }
-    }, [alert]);
     const generateRunButton = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { backgroundColor: 'purple', width: '80%' }, variant: "contained", onClick: props.handlerOfToggle }, { children: "REBUILD" }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { backgroundColor: "purple", width: "80%" }, variant: "contained", onClick: props.handlerOfToggle }, { children: "REBUILD" }), void 0));
     };
     const generateLoadingButton = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_4__["default"], Object.assign({ sx: { width: '80%' }, loading: props.building, loadingPosition: "start", startIcon: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_5__["default"], {}, void 0), variant: "outlined", disabled: true }, { children: "REBUILDING..." }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_4__["default"], Object.assign({ sx: { width: "80%" }, loading: props.building, loadingPosition: "start", startIcon: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_5__["default"], {}, void 0), variant: "outlined", disabled: true }, { children: "REBUILDING..." }), void 0));
     };
     const generateSuccess = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_AlertMessage__WEBPACK_IMPORTED_MODULE_2__["default"], Object.assign({ timer: TIMERS.slideTimer, _ref: _ref, show: props.built }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ sx: { width: '80%' }, variant: "filled", severity: "success" }, { children: "COMPLETE!" }), void 0) }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_AlertMessage__WEBPACK_IMPORTED_MODULE_2__["default"], Object.assign({ timer: TIMERS.slideTimer, _ref: _ref, show: props.built }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ sx: { width: "80%" }, variant: "filled", severity: "success" }, { children: "COMPLETE!" }), void 0) }), void 0));
     };
-    const generateRunning = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { backgroundColor: 'purple', width: '80%' }, variant: "contained", onClick: props.handlerOfToggle, disabled: true }, { children: "Running..." }), void 0));
+    const generateTurnOffButton = () => {
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Grow__WEBPACK_IMPORTED_MODULE_7__["default"], Object.assign({ in: true }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { backgroundColor: "blueviolet", width: "80%" }, variant: "contained", onClick: props.handlerOfToggle }, { children: "TURN OFF" }), void 0) }), void 0));
     };
     const content = () => {
         let generated = null;
-        if (props.built) {
-            generated = generateRunning();
+        if (alert && props.built) {
+            generated = null;
+        }
+        else if (props.built) {
+            generated = generateTurnOffButton();
         }
         else if (props.building) {
             generated = generateLoadingButton();
@@ -46821,9 +47115,9 @@ function Content(props) {
         return generated;
     };
     const generateNotice = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ variant: "outlined", severity: "info", sx: { width: '300px' } }, { children: "Extension is available on the Udemy lecture page" }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ variant: "outlined", severity: "info", sx: { width: "300px" } }, { children: "Extension is available on the Udemy lecture page" }), void 0));
     };
-    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Box__WEBPACK_IMPORTED_MODULE_7__["default"], Object.assign({ sx: { display: 'flex', alignItems: 'center', pl: 1, pb: 1 }, ref: _ref }, { children: [alert ? generateSuccess() : null, props.correctUrl ? content() : generateNotice()] }), void 0));
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Box__WEBPACK_IMPORTED_MODULE_8__["default"], Object.assign({ sx: { display: "flex", alignItems: "center", pl: 1, pb: 1 }, ref: _ref }, { children: [alert ? generateSuccess() : null, props.correctUrl ? content() : generateNotice()] }), void 0));
 }
 
 
@@ -46842,11 +47136,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
 /* harmony import */ var _mui_material_styles__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @mui/material/styles */ "./node_modules/@mui/material/styles/useTheme.js");
-/* harmony import */ var _mui_material_Box__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @mui/material/Box */ "./node_modules/@mui/material/Box/Box.js");
-/* harmony import */ var _mui_material_Card__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @mui/material/Card */ "./node_modules/@mui/material/Card/Card.js");
-/* harmony import */ var _mui_material_CardContent__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @mui/material/CardContent */ "./node_modules/@mui/material/CardContent/CardContent.js");
+/* harmony import */ var _mui_material_Box__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @mui/material/Box */ "./node_modules/@mui/material/Box/Box.js");
+/* harmony import */ var _mui_material_Card__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @mui/material/Card */ "./node_modules/@mui/material/Card/Card.js");
+/* harmony import */ var _mui_material_CardContent__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @mui/material/CardContent */ "./node_modules/@mui/material/CardContent/CardContent.js");
 /* harmony import */ var _mui_material_CardMedia__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @mui/material/CardMedia */ "./node_modules/@mui/material/CardMedia/CardMedia.js");
-/* harmony import */ var _mui_material_Typography__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @mui/material/Typography */ "./node_modules/@mui/material/Typography/Typography.js");
+/* harmony import */ var _mui_material_Typography__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @mui/material/Typography */ "./node_modules/@mui/material/Typography/Typography.js");
 /* harmony import */ var _Content__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Content */ "./src/popup/Content.tsx");
 
 
@@ -46858,7 +47152,14 @@ __webpack_require__.r(__webpack_exports__);
 
 function MainContent(props) {
     const theme = (0,_mui_material_styles__WEBPACK_IMPORTED_MODULE_2__["default"])();
-    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Card__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { display: "flex" } }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Box__WEBPACK_IMPORTED_MODULE_4__["default"], Object.assign({ sx: { display: "flex", flexDirection: "column" } }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_CardContent__WEBPACK_IMPORTED_MODULE_5__["default"], Object.assign({ sx: { flex: "1 0 auto" } }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ component: "div", variant: "h5" }, { children: "Udemy Re Transcript" }), void 0), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ variant: "subtitle1", color: "text.secondary", component: "div" }, { children: "Udemy transcript subtitles are reconstructed into easy-to-translate sentences by the translation app" }), void 0)] }), void 0), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Content__WEBPACK_IMPORTED_MODULE_1__["default"], { correctUrl: props.correctUrl, built: props.built, building: props.building, handlerOfToggle: props.handlerOfToggle }, void 0)] }), void 0), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_CardMedia__WEBPACK_IMPORTED_MODULE_7__["default"], { component: "img", 
+    const generateStateMessage = () => {
+        if (props.built && props.correctUrl) {
+            return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ variant: "button", display: "block", gutterBottom: true, sx: { paddingLeft: "16px" } }, { children: "Now Running..." }), void 0));
+        }
+        else
+            return null;
+    };
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Card__WEBPACK_IMPORTED_MODULE_4__["default"], Object.assign({ sx: { display: "flex" } }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Box__WEBPACK_IMPORTED_MODULE_5__["default"], Object.assign({ sx: { display: "flex", flexDirection: "column" } }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_CardContent__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ sx: { flex: "1 0 auto" } }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ component: "div", variant: "h6" }, { children: "Udemy Re Transcript" }), void 0), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ variant: "subtitle2", color: "text.secondary", component: "div" }, { children: "Udemy transcript subtitles are reconstructed into easy-to-translate sentences by the translation app" }), void 0)] }), void 0), generateStateMessage(), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Content__WEBPACK_IMPORTED_MODULE_1__["default"], { correctUrl: props.correctUrl, built: props.built, building: props.building, handlerOfToggle: props.handlerOfToggle }, void 0)] }), void 0), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_CardMedia__WEBPACK_IMPORTED_MODULE_7__["default"], { component: "img", 
                 // heightを指定しないと表示されないよとのこと
                 sx: { width: 180, height: 180 }, image: "../static/udemy-re-transcript-512.svg", alt: "Udemy Re Transcript icon" }, void 0)] }), void 0));
 }
@@ -48469,18 +48770,24 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
 /* harmony import */ var _popup_css__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./popup.css */ "./src/popup/popup.css");
 /* harmony import */ var _MainContent__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./MainContent */ "./src/popup/MainContent.tsx");
-/* harmony import */ var _mui_material_styles__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @mui/material/styles */ "./node_modules/@mui/styled-engine/StyledEngineProvider/StyledEngineProvider.js");
 
 /*******************************************************
  *  POPUP
  * _____________________________________________________
  *
  * NOTE:  state never retain its value!!
- * Popup refreshes itself everytime opened same as html page reloaded.
- * So state must be stored background script and
- * everytime opened, popup must require background script to send state.
- ****************************************************** */
+ *
+ *******************************************************/
+/*
+TODO:
+    - Button hoverしたときの色を変更する
+    - Alertのボックスの大きさとButtonの大きさ一致していない。変。
+    - Errorメッセージの表示
+    - themeの統一
+    - 後回しでいい LoadingButtonのLoadingの色を薄くしない
 
+
+*/
 
 
 
@@ -48496,10 +48803,27 @@ const Popup = () => {
     const [built, setBuilt] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
     // Saves Tab いらないかも...
     const [tabInfo, setTabInfo] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(null);
-    //   NOTE: new added. スライダーをONにしたらtrue
+    // toggleボタンがonならtrue
     const [turningOn, setTurningOn] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
-    //   NOTE: new added. スライダーを動かしたら、処理が完了するまでtrue
-    const [disableSlider, setDisableSlider] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
+    // //   MUI custom theme
+    //     const paletteTheme = createTheme({
+    //         palette: {
+    //             // purple base
+    //             primary: {
+    //               main: "6f006f",
+    //               light: "a200a2",
+    //               dark: "5e005e"
+    //             },
+    //             // Udemy theme color
+    //             secondary: {
+    //                 main: "5624d0",
+    //                 light: "6939dd",
+    //                 dark: "4a1fb3"
+    //             }
+    //           },
+    //     });
+    //     const buttonTheme = createTheme({
+    //     })
     (0,react__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
         // NOTE: DON'T USE AWAIT inside of useEffect().
         console.log("[popup] OPENED");
@@ -48562,19 +48886,18 @@ const Popup = () => {
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_3__.orderNames.run],
             tabInfo: tabInfo,
         })
-            // NOTE: !res.successはRUNするためのページ環境になっていないことを示し、アプリケーションのエラーではない
+            // NOTE: !res.successはRUNするためのページ環境になっていないことを示し、実行不可能のエラーではない
             .then((res) => {
             const { success } = res;
             console.log("[popup] Rebuilding Successfully Complete!");
             setBuilt(success);
             setBuilding(false);
-            setDisableSlider(false);
+            ;
         })
             .catch((e) => {
             setBuilt(false);
             setBuilding(false);
             setTurningOn(false);
-            setDisableSlider(false);
             console.error(e.message);
             // TODO: 実行不可能であることをViewで示す
         });
@@ -48586,14 +48909,9 @@ const Popup = () => {
             order: [_utils_constants__WEBPACK_IMPORTED_MODULE_3__.orderNames.turnOff],
         })
             .then(() => {
-            // if (!res.success)
-            //     throw new Error(
-            //         `Error: Failed to turn off extension. ${res.failureReason}`
-            //     );
             setBuilt(false);
             setBuilding(false);
             setTurningOn(false);
-            setDisableSlider(false);
         })
             .catch((e) => {
             // TODO: 実行不可能であることをViewで示す
@@ -48605,17 +48923,15 @@ const Popup = () => {
             ? (function () {
                 console.log("[popup] Turning off...");
                 setTurningOn(false);
-                setDisableSlider(true);
                 handlerOfTurnOff();
             })()
             : (function () {
                 console.log("[popup] Turning on...");
                 setTurningOn(true);
-                setDisableSlider(true);
                 handlerOfRun();
             })();
     };
-    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_styles__WEBPACK_IMPORTED_MODULE_7__["default"], Object.assign({ injectFirst: true }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_MainContent__WEBPACK_IMPORTED_MODULE_6__["default"], { built: built, building: building, correctUrl: correctUrl, turningOn: turningOn, disable: disableSlider, handlerOfToggle: handlerOfToggle }, void 0) }), void 0));
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_MainContent__WEBPACK_IMPORTED_MODULE_6__["default"], { built: built, building: building, correctUrl: correctUrl, handlerOfToggle: handlerOfToggle }, void 0) }, void 0));
 };
 const root = document.createElement("div");
 document.body.appendChild(root);
