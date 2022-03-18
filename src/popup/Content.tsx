@@ -1,5 +1,11 @@
 /*********************************************************
- *
+ * Content 
+ * 
+ * 
+ * 仕様：
+ * alertがtrueだとAlertMessageコンポーネントを表示する
+ * alertは一旦trueになると指定時間(TIMERS.alertLifeTimer)後自動的にfalseに戻る
+ * alertはpros.built && previousBuildingの時にtrueになる 
  *
  * ********************************************************/
 
@@ -33,21 +39,53 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import Box from '@mui/material/Box';
 import SaveIcon from '@mui/icons-material/Save';
 import Alert from '@mui/material/Alert';
-import Slide from '@mui/material/Slide';
+import AlertMessage from './AlertMessage';
+
+// NOTE: alertTimer > slideTimer (+ slide timeout time)
+const TIMERS = {
+    alertLifeTimer: 5000,
+    slideTimer: 3000,
+} as const;
 
 /*********************************
  * @param props
- * correctUrl
- * built
- * building
- *
+ * props: {
+ *  built: 拡張機能が実行中ならばtrue
+ *  building: 拡張機能がRUNされて構築中ならばtrue
+ *  correctUrl: Popupが開かれたときのURLが許可URLなのかどうか
+ *  handlerOfToggle: 実行ボタンが押されたときに発火する関数 
+ * }
  *
  * */
 export default function Content(props): JSX.Element {
-    const [timer, setTimer] = React.useState<boolean>(false);
-    const [built, setBuilt] = React.useState<boolean>(false);
+    // True as displaying Alert
+    const [alert, setAlert] = React.useState<boolean>(false);
     const _ref = React.useRef(null);
-    const prev: boolean = usePrevious(props.built);
+    // Save previous props.building value
+    const previousBuilding: boolean = usePrevious(props.building);
+
+    // もしもREBUILDINGが終わった瞬間ならばアラートをかける
+    React.useEffect(function () {
+        if (props.built && previousBuilding) {
+            setAlert(true);
+        }
+    });
+
+    // alertがtrueなら指定時間後にfalseに戻す
+    React.useEffect(
+        function () {
+            let timer = null;
+            if (alert) {
+                timer = setTimeout(function () {
+                    setAlert(false);
+                }, TIMERS.alertLifeTimer);
+                return () => {
+                    clearTimeout(timer);
+                };
+            }
+        },
+        [alert]
+    );
 
     /*****************************
      * 以前のpropsの状態を保持して返す関数
@@ -63,17 +101,6 @@ export default function Content(props): JSX.Element {
         });
         return ref.current;
     }
-
-    React.useEffect(
-        function () {
-            const wasThisAlreadyBuild: boolean = prev;
-            if (wasThisAlreadyBuild === undefined) return;
-            if (props.built && !wasThisAlreadyBuild) {
-                // TODO:
-            }
-        },
-        [props.built]
-    );
 
     const generateRunButton = (): JSX.Element => {
         return (
@@ -102,33 +129,41 @@ export default function Content(props): JSX.Element {
         );
     };
 
-    //   "COMPLETE!"は短い間だけ表示して、あとは"展開中"みたいな表示にしたい
     const generateSuccess = (): JSX.Element => {
         return (
-            <Alert sx={{ width: '80%' }} variant="filled" severity="success">
-                COMPLETE!
-            </Alert>
+            <AlertMessage
+                timer={TIMERS.slideTimer}
+                _ref={_ref}
+                show={props.built}
+            >
+                <Alert
+                    sx={{ width: '80%' }}
+                    variant="filled"
+                    severity="success"
+                >
+                    COMPLETE!
+                </Alert>
+            </AlertMessage>
+        );
+    };
+
+    const generateRunning = (): JSX.Element => {
+        return (
+            <Button
+                sx={{ backgroundColor: 'purple', width: '80%' }}
+                variant="contained"
+                onClick={props.handlerOfToggle}
+                disabled={true}
+            >
+                Running...
+            </Button>
         );
     };
 
     const content = (): JSX.Element => {
         let generated: JSX.Element = null;
         if (props.built) {
-            // setTimer(true);
-            // generated = (
-            //     <Slide
-            //         in={timer}
-            //         direction="right"
-            //         container={_ref.current}
-            //         easing={'ease-out'}
-            //         timeout={600}
-            //     >
-            //         {generateSuccess()}
-            //     </Slide>
-            // );
-            // setTimeout(function () {
-            //     setTimer(false);
-            // }, 3000);
+            generated = generateRunning();
         } else if (props.building) {
             generated = generateLoadingButton();
         } else if (!props.building && !props.built) {
@@ -150,40 +185,8 @@ export default function Content(props): JSX.Element {
             sx={{ display: 'flex', alignItems: 'center', pl: 1, pb: 1 }}
             ref={_ref}
         >
+            {alert ? generateSuccess() : null}
             {props.correctUrl ? content() : generateNotice()}
         </Box>
     );
 }
-
-/*
-MainContent ...ネーミングセンスなさすぎ問題あとで変える
-
-Container(aka.MainContent)
-    Title
-    Introduction
-    Content
-        Button(RUN/LOADING/COMPLETE!)
-        Alerts
-
-
-condition
-    correctUrl ? CONTENT {LOADING | RUN | COMPLETE} : ALERT
-    CONTENT
-        building ? LOADING
-        built ? COMPLETE
-        !building && !built ? RUN
-
-
-TODO:
-
-    propsというかstateの値の節約：役割被っているからいらない値ある...
-    コンポーネントの分割
-    字大きすぎる小さくする
-    併せて全体の幅狭くして
-
-    OFFボタンを実装していない
-    ともなって完了の表示と展開中であること示すviewとOFFボタンをどうやって両立させるか...
-
-    完了、
-
-*/

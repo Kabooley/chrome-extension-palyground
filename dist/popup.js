@@ -5949,6 +5949,407 @@ const paperClasses = (0,_mui_base__WEBPACK_IMPORTED_MODULE_1__["default"])('MuiP
 
 /***/ }),
 
+/***/ "./node_modules/@mui/material/Slide/Slide.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@mui/material/Slide/Slide.js ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "setTranslateValue": () => (/* binding */ setTranslateValue),
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/extends */ "./node_modules/@babel/runtime/helpers/esm/extends.js");
+/* harmony import */ var _babel_runtime_helpers_esm_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/esm/objectWithoutPropertiesLoose */ "./node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_10__);
+/* harmony import */ var react_transition_group__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! react-transition-group */ "./node_modules/react-transition-group/esm/Transition.js");
+/* harmony import */ var _mui_utils__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @mui/utils */ "./node_modules/@mui/utils/esm/elementAcceptingRef.js");
+/* harmony import */ var _mui_utils__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @mui/utils */ "./node_modules/@mui/utils/esm/chainPropTypes.js");
+/* harmony import */ var _mui_utils__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @mui/utils */ "./node_modules/@mui/utils/esm/HTMLElementType.js");
+/* harmony import */ var _utils_debounce__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../utils/debounce */ "./node_modules/@mui/material/utils/debounce.js");
+/* harmony import */ var _utils_useForkRef__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../utils/useForkRef */ "./node_modules/@mui/material/utils/useForkRef.js");
+/* harmony import */ var _styles_useTheme__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../styles/useTheme */ "./node_modules/@mui/material/styles/useTheme.js");
+/* harmony import */ var _transitions_utils__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../transitions/utils */ "./node_modules/@mui/material/transitions/utils.js");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./node_modules/@mui/material/utils/ownerWindow.js");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+
+
+const _excluded = ["addEndListener", "appear", "children", "container", "direction", "easing", "in", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting", "style", "timeout", "TransitionComponent"];
+
+
+
+
+
+
+
+
+ // Translate the node so it can't be seen on the screen.
+// Later, we're going to translate the node back to its original location with `none`.
+
+
+
+function getTranslateValue(direction, node, resolvedContainer) {
+  const rect = node.getBoundingClientRect();
+  const containerRect = resolvedContainer && resolvedContainer.getBoundingClientRect();
+  const containerWindow = (0,_utils__WEBPACK_IMPORTED_MODULE_4__["default"])(node);
+  let transform;
+
+  if (node.fakeTransform) {
+    transform = node.fakeTransform;
+  } else {
+    const computedStyle = containerWindow.getComputedStyle(node);
+    transform = computedStyle.getPropertyValue('-webkit-transform') || computedStyle.getPropertyValue('transform');
+  }
+
+  let offsetX = 0;
+  let offsetY = 0;
+
+  if (transform && transform !== 'none' && typeof transform === 'string') {
+    const transformValues = transform.split('(')[1].split(')')[0].split(',');
+    offsetX = parseInt(transformValues[4], 10);
+    offsetY = parseInt(transformValues[5], 10);
+  }
+
+  if (direction === 'left') {
+    if (containerRect) {
+      return `translateX(${containerRect.right + offsetX - rect.left}px)`;
+    }
+
+    return `translateX(${containerWindow.innerWidth + offsetX - rect.left}px)`;
+  }
+
+  if (direction === 'right') {
+    if (containerRect) {
+      return `translateX(-${rect.right - containerRect.left - offsetX}px)`;
+    }
+
+    return `translateX(-${rect.left + rect.width - offsetX}px)`;
+  }
+
+  if (direction === 'up') {
+    if (containerRect) {
+      return `translateY(${containerRect.bottom + offsetY - rect.top}px)`;
+    }
+
+    return `translateY(${containerWindow.innerHeight + offsetY - rect.top}px)`;
+  } // direction === 'down'
+
+
+  if (containerRect) {
+    return `translateY(-${rect.top - containerRect.top + rect.height - offsetY}px)`;
+  }
+
+  return `translateY(-${rect.top + rect.height - offsetY}px)`;
+}
+
+function resolveContainer(containerPropProp) {
+  return typeof containerPropProp === 'function' ? containerPropProp() : containerPropProp;
+}
+
+function setTranslateValue(direction, node, containerProp) {
+  const resolvedContainer = resolveContainer(containerProp);
+  const transform = getTranslateValue(direction, node, resolvedContainer);
+
+  if (transform) {
+    node.style.webkitTransform = transform;
+    node.style.transform = transform;
+  }
+}
+/**
+ * The Slide transition is used by the [Drawer](/components/drawers/) component.
+ * It uses [react-transition-group](https://github.com/reactjs/react-transition-group) internally.
+ */
+
+const Slide = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2__.forwardRef(function Slide(props, ref) {
+  const theme = (0,_styles_useTheme__WEBPACK_IMPORTED_MODULE_5__["default"])();
+  const defaultEasing = {
+    enter: theme.transitions.easing.easeOut,
+    exit: theme.transitions.easing.sharp
+  };
+  const defaultTimeout = {
+    enter: theme.transitions.duration.enteringScreen,
+    exit: theme.transitions.duration.leavingScreen
+  };
+
+  const {
+    addEndListener,
+    appear = true,
+    children,
+    container: containerProp,
+    direction = 'down',
+    easing: easingProp = defaultEasing,
+    in: inProp,
+    onEnter,
+    onEntered,
+    onEntering,
+    onExit,
+    onExited,
+    onExiting,
+    style,
+    timeout = defaultTimeout,
+    // eslint-disable-next-line react/prop-types
+    TransitionComponent = react_transition_group__WEBPACK_IMPORTED_MODULE_6__["default"]
+  } = props,
+        other = (0,_babel_runtime_helpers_esm_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_1__["default"])(props, _excluded);
+
+  const childrenRef = react__WEBPACK_IMPORTED_MODULE_2__.useRef(null);
+  const handleRefIntermediary = (0,_utils_useForkRef__WEBPACK_IMPORTED_MODULE_7__["default"])(children.ref, childrenRef);
+  const handleRef = (0,_utils_useForkRef__WEBPACK_IMPORTED_MODULE_7__["default"])(handleRefIntermediary, ref);
+
+  const normalizedTransitionCallback = callback => isAppearing => {
+    if (callback) {
+      // onEnterXxx and onExitXxx callbacks have a different arguments.length value.
+      if (isAppearing === undefined) {
+        callback(childrenRef.current);
+      } else {
+        callback(childrenRef.current, isAppearing);
+      }
+    }
+  };
+
+  const handleEnter = normalizedTransitionCallback((node, isAppearing) => {
+    setTranslateValue(direction, node, containerProp);
+    (0,_transitions_utils__WEBPACK_IMPORTED_MODULE_8__.reflow)(node);
+
+    if (onEnter) {
+      onEnter(node, isAppearing);
+    }
+  });
+  const handleEntering = normalizedTransitionCallback((node, isAppearing) => {
+    const transitionProps = (0,_transitions_utils__WEBPACK_IMPORTED_MODULE_8__.getTransitionProps)({
+      timeout,
+      style,
+      easing: easingProp
+    }, {
+      mode: 'enter'
+    });
+    node.style.webkitTransition = theme.transitions.create('-webkit-transform', (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({}, transitionProps));
+    node.style.transition = theme.transitions.create('transform', (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({}, transitionProps));
+    node.style.webkitTransform = 'none';
+    node.style.transform = 'none';
+
+    if (onEntering) {
+      onEntering(node, isAppearing);
+    }
+  });
+  const handleEntered = normalizedTransitionCallback(onEntered);
+  const handleExiting = normalizedTransitionCallback(onExiting);
+  const handleExit = normalizedTransitionCallback(node => {
+    const transitionProps = (0,_transitions_utils__WEBPACK_IMPORTED_MODULE_8__.getTransitionProps)({
+      timeout,
+      style,
+      easing: easingProp
+    }, {
+      mode: 'exit'
+    });
+    node.style.webkitTransition = theme.transitions.create('-webkit-transform', transitionProps);
+    node.style.transition = theme.transitions.create('transform', transitionProps);
+    setTranslateValue(direction, node, containerProp);
+
+    if (onExit) {
+      onExit(node);
+    }
+  });
+  const handleExited = normalizedTransitionCallback(node => {
+    // No need for transitions when the component is hidden
+    node.style.webkitTransition = '';
+    node.style.transition = '';
+
+    if (onExited) {
+      onExited(node);
+    }
+  });
+
+  const handleAddEndListener = next => {
+    if (addEndListener) {
+      // Old call signature before `react-transition-group` implemented `nodeRef`
+      addEndListener(childrenRef.current, next);
+    }
+  };
+
+  const updatePosition = react__WEBPACK_IMPORTED_MODULE_2__.useCallback(() => {
+    if (childrenRef.current) {
+      setTranslateValue(direction, childrenRef.current, containerProp);
+    }
+  }, [direction, containerProp]);
+  react__WEBPACK_IMPORTED_MODULE_2__.useEffect(() => {
+    // Skip configuration where the position is screen size invariant.
+    if (inProp || direction === 'down' || direction === 'right') {
+      return undefined;
+    }
+
+    const handleResize = (0,_utils_debounce__WEBPACK_IMPORTED_MODULE_9__["default"])(() => {
+      if (childrenRef.current) {
+        setTranslateValue(direction, childrenRef.current, containerProp);
+      }
+    });
+    const containerWindow = (0,_utils__WEBPACK_IMPORTED_MODULE_4__["default"])(childrenRef.current);
+    containerWindow.addEventListener('resize', handleResize);
+    return () => {
+      handleResize.clear();
+      containerWindow.removeEventListener('resize', handleResize);
+    };
+  }, [direction, inProp, containerProp]);
+  react__WEBPACK_IMPORTED_MODULE_2__.useEffect(() => {
+    if (!inProp) {
+      // We need to update the position of the drawer when the direction change and
+      // when it's hidden.
+      updatePosition();
+    }
+  }, [inProp, updatePosition]);
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(TransitionComponent, (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({
+    nodeRef: childrenRef,
+    onEnter: handleEnter,
+    onEntered: handleEntered,
+    onEntering: handleEntering,
+    onExit: handleExit,
+    onExited: handleExited,
+    onExiting: handleExiting,
+    addEndListener: handleAddEndListener,
+    appear: appear,
+    in: inProp,
+    timeout: timeout
+  }, other, {
+    children: (state, childProps) => {
+      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2__.cloneElement(children, (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({
+        ref: handleRef,
+        style: (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({
+          visibility: state === 'exited' && !inProp ? 'hidden' : undefined
+        }, style, children.props.style)
+      }, childProps));
+    }
+  }));
+});
+ true ? Slide.propTypes
+/* remove-proptypes */
+= {
+  // ----------------------------- Warning --------------------------------
+  // | These PropTypes are generated from the TypeScript type definitions |
+  // |     To update them edit the d.ts file and run "yarn proptypes"     |
+  // ----------------------------------------------------------------------
+
+  /**
+   * Add a custom transition end trigger. Called with the transitioning DOM
+   * node and a done callback. Allows for more fine grained transition end
+   * logic. Note: Timeouts are still used as a fallback if provided.
+   */
+  addEndListener: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().func),
+
+  /**
+   * Perform the enter transition when it first mounts if `in` is also `true`.
+   * Set this to `false` to disable this behavior.
+   * @default true
+   */
+  appear: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().bool),
+
+  /**
+   * A single child content element.
+   */
+  children: _mui_utils__WEBPACK_IMPORTED_MODULE_11__["default"].isRequired,
+
+  /**
+   * An HTML element, or a function that returns one.
+   * It's used to set the container the Slide is transitioning from.
+   */
+  container: (0,_mui_utils__WEBPACK_IMPORTED_MODULE_12__["default"])(prop_types__WEBPACK_IMPORTED_MODULE_10___default().oneOfType([_mui_utils__WEBPACK_IMPORTED_MODULE_13__["default"], (prop_types__WEBPACK_IMPORTED_MODULE_10___default().func)]), props => {
+    if (props.open) {
+      const resolvedContainer = resolveContainer(props.container);
+
+      if (resolvedContainer && resolvedContainer.nodeType === 1) {
+        const box = resolvedContainer.getBoundingClientRect();
+
+        if ( true && box.top === 0 && box.left === 0 && box.right === 0 && box.bottom === 0) {
+          return new Error(['MUI: The `container` prop provided to the component is invalid.', 'The anchor element should be part of the document layout.', "Make sure the element is present in the document or that it's not display none."].join('\n'));
+        }
+      } else if (!resolvedContainer || typeof resolvedContainer.getBoundingClientRect !== 'function' || resolvedContainer.contextElement != null && resolvedContainer.contextElement.nodeType !== 1) {
+        return new Error(['MUI: The `container` prop provided to the component is invalid.', 'It should be an HTML element instance.'].join('\n'));
+      }
+    }
+
+    return null;
+  }),
+
+  /**
+   * Direction the child node will enter from.
+   * @default 'down'
+   */
+  direction: prop_types__WEBPACK_IMPORTED_MODULE_10___default().oneOf(['down', 'left', 'right', 'up']),
+
+  /**
+   * The transition timing function.
+   * You may specify a single easing or a object containing enter and exit values.
+   * @default {
+   *   enter: theme.transitions.easing.easeOut,
+   *   exit: theme.transitions.easing.sharp,
+   * }
+   */
+  easing: prop_types__WEBPACK_IMPORTED_MODULE_10___default().oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_10___default().shape({
+    enter: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().string),
+    exit: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().string)
+  }), (prop_types__WEBPACK_IMPORTED_MODULE_10___default().string)]),
+
+  /**
+   * If `true`, the component will transition in.
+   */
+  in: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().bool),
+
+  /**
+   * @ignore
+   */
+  onEnter: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().func),
+
+  /**
+   * @ignore
+   */
+  onEntered: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().func),
+
+  /**
+   * @ignore
+   */
+  onEntering: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().func),
+
+  /**
+   * @ignore
+   */
+  onExit: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().func),
+
+  /**
+   * @ignore
+   */
+  onExited: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().func),
+
+  /**
+   * @ignore
+   */
+  onExiting: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().func),
+
+  /**
+   * @ignore
+   */
+  style: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().object),
+
+  /**
+   * The duration for the transition, in milliseconds.
+   * You may specify a single timeout for all transitions, or individually with an object.
+   * @default {
+   *   enter: theme.transitions.duration.enteringScreen,
+   *   exit: theme.transitions.duration.leavingScreen,
+   * }
+   */
+  timeout: prop_types__WEBPACK_IMPORTED_MODULE_10___default().oneOfType([(prop_types__WEBPACK_IMPORTED_MODULE_10___default().number), prop_types__WEBPACK_IMPORTED_MODULE_10___default().shape({
+    appear: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().number),
+    enter: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().number),
+    exit: (prop_types__WEBPACK_IMPORTED_MODULE_10___default().number)
+  })])
+} : 0;
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Slide);
+
+/***/ }),
+
 /***/ "./node_modules/@mui/material/SvgIcon/SvgIcon.js":
 /*!*******************************************************!*\
   !*** ./node_modules/@mui/material/SvgIcon/SvgIcon.js ***!
@@ -7710,6 +8111,36 @@ const zIndex = {
   tooltip: 1500
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (zIndex);
+
+/***/ }),
+
+/***/ "./node_modules/@mui/material/transitions/utils.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/@mui/material/transitions/utils.js ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "reflow": () => (/* binding */ reflow),
+/* harmony export */   "getTransitionProps": () => (/* binding */ getTransitionProps)
+/* harmony export */ });
+const reflow = node => node.scrollTop;
+function getTransitionProps(props, options) {
+  var _style$transitionDura, _style$transitionTimi;
+
+  const {
+    timeout,
+    easing,
+    style = {}
+  } = props;
+  return {
+    duration: (_style$transitionDura = style.transitionDuration) != null ? _style$transitionDura : typeof timeout === 'number' ? timeout : timeout[options.mode] || 0,
+    easing: (_style$transitionTimi = style.transitionTimingFunction) != null ? _style$transitionTimi : typeof easing === 'object' ? easing[options.mode] : easing,
+    delay: style.transitionDelay
+  };
+}
 
 /***/ }),
 
@@ -10794,6 +11225,36 @@ function useTheme(defaultTheme = null) {
 
 /***/ }),
 
+/***/ "./node_modules/@mui/utils/esm/HTMLElementType.js":
+/*!********************************************************!*\
+  !*** ./node_modules/@mui/utils/esm/HTMLElementType.js ***!
+  \********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ HTMLElementType)
+/* harmony export */ });
+function HTMLElementType(props, propName, componentName, location, propFullName) {
+  if (false) {}
+
+  const propValue = props[propName];
+  const safePropName = propFullName || propName;
+
+  if (propValue == null) {
+    return null;
+  }
+
+  if (propValue && propValue.nodeType !== 1) {
+    return new Error(`Invalid ${location} \`${safePropName}\` supplied to \`${componentName}\`. ` + `Expected an HTMLElement.`);
+  }
+
+  return null;
+}
+
+/***/ }),
+
 /***/ "./node_modules/@mui/utils/esm/capitalize.js":
 /*!***************************************************!*\
   !*** ./node_modules/@mui/utils/esm/capitalize.js ***!
@@ -10975,6 +11436,72 @@ function deprecatedPropType(validator, reason) {
     return null;
   };
 }
+
+/***/ }),
+
+/***/ "./node_modules/@mui/utils/esm/elementAcceptingRef.js":
+/*!************************************************************!*\
+  !*** ./node_modules/@mui/utils/esm/elementAcceptingRef.js ***!
+  \************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _chainPropTypes__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./chainPropTypes */ "./node_modules/@mui/utils/esm/chainPropTypes.js");
+
+
+
+function isClassComponent(elementType) {
+  // elementType.prototype?.isReactComponent
+  const {
+    prototype = {}
+  } = elementType;
+  return Boolean(prototype.isReactComponent);
+}
+
+function acceptingRef(props, propName, componentName, location, propFullName) {
+  const element = props[propName];
+  const safePropName = propFullName || propName;
+
+  if (element == null || // When server-side rendering React doesn't warn either.
+  // This is not an accurate check for SSR.
+  // This is only in place for emotion compat.
+  // TODO: Revisit once https://github.com/facebook/react/issues/20047 is resolved.
+  typeof window === 'undefined') {
+    return null;
+  }
+
+  let warningHint;
+  const elementType = element.type;
+  /**
+   * Blacklisting instead of whitelisting
+   *
+   * Blacklisting will miss some components, such as React.Fragment. Those will at least
+   * trigger a warning in React.
+   * We can't whitelist because there is no safe way to detect React.forwardRef
+   * or class components. "Safe" means there's no public API.
+   *
+   */
+
+  if (typeof elementType === 'function' && !isClassComponent(elementType)) {
+    warningHint = 'Did you accidentally use a plain function component for an element instead?';
+  }
+
+  if (warningHint !== undefined) {
+    return new Error(`Invalid ${location} \`${safePropName}\` supplied to \`${componentName}\`. ` + `Expected an element that can hold a ref. ${warningHint} ` + 'For more information see https://mui.com/r/caveat-with-refs-guide');
+  }
+
+  return null;
+}
+
+const elementAcceptingRef = (0,_chainPropTypes__WEBPACK_IMPORTED_MODULE_0__["default"])((prop_types__WEBPACK_IMPORTED_MODULE_1___default().element), acceptingRef);
+elementAcceptingRef.isRequired = (0,_chainPropTypes__WEBPACK_IMPORTED_MODULE_0__["default"])((prop_types__WEBPACK_IMPORTED_MODULE_1___default().element.isRequired), acceptingRef);
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (elementAcceptingRef);
 
 /***/ }),
 
@@ -40001,6 +40528,650 @@ if (false) {} else {
 
 /***/ }),
 
+/***/ "./node_modules/react-transition-group/esm/Transition.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/react-transition-group/esm/Transition.js ***!
+  \***************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "UNMOUNTED": () => (/* binding */ UNMOUNTED),
+/* harmony export */   "EXITED": () => (/* binding */ EXITED),
+/* harmony export */   "ENTERING": () => (/* binding */ ENTERING),
+/* harmony export */   "ENTERED": () => (/* binding */ ENTERED),
+/* harmony export */   "EXITING": () => (/* binding */ EXITING),
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_esm_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/objectWithoutPropertiesLoose */ "./node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js");
+/* harmony import */ var _babel_runtime_helpers_esm_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/esm/inheritsLoose */ "./node_modules/@babel/runtime/helpers/esm/inheritsLoose.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
+/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./config */ "./node_modules/react-transition-group/esm/config.js");
+/* harmony import */ var _utils_PropTypes__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./utils/PropTypes */ "./node_modules/react-transition-group/esm/utils/PropTypes.js");
+/* harmony import */ var _TransitionGroupContext__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./TransitionGroupContext */ "./node_modules/react-transition-group/esm/TransitionGroupContext.js");
+
+
+
+
+
+
+
+
+var UNMOUNTED = 'unmounted';
+var EXITED = 'exited';
+var ENTERING = 'entering';
+var ENTERED = 'entered';
+var EXITING = 'exiting';
+/**
+ * The Transition component lets you describe a transition from one component
+ * state to another _over time_ with a simple declarative API. Most commonly
+ * it's used to animate the mounting and unmounting of a component, but can also
+ * be used to describe in-place transition states as well.
+ *
+ * ---
+ *
+ * **Note**: `Transition` is a platform-agnostic base component. If you're using
+ * transitions in CSS, you'll probably want to use
+ * [`CSSTransition`](https://reactcommunity.org/react-transition-group/css-transition)
+ * instead. It inherits all the features of `Transition`, but contains
+ * additional features necessary to play nice with CSS transitions (hence the
+ * name of the component).
+ *
+ * ---
+ *
+ * By default the `Transition` component does not alter the behavior of the
+ * component it renders, it only tracks "enter" and "exit" states for the
+ * components. It's up to you to give meaning and effect to those states. For
+ * example we can add styles to a component when it enters or exits:
+ *
+ * ```jsx
+ * import { Transition } from 'react-transition-group';
+ *
+ * const duration = 300;
+ *
+ * const defaultStyle = {
+ *   transition: `opacity ${duration}ms ease-in-out`,
+ *   opacity: 0,
+ * }
+ *
+ * const transitionStyles = {
+ *   entering: { opacity: 1 },
+ *   entered:  { opacity: 1 },
+ *   exiting:  { opacity: 0 },
+ *   exited:  { opacity: 0 },
+ * };
+ *
+ * const Fade = ({ in: inProp }) => (
+ *   <Transition in={inProp} timeout={duration}>
+ *     {state => (
+ *       <div style={{
+ *         ...defaultStyle,
+ *         ...transitionStyles[state]
+ *       }}>
+ *         I'm a fade Transition!
+ *       </div>
+ *     )}
+ *   </Transition>
+ * );
+ * ```
+ *
+ * There are 4 main states a Transition can be in:
+ *  - `'entering'`
+ *  - `'entered'`
+ *  - `'exiting'`
+ *  - `'exited'`
+ *
+ * Transition state is toggled via the `in` prop. When `true` the component
+ * begins the "Enter" stage. During this stage, the component will shift from
+ * its current transition state, to `'entering'` for the duration of the
+ * transition and then to the `'entered'` stage once it's complete. Let's take
+ * the following example (we'll use the
+ * [useState](https://reactjs.org/docs/hooks-reference.html#usestate) hook):
+ *
+ * ```jsx
+ * function App() {
+ *   const [inProp, setInProp] = useState(false);
+ *   return (
+ *     <div>
+ *       <Transition in={inProp} timeout={500}>
+ *         {state => (
+ *           // ...
+ *         )}
+ *       </Transition>
+ *       <button onClick={() => setInProp(true)}>
+ *         Click to Enter
+ *       </button>
+ *     </div>
+ *   );
+ * }
+ * ```
+ *
+ * When the button is clicked the component will shift to the `'entering'` state
+ * and stay there for 500ms (the value of `timeout`) before it finally switches
+ * to `'entered'`.
+ *
+ * When `in` is `false` the same thing happens except the state moves from
+ * `'exiting'` to `'exited'`.
+ */
+
+var Transition = /*#__PURE__*/function (_React$Component) {
+  (0,_babel_runtime_helpers_esm_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__["default"])(Transition, _React$Component);
+
+  function Transition(props, context) {
+    var _this;
+
+    _this = _React$Component.call(this, props, context) || this;
+    var parentGroup = context; // In the context of a TransitionGroup all enters are really appears
+
+    var appear = parentGroup && !parentGroup.isMounting ? props.enter : props.appear;
+    var initialStatus;
+    _this.appearStatus = null;
+
+    if (props.in) {
+      if (appear) {
+        initialStatus = EXITED;
+        _this.appearStatus = ENTERING;
+      } else {
+        initialStatus = ENTERED;
+      }
+    } else {
+      if (props.unmountOnExit || props.mountOnEnter) {
+        initialStatus = UNMOUNTED;
+      } else {
+        initialStatus = EXITED;
+      }
+    }
+
+    _this.state = {
+      status: initialStatus
+    };
+    _this.nextCallback = null;
+    return _this;
+  }
+
+  Transition.getDerivedStateFromProps = function getDerivedStateFromProps(_ref, prevState) {
+    var nextIn = _ref.in;
+
+    if (nextIn && prevState.status === UNMOUNTED) {
+      return {
+        status: EXITED
+      };
+    }
+
+    return null;
+  } // getSnapshotBeforeUpdate(prevProps) {
+  //   let nextStatus = null
+  //   if (prevProps !== this.props) {
+  //     const { status } = this.state
+  //     if (this.props.in) {
+  //       if (status !== ENTERING && status !== ENTERED) {
+  //         nextStatus = ENTERING
+  //       }
+  //     } else {
+  //       if (status === ENTERING || status === ENTERED) {
+  //         nextStatus = EXITING
+  //       }
+  //     }
+  //   }
+  //   return { nextStatus }
+  // }
+  ;
+
+  var _proto = Transition.prototype;
+
+  _proto.componentDidMount = function componentDidMount() {
+    this.updateStatus(true, this.appearStatus);
+  };
+
+  _proto.componentDidUpdate = function componentDidUpdate(prevProps) {
+    var nextStatus = null;
+
+    if (prevProps !== this.props) {
+      var status = this.state.status;
+
+      if (this.props.in) {
+        if (status !== ENTERING && status !== ENTERED) {
+          nextStatus = ENTERING;
+        }
+      } else {
+        if (status === ENTERING || status === ENTERED) {
+          nextStatus = EXITING;
+        }
+      }
+    }
+
+    this.updateStatus(false, nextStatus);
+  };
+
+  _proto.componentWillUnmount = function componentWillUnmount() {
+    this.cancelNextCallback();
+  };
+
+  _proto.getTimeouts = function getTimeouts() {
+    var timeout = this.props.timeout;
+    var exit, enter, appear;
+    exit = enter = appear = timeout;
+
+    if (timeout != null && typeof timeout !== 'number') {
+      exit = timeout.exit;
+      enter = timeout.enter; // TODO: remove fallback for next major
+
+      appear = timeout.appear !== undefined ? timeout.appear : enter;
+    }
+
+    return {
+      exit: exit,
+      enter: enter,
+      appear: appear
+    };
+  };
+
+  _proto.updateStatus = function updateStatus(mounting, nextStatus) {
+    if (mounting === void 0) {
+      mounting = false;
+    }
+
+    if (nextStatus !== null) {
+      // nextStatus will always be ENTERING or EXITING.
+      this.cancelNextCallback();
+
+      if (nextStatus === ENTERING) {
+        this.performEnter(mounting);
+      } else {
+        this.performExit();
+      }
+    } else if (this.props.unmountOnExit && this.state.status === EXITED) {
+      this.setState({
+        status: UNMOUNTED
+      });
+    }
+  };
+
+  _proto.performEnter = function performEnter(mounting) {
+    var _this2 = this;
+
+    var enter = this.props.enter;
+    var appearing = this.context ? this.context.isMounting : mounting;
+
+    var _ref2 = this.props.nodeRef ? [appearing] : [react_dom__WEBPACK_IMPORTED_MODULE_3__.findDOMNode(this), appearing],
+        maybeNode = _ref2[0],
+        maybeAppearing = _ref2[1];
+
+    var timeouts = this.getTimeouts();
+    var enterTimeout = appearing ? timeouts.appear : timeouts.enter; // no enter animation skip right to ENTERED
+    // if we are mounting and running this it means appear _must_ be set
+
+    if (!mounting && !enter || _config__WEBPACK_IMPORTED_MODULE_4__["default"].disabled) {
+      this.safeSetState({
+        status: ENTERED
+      }, function () {
+        _this2.props.onEntered(maybeNode);
+      });
+      return;
+    }
+
+    this.props.onEnter(maybeNode, maybeAppearing);
+    this.safeSetState({
+      status: ENTERING
+    }, function () {
+      _this2.props.onEntering(maybeNode, maybeAppearing);
+
+      _this2.onTransitionEnd(enterTimeout, function () {
+        _this2.safeSetState({
+          status: ENTERED
+        }, function () {
+          _this2.props.onEntered(maybeNode, maybeAppearing);
+        });
+      });
+    });
+  };
+
+  _proto.performExit = function performExit() {
+    var _this3 = this;
+
+    var exit = this.props.exit;
+    var timeouts = this.getTimeouts();
+    var maybeNode = this.props.nodeRef ? undefined : react_dom__WEBPACK_IMPORTED_MODULE_3__.findDOMNode(this); // no exit animation skip right to EXITED
+
+    if (!exit || _config__WEBPACK_IMPORTED_MODULE_4__["default"].disabled) {
+      this.safeSetState({
+        status: EXITED
+      }, function () {
+        _this3.props.onExited(maybeNode);
+      });
+      return;
+    }
+
+    this.props.onExit(maybeNode);
+    this.safeSetState({
+      status: EXITING
+    }, function () {
+      _this3.props.onExiting(maybeNode);
+
+      _this3.onTransitionEnd(timeouts.exit, function () {
+        _this3.safeSetState({
+          status: EXITED
+        }, function () {
+          _this3.props.onExited(maybeNode);
+        });
+      });
+    });
+  };
+
+  _proto.cancelNextCallback = function cancelNextCallback() {
+    if (this.nextCallback !== null) {
+      this.nextCallback.cancel();
+      this.nextCallback = null;
+    }
+  };
+
+  _proto.safeSetState = function safeSetState(nextState, callback) {
+    // This shouldn't be necessary, but there are weird race conditions with
+    // setState callbacks and unmounting in testing, so always make sure that
+    // we can cancel any pending setState callbacks after we unmount.
+    callback = this.setNextCallback(callback);
+    this.setState(nextState, callback);
+  };
+
+  _proto.setNextCallback = function setNextCallback(callback) {
+    var _this4 = this;
+
+    var active = true;
+
+    this.nextCallback = function (event) {
+      if (active) {
+        active = false;
+        _this4.nextCallback = null;
+        callback(event);
+      }
+    };
+
+    this.nextCallback.cancel = function () {
+      active = false;
+    };
+
+    return this.nextCallback;
+  };
+
+  _proto.onTransitionEnd = function onTransitionEnd(timeout, handler) {
+    this.setNextCallback(handler);
+    var node = this.props.nodeRef ? this.props.nodeRef.current : react_dom__WEBPACK_IMPORTED_MODULE_3__.findDOMNode(this);
+    var doesNotHaveTimeoutOrListener = timeout == null && !this.props.addEndListener;
+
+    if (!node || doesNotHaveTimeoutOrListener) {
+      setTimeout(this.nextCallback, 0);
+      return;
+    }
+
+    if (this.props.addEndListener) {
+      var _ref3 = this.props.nodeRef ? [this.nextCallback] : [node, this.nextCallback],
+          maybeNode = _ref3[0],
+          maybeNextCallback = _ref3[1];
+
+      this.props.addEndListener(maybeNode, maybeNextCallback);
+    }
+
+    if (timeout != null) {
+      setTimeout(this.nextCallback, timeout);
+    }
+  };
+
+  _proto.render = function render() {
+    var status = this.state.status;
+
+    if (status === UNMOUNTED) {
+      return null;
+    }
+
+    var _this$props = this.props,
+        children = _this$props.children,
+        _in = _this$props.in,
+        _mountOnEnter = _this$props.mountOnEnter,
+        _unmountOnExit = _this$props.unmountOnExit,
+        _appear = _this$props.appear,
+        _enter = _this$props.enter,
+        _exit = _this$props.exit,
+        _timeout = _this$props.timeout,
+        _addEndListener = _this$props.addEndListener,
+        _onEnter = _this$props.onEnter,
+        _onEntering = _this$props.onEntering,
+        _onEntered = _this$props.onEntered,
+        _onExit = _this$props.onExit,
+        _onExiting = _this$props.onExiting,
+        _onExited = _this$props.onExited,
+        _nodeRef = _this$props.nodeRef,
+        childProps = (0,_babel_runtime_helpers_esm_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_0__["default"])(_this$props, ["children", "in", "mountOnEnter", "unmountOnExit", "appear", "enter", "exit", "timeout", "addEndListener", "onEnter", "onEntering", "onEntered", "onExit", "onExiting", "onExited", "nodeRef"]);
+
+    return (
+      /*#__PURE__*/
+      // allows for nested Transitions
+      react__WEBPACK_IMPORTED_MODULE_2__.createElement(_TransitionGroupContext__WEBPACK_IMPORTED_MODULE_5__["default"].Provider, {
+        value: null
+      }, typeof children === 'function' ? children(status, childProps) : react__WEBPACK_IMPORTED_MODULE_2__.cloneElement(react__WEBPACK_IMPORTED_MODULE_2__.Children.only(children), childProps))
+    );
+  };
+
+  return Transition;
+}(react__WEBPACK_IMPORTED_MODULE_2__.Component);
+
+Transition.contextType = _TransitionGroupContext__WEBPACK_IMPORTED_MODULE_5__["default"];
+Transition.propTypes =  true ? {
+  /**
+   * A React reference to DOM element that need to transition:
+   * https://stackoverflow.com/a/51127130/4671932
+   *
+   *   - When `nodeRef` prop is used, `node` is not passed to callback functions
+   *      (e.g. `onEnter`) because user already has direct access to the node.
+   *   - When changing `key` prop of `Transition` in a `TransitionGroup` a new
+   *     `nodeRef` need to be provided to `Transition` with changed `key` prop
+   *     (see
+   *     [test/CSSTransition-test.js](https://github.com/reactjs/react-transition-group/blob/13435f897b3ab71f6e19d724f145596f5910581c/test/CSSTransition-test.js#L362-L437)).
+   */
+  nodeRef: prop_types__WEBPACK_IMPORTED_MODULE_6___default().shape({
+    current: typeof Element === 'undefined' ? (prop_types__WEBPACK_IMPORTED_MODULE_6___default().any) : function (propValue, key, componentName, location, propFullName, secret) {
+      var value = propValue[key];
+      return prop_types__WEBPACK_IMPORTED_MODULE_6___default().instanceOf(value && 'ownerDocument' in value ? value.ownerDocument.defaultView.Element : Element)(propValue, key, componentName, location, propFullName, secret);
+    }
+  }),
+
+  /**
+   * A `function` child can be used instead of a React element. This function is
+   * called with the current transition status (`'entering'`, `'entered'`,
+   * `'exiting'`, `'exited'`), which can be used to apply context
+   * specific props to a component.
+   *
+   * ```jsx
+   * <Transition in={this.state.in} timeout={150}>
+   *   {state => (
+   *     <MyComponent className={`fade fade-${state}`} />
+   *   )}
+   * </Transition>
+   * ```
+   */
+  children: prop_types__WEBPACK_IMPORTED_MODULE_6___default().oneOfType([(prop_types__WEBPACK_IMPORTED_MODULE_6___default().func.isRequired), (prop_types__WEBPACK_IMPORTED_MODULE_6___default().element.isRequired)]).isRequired,
+
+  /**
+   * Show the component; triggers the enter or exit states
+   */
+  in: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().bool),
+
+  /**
+   * By default the child component is mounted immediately along with
+   * the parent `Transition` component. If you want to "lazy mount" the component on the
+   * first `in={true}` you can set `mountOnEnter`. After the first enter transition the component will stay
+   * mounted, even on "exited", unless you also specify `unmountOnExit`.
+   */
+  mountOnEnter: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().bool),
+
+  /**
+   * By default the child component stays mounted after it reaches the `'exited'` state.
+   * Set `unmountOnExit` if you'd prefer to unmount the component after it finishes exiting.
+   */
+  unmountOnExit: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().bool),
+
+  /**
+   * By default the child component does not perform the enter transition when
+   * it first mounts, regardless of the value of `in`. If you want this
+   * behavior, set both `appear` and `in` to `true`.
+   *
+   * > **Note**: there are no special appear states like `appearing`/`appeared`, this prop
+   * > only adds an additional enter transition. However, in the
+   * > `<CSSTransition>` component that first enter transition does result in
+   * > additional `.appear-*` classes, that way you can choose to style it
+   * > differently.
+   */
+  appear: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().bool),
+
+  /**
+   * Enable or disable enter transitions.
+   */
+  enter: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().bool),
+
+  /**
+   * Enable or disable exit transitions.
+   */
+  exit: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().bool),
+
+  /**
+   * The duration of the transition, in milliseconds.
+   * Required unless `addEndListener` is provided.
+   *
+   * You may specify a single timeout for all transitions:
+   *
+   * ```jsx
+   * timeout={500}
+   * ```
+   *
+   * or individually:
+   *
+   * ```jsx
+   * timeout={{
+   *  appear: 500,
+   *  enter: 300,
+   *  exit: 500,
+   * }}
+   * ```
+   *
+   * - `appear` defaults to the value of `enter`
+   * - `enter` defaults to `0`
+   * - `exit` defaults to `0`
+   *
+   * @type {number | { enter?: number, exit?: number, appear?: number }}
+   */
+  timeout: function timeout(props) {
+    var pt = _utils_PropTypes__WEBPACK_IMPORTED_MODULE_7__.timeoutsShape;
+    if (!props.addEndListener) pt = pt.isRequired;
+
+    for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      args[_key - 1] = arguments[_key];
+    }
+
+    return pt.apply(void 0, [props].concat(args));
+  },
+
+  /**
+   * Add a custom transition end trigger. Called with the transitioning
+   * DOM node and a `done` callback. Allows for more fine grained transition end
+   * logic. Timeouts are still used as a fallback if provided.
+   *
+   * **Note**: when `nodeRef` prop is passed, `node` is not passed.
+   *
+   * ```jsx
+   * addEndListener={(node, done) => {
+   *   // use the css transitionend event to mark the finish of a transition
+   *   node.addEventListener('transitionend', done, false);
+   * }}
+   * ```
+   */
+  addEndListener: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().func),
+
+  /**
+   * Callback fired before the "entering" status is applied. An extra parameter
+   * `isAppearing` is supplied to indicate if the enter stage is occurring on the initial mount
+   *
+   * **Note**: when `nodeRef` prop is passed, `node` is not passed.
+   *
+   * @type Function(node: HtmlElement, isAppearing: bool) -> void
+   */
+  onEnter: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().func),
+
+  /**
+   * Callback fired after the "entering" status is applied. An extra parameter
+   * `isAppearing` is supplied to indicate if the enter stage is occurring on the initial mount
+   *
+   * **Note**: when `nodeRef` prop is passed, `node` is not passed.
+   *
+   * @type Function(node: HtmlElement, isAppearing: bool)
+   */
+  onEntering: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().func),
+
+  /**
+   * Callback fired after the "entered" status is applied. An extra parameter
+   * `isAppearing` is supplied to indicate if the enter stage is occurring on the initial mount
+   *
+   * **Note**: when `nodeRef` prop is passed, `node` is not passed.
+   *
+   * @type Function(node: HtmlElement, isAppearing: bool) -> void
+   */
+  onEntered: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().func),
+
+  /**
+   * Callback fired before the "exiting" status is applied.
+   *
+   * **Note**: when `nodeRef` prop is passed, `node` is not passed.
+   *
+   * @type Function(node: HtmlElement) -> void
+   */
+  onExit: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().func),
+
+  /**
+   * Callback fired after the "exiting" status is applied.
+   *
+   * **Note**: when `nodeRef` prop is passed, `node` is not passed.
+   *
+   * @type Function(node: HtmlElement) -> void
+   */
+  onExiting: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().func),
+
+  /**
+   * Callback fired after the "exited" status is applied.
+   *
+   * **Note**: when `nodeRef` prop is passed, `node` is not passed
+   *
+   * @type Function(node: HtmlElement) -> void
+   */
+  onExited: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().func)
+} : 0; // Name the function so it is clearer in the documentation
+
+function noop() {}
+
+Transition.defaultProps = {
+  in: false,
+  mountOnEnter: false,
+  unmountOnExit: false,
+  appear: false,
+  enter: true,
+  exit: true,
+  onEnter: noop,
+  onEntering: noop,
+  onEntered: noop,
+  onExit: noop,
+  onExiting: noop,
+  onExited: noop
+};
+Transition.UNMOUNTED = UNMOUNTED;
+Transition.EXITED = EXITED;
+Transition.ENTERING = ENTERING;
+Transition.ENTERED = ENTERED;
+Transition.EXITING = EXITING;
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Transition);
+
+/***/ }),
+
 /***/ "./node_modules/react-transition-group/esm/TransitionGroup.js":
 /*!********************************************************************!*\
   !*** ./node_modules/react-transition-group/esm/TransitionGroup.js ***!
@@ -40230,6 +41401,23 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./node_modules/react-transition-group/esm/config.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/react-transition-group/esm/config.js ***!
+  \***********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  disabled: false
+});
+
+/***/ }),
+
 /***/ "./node_modules/react-transition-group/esm/utils/ChildMapping.js":
 /*!***********************************************************************!*\
   !*** ./node_modules/react-transition-group/esm/utils/ChildMapping.js ***!
@@ -40385,6 +41573,41 @@ function getNextChildMapping(nextProps, prevChildMapping, onExited) {
   });
   return children;
 }
+
+/***/ }),
+
+/***/ "./node_modules/react-transition-group/esm/utils/PropTypes.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/react-transition-group/esm/utils/PropTypes.js ***!
+  \********************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "timeoutsShape": () => (/* binding */ timeoutsShape),
+/* harmony export */   "classNamesShape": () => (/* binding */ classNamesShape)
+/* harmony export */ });
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_0__);
+
+var timeoutsShape =  true ? prop_types__WEBPACK_IMPORTED_MODULE_0___default().oneOfType([(prop_types__WEBPACK_IMPORTED_MODULE_0___default().number), prop_types__WEBPACK_IMPORTED_MODULE_0___default().shape({
+  enter: (prop_types__WEBPACK_IMPORTED_MODULE_0___default().number),
+  exit: (prop_types__WEBPACK_IMPORTED_MODULE_0___default().number),
+  appear: (prop_types__WEBPACK_IMPORTED_MODULE_0___default().number)
+}).isRequired]) : 0;
+var classNamesShape =  true ? prop_types__WEBPACK_IMPORTED_MODULE_0___default().oneOfType([(prop_types__WEBPACK_IMPORTED_MODULE_0___default().string), prop_types__WEBPACK_IMPORTED_MODULE_0___default().shape({
+  enter: (prop_types__WEBPACK_IMPORTED_MODULE_0___default().string),
+  exit: (prop_types__WEBPACK_IMPORTED_MODULE_0___default().string),
+  active: (prop_types__WEBPACK_IMPORTED_MODULE_0___default().string)
+}), prop_types__WEBPACK_IMPORTED_MODULE_0___default().shape({
+  enter: (prop_types__WEBPACK_IMPORTED_MODULE_0___default().string),
+  enterDone: (prop_types__WEBPACK_IMPORTED_MODULE_0___default().string),
+  enterActive: (prop_types__WEBPACK_IMPORTED_MODULE_0___default().string),
+  exit: (prop_types__WEBPACK_IMPORTED_MODULE_0___default().string),
+  exitDone: (prop_types__WEBPACK_IMPORTED_MODULE_0___default().string),
+  exitActive: (prop_types__WEBPACK_IMPORTED_MODULE_0___default().string)
+})]) : 0;
 
 /***/ }),
 
@@ -45410,6 +46633,63 @@ module.exports = styleTagTransform;
 
 /***/ }),
 
+/***/ "./src/popup/AlertMessage.tsx":
+/*!************************************!*\
+  !*** ./src/popup/AlertMessage.tsx ***!
+  \************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var _mui_material_Slide__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @mui/material/Slide */ "./node_modules/@mui/material/Slide/Slide.js");
+
+
+
+/**********************************
+ * @param props
+ *  props.ref: Object of React.useRef();
+ *  props.show: boolean;
+ * props.timer: number;
+ *
+ * */
+const AlertMessage = (props) => {
+    const [show, setShow] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
+    // NOTE: useEffect()内でsetTimeoutする場合は、無限ループを起こさないように
+    // clearTimeoutをreturnすること
+    (0,react__WEBPACK_IMPORTED_MODULE_1__.useEffect)(function () {
+        console.log("[AlertMessage] use effect");
+        console.log(props.show);
+        let timerId = null;
+        if (props.show) {
+            setShow(true);
+            timerId = setTimeout(function () {
+                setShow(false);
+            }, props.timer);
+        }
+        return () => {
+            clearTimeout(timerId);
+        };
+    }, [props.show]);
+    if (!props.show)
+        return null;
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Slide__WEBPACK_IMPORTED_MODULE_2__["default"], Object.assign({ direction: "right", in: show, 
+        // Refのコンテナの中でスライドする
+        container: props._ref.current, 
+        // transition-timing-functionを指定できる
+        easing: 'ease-out', 
+        // transition-durationと同じ。アニメーションにかける時間
+        timeout: 600 }, { children: props.children }), void 0));
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (AlertMessage);
+
+
+/***/ }),
+
 /***/ "./src/popup/Content.tsx":
 /*!*******************************!*\
   !*** ./src/popup/Content.tsx ***!
@@ -45421,12 +46701,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (/* binding */ Content)
 /* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var _mui_material_Button__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @mui/material/Button */ "./node_modules/@mui/material/Button/Button.js");
-/* harmony import */ var _mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @mui/lab/LoadingButton */ "./node_modules/@mui/lab/LoadingButton/LoadingButton.js");
-/* harmony import */ var _mui_material_Box__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @mui/material/Box */ "./node_modules/@mui/material/Box/Box.js");
-/* harmony import */ var _mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @mui/icons-material/Save */ "./node_modules/@mui/icons-material/Save.js");
-/* harmony import */ var _mui_material_Alert__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @mui/material/Alert */ "./node_modules/@mui/material/Alert/Alert.js");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var _mui_material_Button__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @mui/material/Button */ "./node_modules/@mui/material/Button/Button.js");
+/* harmony import */ var _mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @mui/lab/LoadingButton */ "./node_modules/@mui/lab/LoadingButton/LoadingButton.js");
+/* harmony import */ var _mui_material_Box__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @mui/material/Box */ "./node_modules/@mui/material/Box/Box.js");
+/* harmony import */ var _mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @mui/icons-material/Save */ "./node_modules/@mui/icons-material/Save.js");
+/* harmony import */ var _mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @mui/material/Alert */ "./node_modules/@mui/material/Alert/Alert.js");
+/* harmony import */ var _AlertMessage__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AlertMessage */ "./src/popup/AlertMessage.tsx");
+
 /*********************************************************
  *
  *
@@ -45451,7 +46734,8 @@ COMPLETEを表示してしまうこと
 
 監視する値はpreviousBuildingであるべきかも
 props.built && previous.buildingならば
-COMPLETEを
+COMPLETEをアニメーション表示にする
+という仕様にすればいいかも
 */
 
 
@@ -45459,6 +46743,12 @@ COMPLETEを
 
 
 
+
+// NOTE: alertTimer > slideTimer (+ slide timeout time)
+const TIMERS = {
+    alertLifeTimer: 5000,
+    slideTimer: 3000,
+};
 /*********************************
  * @param props
  * correctUrl
@@ -45468,10 +46758,9 @@ COMPLETEを
  *
  * */
 function Content(props) {
-    const [timer, setTimer] = react__WEBPACK_IMPORTED_MODULE_0__.useState(false);
-    const [built, setBuilt] = react__WEBPACK_IMPORTED_MODULE_0__.useState(false);
-    const _ref = react__WEBPACK_IMPORTED_MODULE_0__.useRef(null);
-    const prev = usePrevious(props.built);
+    const [alert, setAlert] = react__WEBPACK_IMPORTED_MODULE_1__.useState(false);
+    const _ref = react__WEBPACK_IMPORTED_MODULE_1__.useRef(null);
+    const previousBuilding = usePrevious(props.building);
     /*****************************
      * 以前のpropsの状態を保持して返す関数
      *
@@ -45480,48 +46769,48 @@ function Content(props) {
      * https://blog.logrocket.com/accessing-previous-props-state-react-hooks/
      * */
     function usePrevious(value) {
-        const ref = react__WEBPACK_IMPORTED_MODULE_0__.useRef();
-        react__WEBPACK_IMPORTED_MODULE_0__.useEffect(() => {
+        const ref = react__WEBPACK_IMPORTED_MODULE_1__.useRef();
+        react__WEBPACK_IMPORTED_MODULE_1__.useEffect(() => {
             ref.current = value;
         });
         return ref.current;
     }
-    react__WEBPACK_IMPORTED_MODULE_0__.useEffect(function () {
-        const wasThisAlreadyBuild = prev;
-        if (wasThisAlreadyBuild === undefined)
-            return;
-        if (props.built && !wasThisAlreadyBuild) {
-            // TODO: 
+    // もしもREBUILDINGが終わった瞬間ならばアラートをかける
+    react__WEBPACK_IMPORTED_MODULE_1__.useEffect(function () {
+        if (props.built && previousBuilding) {
+            console.log('?????');
+            setAlert(true);
         }
-    }, [props.built]);
+    });
+    // alertがtrueなら指定時間後にfalseに戻す
+    react__WEBPACK_IMPORTED_MODULE_1__.useEffect(function () {
+        let timer = null;
+        if (alert) {
+            console.log('!!!!!');
+            timer = setTimeout(function () {
+                setAlert(false);
+            }, TIMERS.alertLifeTimer);
+            return () => {
+                clearTimeout(timer);
+            };
+        }
+    }, [alert]);
     const generateRunButton = () => {
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Button__WEBPACK_IMPORTED_MODULE_1__["default"], { sx: { backgroundColor: 'purple', width: '80%' }, variant: "contained", onClick: props.handlerOfToggle }, "REBUILD"));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { backgroundColor: 'purple', width: '80%' }, variant: "contained", onClick: props.handlerOfToggle }, { children: "REBUILD" }), void 0));
     };
     const generateLoadingButton = () => {
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_2__["default"], { sx: { width: '80%' }, loading: props.building, loadingPosition: "start", startIcon: react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_3__["default"], null), variant: "outlined", disabled: true }, "REBUILDING..."));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_4__["default"], Object.assign({ sx: { width: '80%' }, loading: props.building, loadingPosition: "start", startIcon: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_5__["default"], {}, void 0), variant: "outlined", disabled: true }, { children: "REBUILDING..." }), void 0));
     };
-    //   "COMPLETE!"は短い間だけ表示して、あとは"展開中"みたいな表示にしたい
     const generateSuccess = () => {
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_4__["default"], { sx: { width: '80%' }, variant: "filled", severity: "success" }, "COMPLETE!"));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_AlertMessage__WEBPACK_IMPORTED_MODULE_2__["default"], Object.assign({ timer: TIMERS.slideTimer, _ref: _ref, show: props.built }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ sx: { width: '80%' }, variant: "filled", severity: "success" }, { children: "COMPLETE!" }), void 0) }), void 0));
+    };
+    const generateRunning = () => {
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { backgroundColor: 'purple', width: '80%' }, variant: "contained", onClick: props.handlerOfToggle, disabled: true }, { children: "Running..." }), void 0));
     };
     const content = () => {
         let generated = null;
         if (props.built) {
-            // setTimer(true);
-            // generated = (
-            //     <Slide
-            //         in={timer}
-            //         direction="right"
-            //         container={_ref.current}
-            //         easing={'ease-out'}
-            //         timeout={600}
-            //     >
-            //         {generateSuccess()}
-            //     </Slide>
-            // );
-            // setTimeout(function () {
-            //     setTimer(false);
-            // }, 3000);
+            generated = generateRunning();
         }
         else if (props.building) {
             generated = generateLoadingButton();
@@ -45532,42 +46821,10 @@ function Content(props) {
         return generated;
     };
     const generateNotice = () => {
-        return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_4__["default"], { variant: "outlined", severity: "info", sx: { width: "300px" } }, "Extension is available on the Udemy lecture page"));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ variant: "outlined", severity: "info", sx: { width: '300px' } }, { children: "Extension is available on the Udemy lecture page" }), void 0));
     };
-    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Box__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', alignItems: 'center', pl: 1, pb: 1 }, ref: _ref }, props.correctUrl ? content() : generateNotice()));
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Box__WEBPACK_IMPORTED_MODULE_7__["default"], Object.assign({ sx: { display: 'flex', alignItems: 'center', pl: 1, pb: 1 }, ref: _ref }, { children: [alert ? generateSuccess() : null, props.correctUrl ? content() : generateNotice()] }), void 0));
 }
-/*
-MainContent ...ネーミングセンスなさすぎ問題あとで変える
-
-Container(aka.MainContent)
-    Title
-    Introduction
-    Content
-        Button(RUN/LOADING/COMPLETE!)
-        Alerts
-
-
-condition
-    correctUrl ? CONTENT {LOADING | RUN | COMPLETE} : ALERT
-    CONTENT
-        building ? LOADING
-        built ? COMPLETE
-        !building && !built ? RUN
-
-
-TODO:
-
-    propsというかstateの値の節約：役割被っているからいらない値ある...
-    コンポーネントの分割
-    字大きすぎる小さくする
-    併せて全体の幅狭くして
-
-    OFFボタンを実装していない
-    ともなって完了の表示と展開中であること示すviewとOFFボタンをどうやって両立させるか...
-
-    完了、
-
-*/
 
 
 /***/ }),
@@ -45583,7 +46840,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (/* binding */ MainContent)
 /* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
 /* harmony import */ var _mui_material_styles__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @mui/material/styles */ "./node_modules/@mui/material/styles/useTheme.js");
 /* harmony import */ var _mui_material_Box__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @mui/material/Box */ "./node_modules/@mui/material/Box/Box.js");
 /* harmony import */ var _mui_material_Card__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @mui/material/Card */ "./node_modules/@mui/material/Card/Card.js");
@@ -45591,33 +46848,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _mui_material_CardMedia__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @mui/material/CardMedia */ "./node_modules/@mui/material/CardMedia/CardMedia.js");
 /* harmony import */ var _mui_material_Typography__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @mui/material/Typography */ "./node_modules/@mui/material/Typography/Typography.js");
 /* harmony import */ var _Content__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Content */ "./src/popup/Content.tsx");
-/*********************************************************
- *
- *
- * ********************************************************/
-/* DEVELOPMENT NOTE
-
-props:
-
-<MainContent
-    built={built}
-    building={building}
-    correctUrl={correctUrl}
-    turningOn={turningOn}
-    disable={disableSlider}
-    handlerOfToggle={handlerOfToggle}
-/>
-
-built: 拡張機能が実行中ならばtrue
-building: 拡張機能がRUNされて構築中ならばtrue
-correctUrl: Popupが開かれたときのURLが許可URLなのかどうか
-
-
-turningOn: スライダーがONならばtrue(存在意義がbuiltとかぶっている)
-disableSlider: スライダーを無効にしたいとき。構築中とOFF処理中の時とか
-
-handlerOfToggle: 実行ボタンが押されたときに発火する関数
-*/
 
 
 
@@ -45628,43 +46858,10 @@ handlerOfToggle: 実行ボタンが押されたときに発火する関数
 
 function MainContent(props) {
     const theme = (0,_mui_material_styles__WEBPACK_IMPORTED_MODULE_2__["default"])();
-    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Card__WEBPACK_IMPORTED_MODULE_3__["default"], { sx: { display: "flex" } },
-        react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Box__WEBPACK_IMPORTED_MODULE_4__["default"], { sx: { display: "flex", flexDirection: "column" } },
-            react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_CardContent__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { flex: "1 0 auto" } },
-                react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_6__["default"], { component: "div", variant: "h5" }, "Udemy Re Transcript"),
-                react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "subtitle1", color: "text.secondary", component: "div" }, "Udemy transcript subtitles are reconstructed into easy-to-translate sentences by the translation app")),
-            react__WEBPACK_IMPORTED_MODULE_0__.createElement(_Content__WEBPACK_IMPORTED_MODULE_1__["default"], { correctUrl: props.correctUrl, built: props.built, building: props.building, handlerOfToggle: props.handlerOfToggle })),
-        react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_CardMedia__WEBPACK_IMPORTED_MODULE_7__["default"], { component: "img", 
-            // heightを指定しないと表示されないよとのこと
-            sx: { width: 180, height: 180 }, image: "../static/udemy-re-transcript-512.svg", alt: "Udemy Re Transcript icon" })));
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Card__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { display: "flex" } }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Box__WEBPACK_IMPORTED_MODULE_4__["default"], Object.assign({ sx: { display: "flex", flexDirection: "column" } }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_CardContent__WEBPACK_IMPORTED_MODULE_5__["default"], Object.assign({ sx: { flex: "1 0 auto" } }, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ component: "div", variant: "h5" }, { children: "Udemy Re Transcript" }), void 0), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Typography__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ variant: "subtitle1", color: "text.secondary", component: "div" }, { children: "Udemy transcript subtitles are reconstructed into easy-to-translate sentences by the translation app" }), void 0)] }), void 0), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Content__WEBPACK_IMPORTED_MODULE_1__["default"], { correctUrl: props.correctUrl, built: props.built, building: props.building, handlerOfToggle: props.handlerOfToggle }, void 0)] }), void 0), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_CardMedia__WEBPACK_IMPORTED_MODULE_7__["default"], { component: "img", 
+                // heightを指定しないと表示されないよとのこと
+                sx: { width: 180, height: 180 }, image: "../static/udemy-re-transcript-512.svg", alt: "Udemy Re Transcript icon" }, void 0)] }), void 0));
 }
-/*
-MainContent ...ネーミングセンスなさすぎ問題あとで変える
-
-Container(aka.MainContent)
-    Title
-    Introduction
-    Content
-        Button(RUN/LOADING/COMPLETE!)
-        Alerts
-
-
-condition
-    correctUrl ? CONTENT {LOADING | RUN | COMPLETE} : ALERT
-    CONTENT
-        building ? LOADING
-        built ? COMPLETE
-        !building && !built ? RUN
-
-
-TODO:
-
-    propsというかstateの値の節約：役割被っているからいらない値ある...
-    コンポーネントの分割
-    字大きすぎる小さくする
-    併せて全体の幅狭くして
-
-*/
 
 
 /***/ }),
@@ -47265,13 +48462,15 @@ var __webpack_exports__ = {};
   !*** ./src/popup/popup.tsx ***!
   \*****************************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
-/* harmony import */ var _utils_constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/constants */ "./src/utils/constants.ts");
-/* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
-/* harmony import */ var _popup_css__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./popup.css */ "./src/popup/popup.css");
-/* harmony import */ var _MainContent__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./MainContent */ "./src/popup/MainContent.tsx");
-/* harmony import */ var _mui_material_styles__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @mui/material/styles */ "./node_modules/@mui/styled-engine/StyledEngineProvider/StyledEngineProvider.js");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
+/* harmony import */ var _utils_constants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/constants */ "./src/utils/constants.ts");
+/* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
+/* harmony import */ var _popup_css__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./popup.css */ "./src/popup/popup.css");
+/* harmony import */ var _MainContent__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./MainContent */ "./src/popup/MainContent.tsx");
+/* harmony import */ var _mui_material_styles__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @mui/material/styles */ "./node_modules/@mui/styled-engine/StyledEngineProvider/StyledEngineProvider.js");
+
 /*******************************************************
  *  POPUP
  * _____________________________________________________
@@ -47290,28 +48489,28 @@ __webpack_require__.r(__webpack_exports__);
 
 const Popup = () => {
     // popupが開かれたときのURLが、拡張機能が有効になるべきURLなのか
-    const [correctUrl, setCorrectUrl] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const [correctUrl, setCorrectUrl] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
     // RUNボタンが押されて、結果待ちの状態ならばtrue それ以外はfalse
-    const [building, setBuilding] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const [building, setBuilding] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
     // 正常に拡張機能が実行されたらtrue
-    const [built, setBuilt] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const [built, setBuilt] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
     // Saves Tab いらないかも...
-    const [tabInfo, setTabInfo] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+    const [tabInfo, setTabInfo] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(null);
     //   NOTE: new added. スライダーをONにしたらtrue
-    const [turningOn, setTurningOn] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const [turningOn, setTurningOn] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
     //   NOTE: new added. スライダーを動かしたら、処理が完了するまでtrue
-    const [disableSlider, setDisableSlider] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    const [disableSlider, setDisableSlider] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
+    (0,react__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
         // NOTE: DON'T USE AWAIT inside of useEffect().
         console.log("[popup] OPENED");
         verifyValidPage();
     }, []);
     // Get current state from background script.
-    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-        (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
-            from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
-            to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
-            order: [_utils_constants__WEBPACK_IMPORTED_MODULE_2__.orderNames.sendStatus],
+    (0,react__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
+        (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_4__.sendMessagePromise)({
+            from: _utils_constants__WEBPACK_IMPORTED_MODULE_3__.extensionNames.popup,
+            to: _utils_constants__WEBPACK_IMPORTED_MODULE_3__.extensionNames.background,
+            order: [_utils_constants__WEBPACK_IMPORTED_MODULE_3__.orderNames.sendStatus],
         }).then((res) => {
             const { isSubtitleCapturing, isExTranscriptStructured } = res.state;
             setBuilding(isSubtitleCapturing);
@@ -47336,7 +48535,7 @@ const Popup = () => {
         })
             .then((tabs) => {
             console.log(tabs);
-            const r = tabs[0].url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_2__.urlPattern);
+            const r = tabs[0].url.match(_utils_constants__WEBPACK_IMPORTED_MODULE_3__.urlPattern);
             console.log(`Is this page valid?: ${r && r.length ? true : false}`);
             if (r && r.length) {
                 setCorrectUrl(true);
@@ -47357,10 +48556,10 @@ const Popup = () => {
             throw new Error("Error: tabInfo is null");
         setBuilding(true);
         console.log("[popup] Rebuilding...");
-        (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
-            from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
-            to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
-            order: [_utils_constants__WEBPACK_IMPORTED_MODULE_2__.orderNames.run],
+        (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_4__.sendMessagePromise)({
+            from: _utils_constants__WEBPACK_IMPORTED_MODULE_3__.extensionNames.popup,
+            to: _utils_constants__WEBPACK_IMPORTED_MODULE_3__.extensionNames.background,
+            order: [_utils_constants__WEBPACK_IMPORTED_MODULE_3__.orderNames.run],
             tabInfo: tabInfo,
         })
             // NOTE: !res.successはRUNするためのページ環境になっていないことを示し、アプリケーションのエラーではない
@@ -47381,10 +48580,10 @@ const Popup = () => {
         });
     };
     const handlerOfTurnOff = () => {
-        (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_3__.sendMessagePromise)({
-            from: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.popup,
-            to: _utils_constants__WEBPACK_IMPORTED_MODULE_2__.extensionNames.background,
-            order: [_utils_constants__WEBPACK_IMPORTED_MODULE_2__.orderNames.turnOff],
+        (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_4__.sendMessagePromise)({
+            from: _utils_constants__WEBPACK_IMPORTED_MODULE_3__.extensionNames.popup,
+            to: _utils_constants__WEBPACK_IMPORTED_MODULE_3__.extensionNames.background,
+            order: [_utils_constants__WEBPACK_IMPORTED_MODULE_3__.orderNames.turnOff],
         })
             .then(() => {
             // if (!res.success)
@@ -47416,13 +48615,11 @@ const Popup = () => {
                 handlerOfRun();
             })();
     };
-    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement(_mui_material_styles__WEBPACK_IMPORTED_MODULE_6__["default"], { injectFirst: true },
-        react__WEBPACK_IMPORTED_MODULE_0__.createElement(_MainContent__WEBPACK_IMPORTED_MODULE_5__["default"], { built: built, building: building, correctUrl: correctUrl, turningOn: turningOn, disable: disableSlider, handlerOfToggle: handlerOfToggle })));
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_styles__WEBPACK_IMPORTED_MODULE_7__["default"], Object.assign({ injectFirst: true }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_MainContent__WEBPACK_IMPORTED_MODULE_6__["default"], { built: built, building: building, correctUrl: correctUrl, turningOn: turningOn, disable: disableSlider, handlerOfToggle: handlerOfToggle }, void 0) }), void 0));
 };
 const root = document.createElement("div");
 document.body.appendChild(root);
-react_dom__WEBPACK_IMPORTED_MODULE_1__.render(react__WEBPACK_IMPORTED_MODULE_0__.createElement(Popup, null), root);
-// legacy code -------------
+react_dom__WEBPACK_IMPORTED_MODULE_2__.render((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(Popup, {}, void 0), root);
 
 })();
 
