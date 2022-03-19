@@ -8839,6 +8839,122 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./node_modules/@mui/private-theming/ThemeProvider/ThemeProvider.js":
+/*!**************************************************************************!*\
+  !*** ./node_modules/@mui/private-theming/ThemeProvider/ThemeProvider.js ***!
+  \**************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/extends */ "./node_modules/@babel/runtime/helpers/esm/extends.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var _mui_utils__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @mui/utils */ "./node_modules/@mui/utils/esm/exactProp.js");
+/* harmony import */ var _useTheme_ThemeContext__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../useTheme/ThemeContext */ "./node_modules/@mui/private-theming/useTheme/ThemeContext.js");
+/* harmony import */ var _useTheme__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../useTheme */ "./node_modules/@mui/private-theming/useTheme/useTheme.js");
+/* harmony import */ var _nested__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./nested */ "./node_modules/@mui/private-theming/ThemeProvider/nested.js");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+
+
+
+
+
+
+ // To support composition of theme.
+
+
+
+function mergeOuterLocalTheme(outerTheme, localTheme) {
+  if (typeof localTheme === 'function') {
+    const mergedTheme = localTheme(outerTheme);
+
+    if (true) {
+      if (!mergedTheme) {
+        console.error(['MUI: You should return an object from your theme function, i.e.', '<ThemeProvider theme={() => ({})} />'].join('\n'));
+      }
+    }
+
+    return mergedTheme;
+  }
+
+  return (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({}, outerTheme, localTheme);
+}
+/**
+ * This component takes a `theme` prop.
+ * It makes the `theme` available down the React tree thanks to React context.
+ * This component should preferably be used at **the root of your component tree**.
+ */
+
+
+function ThemeProvider(props) {
+  const {
+    children,
+    theme: localTheme
+  } = props;
+  const outerTheme = (0,_useTheme__WEBPACK_IMPORTED_MODULE_3__["default"])();
+
+  if (true) {
+    if (outerTheme === null && typeof localTheme === 'function') {
+      console.error(['MUI: You are providing a theme function prop to the ThemeProvider component:', '<ThemeProvider theme={outerTheme => outerTheme} />', '', 'However, no outer theme is present.', 'Make sure a theme is already injected higher in the React tree ' + 'or provide a theme object.'].join('\n'));
+    }
+  }
+
+  const theme = react__WEBPACK_IMPORTED_MODULE_1__.useMemo(() => {
+    const output = outerTheme === null ? localTheme : mergeOuterLocalTheme(outerTheme, localTheme);
+
+    if (output != null) {
+      output[_nested__WEBPACK_IMPORTED_MODULE_4__["default"]] = outerTheme !== null;
+    }
+
+    return output;
+  }, [localTheme, outerTheme]);
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(_useTheme_ThemeContext__WEBPACK_IMPORTED_MODULE_5__["default"].Provider, {
+    value: theme,
+    children: children
+  });
+}
+
+ true ? ThemeProvider.propTypes = {
+  /**
+   * Your component tree.
+   */
+  children: (prop_types__WEBPACK_IMPORTED_MODULE_6___default().node),
+
+  /**
+   * A theme object. You can provide a function to extend the outer theme.
+   */
+  theme: prop_types__WEBPACK_IMPORTED_MODULE_6___default().oneOfType([(prop_types__WEBPACK_IMPORTED_MODULE_6___default().object), (prop_types__WEBPACK_IMPORTED_MODULE_6___default().func)]).isRequired
+} : 0;
+
+if (true) {
+   true ? ThemeProvider.propTypes = (0,_mui_utils__WEBPACK_IMPORTED_MODULE_7__["default"])(ThemeProvider.propTypes) : 0;
+}
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ThemeProvider);
+
+/***/ }),
+
+/***/ "./node_modules/@mui/private-theming/ThemeProvider/nested.js":
+/*!*******************************************************************!*\
+  !*** ./node_modules/@mui/private-theming/ThemeProvider/nested.js ***!
+  \*******************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+const hasSymbol = typeof Symbol === 'function' && Symbol.for;
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (hasSymbol ? Symbol.for('mui.nested') : '__THEME_NESTED__');
+
+/***/ }),
+
 /***/ "./node_modules/@mui/private-theming/useTheme/ThemeContext.js":
 /*!********************************************************************!*\
   !*** ./node_modules/@mui/private-theming/useTheme/ThemeContext.js ***!
@@ -9035,6 +9151,85 @@ function styled(tag, options) {
 
 
 
+
+/***/ }),
+
+/***/ "./node_modules/@mui/system/esm/ThemeProvider/ThemeProvider.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/@mui/system/esm/ThemeProvider/ThemeProvider.js ***!
+  \*********************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _mui_private_theming__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @mui/private-theming */ "./node_modules/@mui/private-theming/ThemeProvider/ThemeProvider.js");
+/* harmony import */ var _mui_utils__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @mui/utils */ "./node_modules/@mui/utils/esm/exactProp.js");
+/* harmony import */ var _mui_styled_engine__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @mui/styled-engine */ "./node_modules/@emotion/react/dist/emotion-element-cbed451f.browser.esm.js");
+/* harmony import */ var _useTheme__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../useTheme */ "./node_modules/@mui/system/esm/useTheme.js");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+
+
+
+
+
+
+
+
+function InnerThemeProvider(props) {
+  const theme = (0,_useTheme__WEBPACK_IMPORTED_MODULE_2__["default"])();
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(_mui_styled_engine__WEBPACK_IMPORTED_MODULE_3__.T.Provider, {
+    value: typeof theme === 'object' ? theme : {},
+    children: props.children
+  });
+}
+
+ true ? InnerThemeProvider.propTypes = {
+  /**
+   * Your component tree.
+   */
+  children: (prop_types__WEBPACK_IMPORTED_MODULE_4___default().node)
+} : 0;
+/**
+ * This component makes the `theme` available down the React tree.
+ * It should preferably be used at **the root of your component tree**.
+ */
+
+function ThemeProvider(props) {
+  const {
+    children,
+    theme: localTheme
+  } = props;
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(_mui_private_theming__WEBPACK_IMPORTED_MODULE_5__["default"], {
+    theme: localTheme,
+    children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(InnerThemeProvider, {
+      children: children
+    })
+  });
+}
+
+ true ? ThemeProvider.propTypes = {
+  /**
+   * Your component tree.
+   */
+  children: (prop_types__WEBPACK_IMPORTED_MODULE_4___default().node),
+
+  /**
+   * A theme object. You can provide a function to extend the outer theme.
+   */
+  theme: prop_types__WEBPACK_IMPORTED_MODULE_4___default().oneOfType([(prop_types__WEBPACK_IMPORTED_MODULE_4___default().object), (prop_types__WEBPACK_IMPORTED_MODULE_4___default().func)]).isRequired
+} : 0;
+
+if (true) {
+   true ? ThemeProvider.propTypes = (0,_mui_utils__WEBPACK_IMPORTED_MODULE_6__["default"])(ThemeProvider.propTypes) : 0;
+}
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ThemeProvider);
 
 /***/ }),
 
@@ -11870,6 +12065,41 @@ function elementTypeAcceptingRef(props, propName, componentName, location, propF
 }
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ((0,_chainPropTypes__WEBPACK_IMPORTED_MODULE_0__["default"])((prop_types__WEBPACK_IMPORTED_MODULE_1___default().elementType), elementTypeAcceptingRef));
+
+/***/ }),
+
+/***/ "./node_modules/@mui/utils/esm/exactProp.js":
+/*!**************************************************!*\
+  !*** ./node_modules/@mui/utils/esm/exactProp.js ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ exactProp)
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/extends */ "./node_modules/@babel/runtime/helpers/esm/extends.js");
+
+// This module is based on https://github.com/airbnb/prop-types-exact repository.
+// However, in order to reduce the number of dependencies and to remove some extra safe checks
+// the module was forked.
+const specialProperty = 'exact-prop: \u200b';
+function exactProp(propTypes) {
+  if (false) {}
+
+  return (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({}, propTypes, {
+    [specialProperty]: props => {
+      const unsupportedProps = Object.keys(props).filter(prop => !propTypes.hasOwnProperty(prop));
+
+      if (unsupportedProps.length > 0) {
+        return new Error(`The following props are not supported: ${unsupportedProps.map(prop => `\`${prop}\``).join(', ')}. Please remove them.`);
+      }
+
+      return null;
+    }
+  });
+}
 
 /***/ }),
 
@@ -47087,24 +47317,32 @@ function Content(props) {
         return ref.current;
     }
     const generateRunButton = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { backgroundColor: 'purple', width: '80%' }, variant: "contained", onClick: props.handlerOfToggle }, { children: "REBUILD" }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: {
+                // backgroundColor: 'purple',
+                width: "80%",
+            }, variant: "contained", onClick: props.handlerOfToggle, color: "primary" }, { children: "REBUILD" }), void 0));
     };
     const generateLoadingButton = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_4__["default"], Object.assign({ sx: { width: '80%' }, loading: props.building, loadingPosition: "start", startIcon: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_5__["default"], {}, void 0), variant: "outlined", disabled: true }, { children: "REBUILDING..." }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_4__["default"], Object.assign({ sx: {
+                width: "80%",
+            }, color: "secondary", loading: props.building, loadingPosition: "start", startIcon: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_5__["default"], {}, void 0), variant: "text", disabled: true }, { children: "REBUILDING..." }), void 0));
     };
     const generateSuccess = () => {
         return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_AlertMessage__WEBPACK_IMPORTED_MODULE_2__["default"], Object.assign({ timer: TIMERS.slideTimer, _ref: _ref, show: props.built }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ sx: {
-                    width: '80%',
-                    '& 	.MuiAlert-message': {
+                    width: "80%",
+                    "& 	.MuiAlert-message": {
                         padding: 0,
                     },
-                    '& .MuiAlert-icon': {
+                    "& .MuiAlert-icon": {
                         padding: 0,
                     },
                 }, variant: "filled", severity: "success" }, { children: "COMPLETE!" }), void 0) }), void 0));
     };
     const generateTurnOffButton = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Grow__WEBPACK_IMPORTED_MODULE_7__["default"], Object.assign({ in: true }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { backgroundColor: 'blueviolet', width: '80%' }, variant: "contained", onClick: props.handlerOfToggle }, { children: "TURN OFF" }), void 0) }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Grow__WEBPACK_IMPORTED_MODULE_7__["default"], Object.assign({ in: true }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: {
+                    // backgroundColor: 'blueviolet',
+                    width: "80%",
+                }, variant: "contained", onClick: props.handlerOfToggle, color: "secondary" }, { children: "TURN OFF" }), void 0) }), void 0));
     };
     const content = () => {
         let generated = null;
@@ -47123,9 +47361,9 @@ function Content(props) {
         return generated;
     };
     const generateNotice = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ variant: "outlined", severity: "info", sx: { width: '300px' } }, { children: "Extension is available on the Udemy lecture page" }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ variant: "outlined", severity: "info", sx: { width: "300px" } }, { children: "Extension is available on the Udemy lecture page" }), void 0));
     };
-    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Box__WEBPACK_IMPORTED_MODULE_8__["default"], Object.assign({ sx: { display: 'flex', alignItems: 'center', pl: 1, pb: 1 }, ref: _ref }, { children: [alert ? generateSuccess() : null, props.correctUrl ? content() : generateNotice()] }), void 0));
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Box__WEBPACK_IMPORTED_MODULE_8__["default"], Object.assign({ sx: { display: "flex", alignItems: "center", pl: 1, pb: 1 }, ref: _ref }, { children: [alert ? generateSuccess() : null, props.correctUrl ? content() : generateNotice()] }), void 0));
 }
 
 
@@ -48778,6 +49016,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
 /* harmony import */ var _popup_css__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./popup.css */ "./src/popup/popup.css");
 /* harmony import */ var _MainContent__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./MainContent */ "./src/popup/MainContent.tsx");
+/* harmony import */ var _mui_material_styles__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @mui/material/styles */ "./node_modules/@mui/material/styles/createTheme.js");
+/* harmony import */ var _mui_material_styles__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @mui/material/styles */ "./node_modules/@mui/system/esm/ThemeProvider/ThemeProvider.js");
 
 /*******************************************************
  *  POPUP
@@ -48788,10 +49028,7 @@ __webpack_require__.r(__webpack_exports__);
  *******************************************************/
 /*
 TODO:
-    - Button hoverしたときの色を変更する
-    - Alertのボックスの大きさとButtonの大きさ一致していない。変。
     - Errorメッセージの表示
-    - themeの統一
     - 後回しでいい LoadingButtonのLoadingの色を薄くしない
 
 
@@ -48802,6 +49039,23 @@ TODO:
 
 
 
+
+const theme = (0,_mui_material_styles__WEBPACK_IMPORTED_MODULE_7__["default"])({
+    palette: {
+        // purple base
+        primary: {
+            main: "#6f006f",
+            light: "#a200a2",
+            dark: "#5e005e",
+        },
+        // Udemy theme color
+        secondary: {
+            main: "#5624d0",
+            light: "#6939dd",
+            dark: "#4a1fb3",
+        },
+    },
+});
 const Popup = () => {
     // popupが開かれたときのURLが、拡張機能が有効になるべきURLなのか
     const [correctUrl, setCorrectUrl] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
@@ -48813,25 +49067,6 @@ const Popup = () => {
     const [tabInfo, setTabInfo] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(null);
     // toggleボタンがonならtrue
     const [turningOn, setTurningOn] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
-    // //   MUI custom theme
-    //     const paletteTheme = createTheme({
-    //         palette: {
-    //             // purple base
-    //             primary: {
-    //               main: "6f006f",
-    //               light: "a200a2",
-    //               dark: "5e005e"
-    //             },
-    //             // Udemy theme color
-    //             secondary: {
-    //                 main: "5624d0",
-    //                 light: "6939dd",
-    //                 dark: "4a1fb3"
-    //             }
-    //           },
-    //     });
-    //     const buttonTheme = createTheme({
-    //     })
     (0,react__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
         // NOTE: DON'T USE AWAIT inside of useEffect().
         console.log("[popup] OPENED");
@@ -48900,7 +49135,6 @@ const Popup = () => {
             console.log("[popup] Rebuilding Successfully Complete!");
             setBuilt(success);
             setBuilding(false);
-            ;
         })
             .catch((e) => {
             setBuilt(false);
@@ -48939,7 +49173,7 @@ const Popup = () => {
                 handlerOfRun();
             })();
     };
-    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_MainContent__WEBPACK_IMPORTED_MODULE_6__["default"], { built: built, building: building, correctUrl: correctUrl, handlerOfToggle: handlerOfToggle }, void 0) }, void 0));
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_styles__WEBPACK_IMPORTED_MODULE_8__["default"], Object.assign({ theme: theme }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_MainContent__WEBPACK_IMPORTED_MODULE_6__["default"], { built: built, building: building, correctUrl: correctUrl, handlerOfToggle: handlerOfToggle }, void 0) }), void 0));
 };
 const root = document.createElement("div");
 document.body.appendChild(root);

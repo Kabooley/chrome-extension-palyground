@@ -3,19 +3,16 @@
  * _____________________________________________________
  *
  * NOTE:  state never retain its value!!
- * 
+ *
  *******************************************************/
 
 /*
 TODO: 
-    - Button hoverしたときの色を変更する
-    - Alertのボックスの大きさとButtonの大きさ一致していない。変。
     - Errorメッセージの表示
-    - themeの統一
     - 後回しでいい LoadingButtonのLoadingの色を薄くしない
 
 
-*/ 
+*/
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import {
@@ -28,7 +25,24 @@ import {
 import { sendMessagePromise } from "../utils/helpers";
 import "./popup.css";
 import MainContent from "./MainContent";
-import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
+import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
+
+const theme = createTheme({
+  palette: {
+    // purple base
+    primary: {
+      main: "#6f006f",
+      light: "#a200a2",
+      dark: "#5e005e",
+    },
+    // Udemy theme color
+    secondary: {
+      main: "#5624d0",
+      light: "#6939dd",
+      dark: "#4a1fb3",
+    },
+  },
+});
 
 const Popup = (): JSX.Element => {
   // popupが開かれたときのURLが、拡張機能が有効になるべきURLなのか
@@ -41,28 +55,6 @@ const Popup = (): JSX.Element => {
   const [tabInfo, setTabInfo] = useState<chrome.tabs.Tab>(null);
   // toggleボタンがonならtrue
   const [turningOn, setTurningOn] = useState<boolean>(false);
-
-// //   MUI custom theme
-//     const paletteTheme = createTheme({
-//         palette: {
-//             // purple base
-//             primary: {
-//               main: "6f006f",
-//               light: "a200a2",
-//               dark: "5e005e"
-//             },
-//             // Udemy theme color
-//             secondary: {
-//                 main: "5624d0",
-//                 light: "6939dd",
-//                 dark: "4a1fb3"
-//             }
-//           },
-//     });
-
-//     const buttonTheme = createTheme({
-
-//     })
 
   useEffect(() => {
     // NOTE: DON'T USE AWAIT inside of useEffect().
@@ -135,7 +127,6 @@ const Popup = (): JSX.Element => {
         console.log("[popup] Rebuilding Successfully Complete!");
         setBuilt(success);
         setBuilding(false);
-        ;
       })
       .catch((e) => {
         setBuilt(false);
@@ -178,14 +169,14 @@ const Popup = (): JSX.Element => {
   };
 
   return (
-    <div>
+    <ThemeProvider theme={theme}>
       <MainContent
         built={built}
         building={building}
         correctUrl={correctUrl}
         handlerOfToggle={handlerOfToggle}
       />
-    </div>
+    </ThemeProvider>
   );
 };
 
