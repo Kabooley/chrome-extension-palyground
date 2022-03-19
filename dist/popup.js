@@ -47036,8 +47036,8 @@ __webpack_require__.r(__webpack_exports__);
 
 // NOTE: alertTimer MUST BE OVER slideTimer + Slide timeout time
 const TIMERS = {
-    alertLifeTimer: 10200,
-    slideTimer: 9000,
+    alertLifeTimer: 4200,
+    slideTimer: 3000,
 };
 /*********************************************************************
  * @param props
@@ -47087,16 +47087,24 @@ function Content(props) {
         return ref.current;
     }
     const generateRunButton = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { backgroundColor: "purple", width: "80%" }, variant: "contained", onClick: props.handlerOfToggle }, { children: "REBUILD" }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { backgroundColor: 'purple', width: '80%' }, variant: "contained", onClick: props.handlerOfToggle }, { children: "REBUILD" }), void 0));
     };
     const generateLoadingButton = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_4__["default"], Object.assign({ sx: { width: "80%" }, loading: props.building, loadingPosition: "start", startIcon: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_5__["default"], {}, void 0), variant: "outlined", disabled: true }, { children: "REBUILDING..." }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_lab_LoadingButton__WEBPACK_IMPORTED_MODULE_4__["default"], Object.assign({ sx: { width: '80%' }, loading: props.building, loadingPosition: "start", startIcon: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material_Save__WEBPACK_IMPORTED_MODULE_5__["default"], {}, void 0), variant: "outlined", disabled: true }, { children: "REBUILDING..." }), void 0));
     };
     const generateSuccess = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_AlertMessage__WEBPACK_IMPORTED_MODULE_2__["default"], Object.assign({ timer: TIMERS.slideTimer, _ref: _ref, show: props.built }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ sx: { width: "80%" }, variant: "filled", severity: "success" }, { children: "COMPLETE!" }), void 0) }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_AlertMessage__WEBPACK_IMPORTED_MODULE_2__["default"], Object.assign({ timer: TIMERS.slideTimer, _ref: _ref, show: props.built }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ sx: {
+                    width: '80%',
+                    '& 	.MuiAlert-message': {
+                        padding: 0,
+                    },
+                    '& .MuiAlert-icon': {
+                        padding: 0,
+                    },
+                }, variant: "filled", severity: "success" }, { children: "COMPLETE!" }), void 0) }), void 0));
     };
     const generateTurnOffButton = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Grow__WEBPACK_IMPORTED_MODULE_7__["default"], Object.assign({ in: true }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { backgroundColor: "blueviolet", width: "80%" }, variant: "contained", onClick: props.handlerOfToggle }, { children: "TURN OFF" }), void 0) }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Grow__WEBPACK_IMPORTED_MODULE_7__["default"], Object.assign({ in: true }, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Button__WEBPACK_IMPORTED_MODULE_3__["default"], Object.assign({ sx: { backgroundColor: 'blueviolet', width: '80%' }, variant: "contained", onClick: props.handlerOfToggle }, { children: "TURN OFF" }), void 0) }), void 0));
     };
     const content = () => {
         let generated = null;
@@ -47115,9 +47123,9 @@ function Content(props) {
         return generated;
     };
     const generateNotice = () => {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ variant: "outlined", severity: "info", sx: { width: "300px" } }, { children: "Extension is available on the Udemy lecture page" }), void 0));
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material_Alert__WEBPACK_IMPORTED_MODULE_6__["default"], Object.assign({ variant: "outlined", severity: "info", sx: { width: '300px' } }, { children: "Extension is available on the Udemy lecture page" }), void 0));
     };
-    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Box__WEBPACK_IMPORTED_MODULE_8__["default"], Object.assign({ sx: { display: "flex", alignItems: "center", pl: 1, pb: 1 }, ref: _ref }, { children: [alert ? generateSuccess() : null, props.correctUrl ? content() : generateNotice()] }), void 0));
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material_Box__WEBPACK_IMPORTED_MODULE_8__["default"], Object.assign({ sx: { display: 'flex', alignItems: 'center', pl: 1, pb: 1 }, ref: _ref }, { children: [alert ? generateSuccess() : null, props.correctUrl ? content() : generateNotice()] }), void 0));
 }
 
 
