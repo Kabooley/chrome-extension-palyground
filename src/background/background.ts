@@ -34,7 +34,7 @@ import { alertMessages } from "../Error/templates";
 // --- GLOBALS -----------------------------------------------
 //
 
-const INTERVAL_TIME = 500;
+const INTERVAL_TIME = 100;
 const KEY_LOCALSTORAGE = "__key__of_local_storage_";
 
 //
@@ -281,12 +281,13 @@ const handlerOfPopupMessage = async (
         response.success = r ? true : false;
         response.complete = true;
         // TODO: ページ環境を実行できるものにしてくれとアラート
-        if (!r) chrome.tabs.sendMessage(rest.tabInfo.id, {
+        if (!r)
+          chrome.tabs.sendMessage(rest.tabInfo.id, {
             from: extensionNames.background,
             to: extensionNames.contentScript,
             order: orderNames.alert,
-            alertMessage: alertMessages.pageIsNotReady
-        });
+            alertMessage: alertMessages.pageIsNotReady,
+          });
       } catch (e) {
         response.complete = false;
         response.error = e;

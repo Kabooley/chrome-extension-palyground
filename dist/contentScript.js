@@ -910,7 +910,7 @@ const repeatCheckQueryAcquired = (selector, timeoutAsResolve = false) => __await
     try {
         return yield (0,_utils_helpers__WEBPACK_IMPORTED_MODULE_2__.repeatActionPromise)(function () {
             return investTheElementIncluded(selector);
-        }, timeoutAsResolve, 200, 10);
+        }, timeoutAsResolve, 100, 10);
     }
     catch (e) {
         throw e;

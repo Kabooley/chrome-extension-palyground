@@ -516,7 +516,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
 //
 // --- GLOBALS -----------------------------------------------
 //
-const INTERVAL_TIME = 500;
+const INTERVAL_TIME = 100;
 const KEY_LOCALSTORAGE = "__key__of_local_storage_";
 //
 // --- Chrome API Listeners ---------------------------------
@@ -731,7 +731,7 @@ const handlerOfPopupMessage = (message, sender, sendResponse) => __awaiter(void 
                         from: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.background,
                         to: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.extensionNames.contentScript,
                         order: _utils_constants__WEBPACK_IMPORTED_MODULE_0__.orderNames.alert,
-                        alertMessage: _Error_templates__WEBPACK_IMPORTED_MODULE_3__.alertMessages.pageIsNotReady
+                        alertMessage: _Error_templates__WEBPACK_IMPORTED_MODULE_3__.alertMessages.pageIsNotReady,
                     });
             }
             catch (e) {

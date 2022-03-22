@@ -8,26 +8,24 @@ MVC と DDD の設計思想を取り入れたい
 
 ## 目次
 
+[確認できる問題走り書き](#確認できる問題走り書き)
 [デイリータスク](#デイリータスク)
 [課題](#課題)
+[仕様について](#仕様について)
 [成果記録](#成果記録)
 [1/25:処理についておさらい](#1/25:処理についておさらい)
 [chrome-extension-API](#chrome-extension-API)
 [TEST](#TEST)
 
-## デイリータスク
 
-3/12
+## 確認できる問題走り書き
 
-- [update: `sendMessageToTabsPromise`と例外処理](#update: `sendMessageToTabsPromise`と例外処理)
 
-sendMessageToTabsPromise と使用箇所のリファクタリング
-
-- background script の例外処理機能の実装
 
 ## 課題
 
 更新は豆に！
+
 
 - 例外/Error ダイアグラムの作成
 
@@ -35,9 +33,8 @@ sendMessageToTabsPromise と使用箇所のリファクタリング
 まず紙とペンですわ
 
 - [`setTimeout`, `setInterval`を background script で使うな](#`setTimeout`, `setInterval`を background script で使うな)
-
-専用の API が用意されているのでそちらに切り替えること
-https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/#alarms
+    専用の API が用意されているのでそちらに切り替えること
+    https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/#alarms
 
 - どのタブ ID でどの window なのかは区別しないといかんかも
   たとえば複数タブで展開するときに、おそらく今のままだと
@@ -50,8 +47,6 @@ https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/#a
   もしくはタブ情報を「持たない」とか？
   もしくはそれがでふぉということで、1 ページにしか使えないという仕様にする
 
-- 拡張機能の OFF 機能の実装
-  [実装：拡張機能 OFF](#実装：拡張機能OFF)
 
 - loading 中を ExTranscript へ表示させる
   [ローディング中 view の実装](#ローディング中viewの実装)
@@ -65,16 +60,16 @@ https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/#a
   [デザイン改善:popup](#デザイン改善:popup)
   拡張機能 OFF 機能を実装したら再度進行する
 
+
 後回しでもいいかも:
 
+- controller.ts の onwWindowResizeHandler をもうちょっとサクサク動かしたい
+- [また問題が起こったら対処] [Google翻訳と連携させるとおこる不具合対処](#Google翻訳と連携させるとおこる不具合対処)
 - [また問題が起こったら対処] 自動スクロール機能で重複する字幕要素を完全に処理しきれていない模様...
   つまりたぶんだけど、重複しているほうの要素に css の class をつけてしまっていて、
   だけれども remove はできていない
   という可能性...
   [自動スクロール機能修正：ハイライト重複](#自動スクロール機能修正：ハイライト重複)
-
-- controller.ts の onwWindowResizeHandler をもうちょっとサクサク動かしたい
-
 - [また問題が起こったら対処] 複数 window を開いていると、あとから複製した window の id を取得してしまう問題
   [複数 window だとあとから複製した window.id を取得してしまう問題](#複数windowだとあとから複製したwindow.idを取得してしまう問題)
 
@@ -84,7 +79,7 @@ https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/#a
   [ブラウザが閉じたらどうなるのか](#ブラウザが閉じたらどうなるのか)
 
 済：
-
+- [済] [実装：拡張機能 OFF](#実装：拡張機能OFF)
 - [済] [展開中にリロードしたときの挙動の実装](#展開中にリロードしたときの挙動の実装)
 - [済] [展開中のタブが別の URL へ移動したときの対応](#展開中のタブが別のURLへ移動したときの対応)
 - [済] [実装：拡張機能 OFF](#実装：拡張機能OFF)
@@ -107,7 +102,9 @@ https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/#a
 実装しない機能：
 
 - Autro Scroll ON/OFF ボタンとその機能
--
+
+
+## 仕様について
 
 ## 成果記録
 
@@ -5253,3 +5250,68 @@ content script ならページに埋め込まれるからできる、という�
 エラーダイアグラムを書く
 popupボタンのスタイルの実装
 popupのボタンのローディングはドットアニメーションにする
+
+
+## Google翻訳と連携させるとおこる不具合対処
+
+解決はしていないけど、できる限りの回避策は施せた
+
+
+まず確認される問題：
+
+- Google翻訳済のページは拡張機能は使えないのは仕様にしましょう
+- 拡張機能実行してからGoogle翻訳して、ページが次に遷移したときに、ExTranscriptの字幕一番目の字幕の塊が大きすぎる
+    たぶん、Google翻訳がページ遷移後に拡張機能を実行してして、英語を日本語に翻訳完了させた部分はすべてこの塊に含まれるのだと思う
+    Google翻訳の実行スピードとcaptureSubtitleとcontrollerのスピード勝負になっている
+- 上記とおそらく同じ理由で場合によってはページ遷移後に字幕が取得できないかもしれない
+
+```html
+<!-- 翻訳前 -->
+<div class="transcript--cue-container--wu3UY">
+    <p data-purpose="transcript-cue" class="transcript--underline-cue--3osdw" role="button" tabindex="-1">
+        <span data-purpose="cue-text" class="">So we talked about the Cascade</span>
+    </p>
+</div>
+
+<!-- 翻訳後 -->
+<div class="transcript--cue-container--wu3UY">
+    <p data-purpose="transcript-cue" class="transcript--underline-cue--3osdw" role="button" tabindex="-1">
+        <span data-purpose="cue-text" class="">
+            <font style="vertical-align: inherit;">
+                <font style="vertical-align: inherit;">だから私たちはカスケードについて話しました</font>
+            </font>
+        </span>
+    </p>
+</div>
+```
+
+なんか`font`というタグが追加されている（これは特に問題ではなかった）
+
+Google翻訳済ページを確認してみたところ、
+
+```bash
+# chrome dev tools console
+# captureSubtitle.tsと同じ処理
+$ const span = document.querySelectorAll("div.transcript--cue-container--wu3UY p.transcript--underline-cue--3osdw span");
+# 結果、初めの10行分はすでにGoogle翻訳によって翻訳済の字幕テキストを取得していた
+# 10行分よりあとは英語字幕を取得していた
+# おそらく、
+# captureSubtitle.tsで字幕取得している最中にすでにGoogle翻訳が翻訳（字幕の変換）をすすめており、
+# 前半10行ほどは翻訳済をcaptureSubtitle.tsが取得してしまったが、それ以降は翻訳返還される前に取得できたため、
+# 正常に取得できたのだと思う
+$ const subtitle = Array.from(span).map(function(s) {return s.innerText.trim()});
+
+# 以下のプロパティが確認でき、唯一翻訳前の字幕テキストを取得していた
+$ span[0].__reactEventHandlers$l71b4sw2al.children
+# ただし、$以降の文字列はランダム生成の模様で取得は不可能...
+```
+
+ということで
+解決方法はなく
+
+とにかくこちらの拡張機能のスピードをあほほど早くするほかない...
+
+ということで各setTimeoutやsetIntervalのタイマー時間を可能な限り短くした
+これで今のところ大きな塊を取得しないで済んでいるが...
+
+ローディングがかかりすぎる場合は拡張機能が機能しなくなることを仕様として追記したほうがいいね...

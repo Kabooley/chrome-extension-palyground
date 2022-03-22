@@ -16,7 +16,6 @@ TODO:
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import {
-  iMessage,
   iResponse,
   extensionNames,
   orderNames,
@@ -25,7 +24,7 @@ import {
 import { sendMessagePromise } from "../utils/helpers";
 import "./popup.css";
 import MainContent from "./MainContent";
-import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {

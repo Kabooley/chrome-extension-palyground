@@ -420,7 +420,7 @@ const repeatCheckQueryAcquired = async (
         return investTheElementIncluded(selector);
       },
       timeoutAsResolve,
-      200,
+      100,
       10
     );
   } catch (e) {
