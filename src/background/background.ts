@@ -29,6 +29,7 @@ import {
 } from "../utils/helpers";
 import { iModel, modelBase, iStateModule } from "./annotations";
 import { alertMessages } from "../Error/templates";
+import { circulater, iCallbackOfCirculater, iConditionOfCirculater } from "../utils/Circulater";
 
 //
 // --- GLOBALS -----------------------------------------------
@@ -649,6 +650,8 @@ const handlerOfHide = async (tabId: number): Promise<void> => {
   }
 };
 
+// ---- OTHERS METHODS ----------------------------------------
+
 /**
  *
  *
@@ -778,6 +781,31 @@ const repeatCaptureSubtitles = async function (
     }, INTERVAL_TIME);
   });
 };
+
+// // circulaterへ渡すcallback関数
+// //
+// // 完全にハードコーディング
+// // 利用場面に応じて個別に作って
+// //
+// // 実際に実行したい関数へ渡さなくてはならない引数はここで渡すこと
+// // 戻り値は任意であるが、condition関数のgenerics型と同じにすること
+// const cb: iCallbackOfCirculater = async (): Promise<subtitle_piece[]> => {
+//   const { tabId } = await state.get();
+//   const s: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
+//   return s;
+// };
+
+// // circulaterへ渡すconditon関数
+// //
+// // 完全にハードコーディング
+// // 利用場面に応じて個別に作って
+// //
+// // circulaterへ渡す引数callbackの戻り値の型と同じ型をgenericsとして渡すこと
+// const condition: iConditionOfCirculater = <subtitle_piece[]>(operand: subtitle_piece[]): boolean => {
+//   return operand.length ? true : false;
+// };
+
+// const repeactCapturingSubtitle = circulater(cb, condition, 2);
 
 /*****
  * state module
