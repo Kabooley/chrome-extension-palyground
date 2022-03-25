@@ -67,6 +67,10 @@ https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/#a
 
 後回しでもいいかも:
 
+- [async関数は暗黙にPromiseを返すからreturn_new_Promiseしなくていい](#async関数は暗黙にPromiseを返すからreturn_new_Promiseしなくていい)
+
+ つまりコードリーディングてきな改善としてのrefactoring
+
 - [また問題が起こったら対処] 自動スクロール機能で重複する字幕要素を完全に処理しきれていない模様...
   つまりたぶんだけど、重複しているほうの要素に css の class をつけてしまっていて、
   だけれども remove はできていない
@@ -5253,3 +5257,227 @@ content script ならページに埋め込まれるからできる、という�
 エラーダイアグラムを書く
 popupボタンのスタイルの実装
 popupのボタンのローディングはドットアニメーションにする
+
+
+#### 実装：字幕取得処理のループ処理を1周ではなくて2週にする
+
+`repeatCaptureSubtitles()`を条件次第で2周させるようにする
+
+
+条件：字幕データが取得できなかったらもう1周
+
+今回の処理に伴う変更: 2周するかわりインターバルの間隔を短くする
+
+
+
+`circulaterPromise`という関数を作った
+
+引数に渡したcallback関数を、おなじく引数に渡したnumberの回数だけ
+繰り返し実行する
+ただし繰り返しに関しては、
+callback関数完了を待って次の繰り返しへすすむ
+つまり
+繰り返しは非同期的に実行されることになる
+
+
+forループは、ループ中に実行する関数がawait呼出ならば、
+その実行される関数の完了を待ってから次のループに行くみたい
+
+forループ中に実行する非同期関数が解決したとして
+その解決を持ってループ処理を停止したいときは、
+breakをつけないといけないのか？
+
+参考：
+https://stackoverflow.com/questions/55207256/will-resolve-in-promise-loop-break-loop-iteration
+
+> If you want to break the loop, you have to do that with break or return.
+
+ということで、`break`または`return`を付けないといけない
+
+```TypeScript
+
+// 指定の回数を実行したら完了させるラッパーPromise関数を作成する
+
+
+
+// 指定の回数を実行したら完了させるラッパーPromise関数を作成する
+// ループは、callbackが完了してから次のループに行くようにする
+// 
+// あとasync関数ならばわざわざPromiseを返す関数にしなくていい
+// この関数に関しては、callbackが非同期関数なのが前提なので
+// await呼出したいのでasync関数にする
+
+/****************************************
+ * @callback callback function must return Promise<boolean>
+ * @param {any} callback.param
+ * @return {Promise} boolean
+ * @param {number} looptimes: 
+ * 
+ * 
+ * */ 
+const circulaterPromise = async (
+  callback: (param?: any) => Promise<boolean>,
+  looptimes: number
+  ): Promise<void> => {
+      for(let i = 0; i < looptimes; i++) {
+        console.log(`LOOP Round:${i}`);
+        const r: boolean = await callback();
+        console.log(`RESULT: ${r}`);
+        if(r) return;
+      }
+}
+
+// -- USAGE --
+
+const counter = async (times: number): Promise<boolean> => {
+    let timerId: number;
+    let num: number = 0;
+    timerId = setInterval(function() {
+      console.log(num);
+      if(num >= times) {
+        clearInterval(timerId);
+        const random_boolean = Math.random() < 0.8;
+        return random_boolean;
+      }
+      else num++;
+    }, 1000);
+}
+
+
+(async function() {
+  try {
+    circulaterPromise(async function() {
+      const r = await counter(7);
+      return r;
+    }, 5);
+  }
+  catch(e) {
+    console.error(e);
+  }
+})();
+```
+
+うまくいくとおもったけれど、
+遠回りしまくらないといけない
+
+関数のデコレータ技術を身につけないといけない
+
+```TypeScript
+// 要はこういうことをしたい
+// repeactCaptureSubtitles()がほしい値を返すならばループ終了で呼び出し元に戻る
+// ほしい値が取得できなかったら取得できるまでまたは任意のループ回数に到達するまで
+// 同じ処理を繰り返す
+async function(): Promise<subtitle_piece[]> {
+  let s: subtitle_piece[] = null;
+  s = await repeactCaptureSubtitles(tabId);
+  if(!s.length){
+    s = await repeactCaptureSubtitles(tabId);
+  }
+  else return s;
+  if(!s.length){
+    s = await repeactCaptureSubtitles(tabId);
+  }
+  else return s;
+  // ...continue until arbirary times...
+}
+
+// 以下のようにしてもいいけれど、
+// 完全にrepeatCaptureSubtitles()に特化した関数なので
+// 再利用性はない
+const circulater = async function(callback, until, tabId) {
+  return function() {
+    for(let i = 0; i < until; i++){
+      const r: subtitle_piece[] = await repeactCaptureSubtitles(tabId);
+      if(r.length) return r;
+    }
+  }
+}
+
+// 改善案１
+// 条件分岐を記述した関数でcallbackをラップする
+const wRepeactCaptureSubtitles = async function(tabId) {
+      const r: subtitle_piece[] = await repeactCaptureSubtitles(tabId);
+      if(r.length) return r;
+}
+
+// callback関数はbooleanを返すならばどんな関数でもうけつけることが
+// できるようになった
+const circulater = async function(callback, until) {
+  return function() {
+    for(let i = 0; i < until; i++){
+      const r: boolean = await callback();
+      if(r) return;
+    }
+  }
+}
+
+// 問題点：これだと肝心なsubtitle_piece[]データが返せていない
+// 
+// つまり、
+// ループを継続するかの条件信号の値と
+// ループで実行したい関数から取得できる戻り値の
+// 両方を扱わないといけないのである
+
+// 改善案２
+// 条件分岐の関数とcallback関数を分ける
+// 実行したい処理：callback
+// ループを継続するのかの条件分岐判定関数：isLoopDone
+const conditoinal = function(result: subtitle_piece[]) {
+  return result.length ? true : false; 
+}
+
+const circulater = async function(callback, isLoopDone, until: number): Promise<subtitle_piece[]> {
+  return function() {
+    for(let i = 0; i < until; i++){
+      let result: subtitle_piece[];
+      // 実行したい関数から結果を受け取っておく
+      result = await callback();
+      // callbackの結果をループ継続させるか判定する関数に渡す
+      if(isLoopDone(result)) return result;
+    }
+  }
+}
+
+const repeactSubtitleCapturing = circulater(repeactCaptureSubtitles, conditional, 3);
+const data = await repeactSubtitleCapturing()
+
+// 問題点：ループが終わるまでcallbackからほしい値が取得できなかったときの
+// 処理を定義していない
+
+
+// 案２の改善策
+// 
+// T型をあつかっていて、T型を返すことになっているので
+// ループが終了を迎えてから返す値もT型に配慮しないといけない
+// 
+// なので1回前のループのときのcallback関数の戻り値を返すようにすればいいかも
+const circulater = async function(callback, isLoopDone, until: number): Promise<T> {
+  return function() {
+    // 予めループの外にresult変数を置いて
+      let result: T;
+    for(let i = 0; i < until; i++){
+      result = await callback();
+      if(isLoopDone(result)) return result;
+    }
+    // ループが終わってしまったら最後のresultを返せばいい
+    return result;
+  }
+}
+
+```
+
+#### JavaScript Tips: 関数デコレート
+
+UdemyのJavaScritコースに高階関数についてレクチャーがあったのでひとまずそこを...
+
+
+1. High-Order-Functionとは
+
+- 関数を引数として取得する関数
+- 新しい関数を返す関数
+- その両方
+
+つまり、高階関数は値を返さない。
+関数を返すのである
+
+
