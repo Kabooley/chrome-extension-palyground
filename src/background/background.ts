@@ -9,7 +9,8 @@
  *
  *
  *
- * Exception Handling ***************************************************************/
+ * Exception Handling 
+ * ***************************************************************/
 
 import {
   _key_of_model_state__,
@@ -42,14 +43,16 @@ const KEY_LOCALSTORAGE = "__key__of_local_storage_";
 // --- Chrome API Listeners ---------------------------------
 //
 
-/***
- * chrome.runtime.onInstalled.addListener():
- * _________________________________________________
- *
- * Initialize State as iModel.
- * Always clear storage.
- * Set modelBase as initiali value.
- * */
+
+/**
+ * Set up state module and clear previous storage information that state use.
+ * Set modelBase as initial value of state module.
+ * 
+ * @callback
+ * @param {chrome.runtime.InstalledDetails} details
+ * - Represents details of install or update.  
+ * 
+ * */ 
 chrome.runtime.onInstalled.addListener(
   async (details: chrome.runtime.InstalledDetails): Promise<void> => {
     console.log(`[background] onInstalled: ${details.reason}`);
@@ -64,31 +67,28 @@ chrome.runtime.onInstalled.addListener(
 );
 
 /**
- * chrome.tabs.onUpdated.addListener()
- * ______________________________________________
+ * Monitor events of interest by filtering all events on the browser.
+ * 
+ * NOTE: chrome.tabs.onUpdated.addListenerにはfiltering機能がない
+ * なのでイベントの取捨選択はすべて条件分岐を追加して対処している
  *
  * 機能：
- * URLが変更されたかどうかを検知する機能を実装する
- *
- * chrome.tabs.onUpdatedはすべてのタブにおけるイベントを検知する
- * なので関係ないタブに関することは無視する機能を実装する必要がある
- *
- * ブラウザの挙動に対してonUpdatedが反応したときの振舞に関して：
- *
- * - Incase 拡張機能が未展開であるけど、Udemy 講義ページである
- * then なにもしない
- *
- * - incase 拡張機能が展開されていて、同じタブで Udemy 講義ページだけど末尾の URL が変更されたとき
- * then 拡張機能をリセットして引き続き展開する
- *
- * - incase 拡張機能が展開されていて、同じタブで Udemy 講義ページ以外の URL になった時
- * then ExTranscriptは非表示にする
- *
- * - incase タブが切り替わった
- *  then 何もしない
- *
- * - incase 拡張機能が展開されていたタブが閉じられた
- *  then TODO: 拡張機能の後始末を実施する
+ * 
+ * 1. 次のイベントを無視する
+ * 
+ * - 指定のURL以外のページのイベントすべて
+ * - 拡張機能が展開済であるが、changeInfo.statusが'loading'ではない
+ * - 拡張機能が展開済であるが、展開しているタブ以外に切り替わったとき
+ * - ブラウザが閉じられた、タブが閉じられたときの対処はchrome.tabs.onRemoved.addListenerが請け負う
+ * 
+ * 2. 次のイベントは監視する
+ * 
+ * - 拡張機能が展開中のタブでリロードが起こった
+ * - 拡張機能が展開中のタブが別のURLへ移動した
+ * - 拡張機能が展開中のタブでURL末尾(#含まない)が更新された(次の講義動画に切り替わった)
+ * - 拡張機能が展開中のタブでURL末尾(#含まない)が更新された(講義動画がないページに切り替わった)
+ * 
+ * 
  *
  * */
 chrome.tabs.onUpdated.addListener(
@@ -512,7 +512,7 @@ const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
 
     // 字幕取得できるまで10回は繰り返す関数で取得する
     // NOTE: 戻り値が空の配列でも受け入れる
-    const subtitles: subtitle_piece[] = await repeatCapturingSubtitle();
+    const subtitles: subtitle_piece[] = await circulateRepeatCaptureSubtitles();
     await state.set({ subtitles: subtitles });
 
     // <phase 4> inject controller.js
@@ -805,13 +805,23 @@ const condition: iConditionOfCirculater<subtitle_piece[]> = (operand: subtitle_p
   return operand.length ? true : false;
 };
 
-const repeatCapturingSubtitle: iClosureOfCirculater<subtitle_piece[]> = circulater(cb, condition, 2);
+/**********************************************
+ * circulateRepeatCaptureSubtitles
+ * 
+ * 
+ * description:
+ * repeactCaptureSubtitles()を3回繰り返す関数
+ * condition()の条件を満たせば即終了し、
+ * repeactCaptureSubtitles()が取得した最後の戻り値を返す
+ * 
+ * UdemyのDOMローディングの時間がかかりすぎる場合に対処するための関数
+ * */ 
+const circulateRepeatCaptureSubtitles: iClosureOfCirculater<subtitle_piece[]> = circulater(cb, condition, 2);
 
 /*****
  * state module
  * _________________________________________________________________
  *
- * UPDATED: 2/17
  * This module never holds variables.
  * No matter background script unloaded or reloaded,
  * state never lose saved varibales.
