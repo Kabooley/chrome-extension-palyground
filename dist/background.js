@@ -71,6 +71,95 @@ const modelBase = {
 
 /***/ }),
 
+/***/ "./src/utils/Circulater.ts":
+/*!*********************************!*\
+  !*** ./src/utils/Circulater.ts ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "circulater": () => (/* binding */ circulater)
+/* harmony export */ });
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+// HIGH ORDER FUNCTION
+//
+// 再利用性のある非同期関数の任意ループ処理ラッパー
+const circulater = function (callback, condition, until) {
+    return function () {
+        return __awaiter(this, void 0, void 0, function* () {
+            // 予めループの外にresult変数を置いて
+            let result;
+            for (let i = 0; i < until; i++) {
+                result = yield callback();
+                if (condition(result))
+                    return result;
+            }
+            // ループが終わってしまったら最後のresultを返せばいいのだが...
+            // エラーを出すかも:
+            // "TypeScriptがresultが初期化されないままなんだけど"
+            //
+            // 必ずresultはforループで初期化されるからってことを
+            // TypeScriptへ伝えたいけど手段がわからん
+            return result;
+        });
+    };
+};
+// USAGE
+// // 実際に実行したい関数
+// const counter = async (times: number): Promise<boolean> => {
+//   return new Promise((resolve, reject) => {
+//     let timerId: number;
+//     let num: number = 0;
+//     timerId = setInterval(function () {
+//       console.log(`counter: ${num}`);
+//       if (num >= times) {
+//         clearInterval(timerId);
+//         const random_boolean = Math.random() < 0.7;
+//         resolve(random_boolean ? true : false);
+//       } else num++;
+//     }, 1000);
+//   });
+// };
+// // circulaterへ渡すcallback関数
+// //
+// // 完全にハードコーディング
+// //
+// // 実際に実行したい関数へ渡さなくてはならない引数はここで渡すこと
+// // 戻り値は任意であるが、condition関数のgenerics型と同じにすること
+// const cb: iCallbackOfCirculater<boolean> = async (): Promise<boolean> => {
+//   const n: boolean = await counter(7);
+//   console.log(`cb: ${n}`);
+//   return n;
+// };
+// // circulaterへ渡すconditon関数
+// //
+// // 完全にハードコーディング
+// //
+// // circulaterへ渡す引数callbackの戻り値の型と同じ型をgenericsとして渡すこと
+// const counterCondition: iConditionOfCirculater<iOp> = (
+//   operand: iOp
+// ): boolean => {
+//   console.log(`condition: ${operand ? true : false}`);
+//   return operand ? true : false;
+// };
+// const counterLoop = circulater<boolean>(cb, counterCondition, 3);
+// (async function () {
+//   const r = await counterLoop();
+//   console.log(`RESULT: ${r}`);
+// })();
+
+
+/***/ }),
+
 /***/ "./src/utils/constants.ts":
 /*!********************************!*\
   !*** ./src/utils/constants.ts ***!
@@ -477,6 +566,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_helpers__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/helpers */ "./src/utils/helpers.ts");
 /* harmony import */ var _annotations__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./annotations */ "./src/background/annotations.ts");
 /* harmony import */ var _Error_templates__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Error/templates */ "./src/Error/templates.ts");
+/* harmony import */ var _utils_Circulater__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/Circulater */ "./src/utils/Circulater.ts");
 /***************************************************************
  * background.ts
  * _____________________________________________________________
@@ -509,6 +599,7 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
         }
     return t;
 };
+
 
 
 
@@ -924,7 +1015,7 @@ const handlerOfRun = (tabInfo) => __awaiter(void 0, void 0, void 0, function* ()
         }
         // 字幕取得できるまで10回は繰り返す関数で取得する
         // NOTE: 戻り値が空の配列でも受け入れる
-        const subtitles = yield repeatCaptureSubtitles(tabId);
+        const subtitles = yield repeatCapturingSubtitle();
         yield state.set({ subtitles: subtitles });
         // <phase 4> inject controller.js
         if (!isControllerInjected) {
@@ -1053,6 +1144,7 @@ const handlerOfHide = (tabId) => __awaiter(void 0, void 0, void 0, function* () 
         throw e;
     }
 });
+// ---- OTHERS METHODS ----------------------------------------
 /**
  *
  *
@@ -1170,6 +1262,28 @@ const repeatCaptureSubtitles = function (tabId) {
         }));
     });
 };
+// circulaterへ渡すcallback関数
+//
+// 完全にハードコーディング
+// 利用場面に応じて個別に作って
+//
+// 実際に実行したい関数へ渡さなくてはならない引数はここで渡すこと
+// 戻り値は任意であるが、condition関数のgenerics型と同じにすること
+const cb = () => __awaiter(void 0, void 0, void 0, function* () {
+    const { tabId } = yield state.get();
+    const s = yield repeatCaptureSubtitles(tabId);
+    return s;
+});
+// circulaterへ渡すconditon関数
+//
+// 完全にハードコーディング
+// 利用場面に応じて個別に作って
+//
+// circulaterへ渡す引数callbackの戻り値の型と同じ型をgenericsとして渡すこと
+const condition = (operand) => {
+    return operand.length ? true : false;
+};
+const repeatCapturingSubtitle = (0,_utils_Circulater__WEBPACK_IMPORTED_MODULE_4__.circulater)(cb, condition, 2);
 /*****
  * state module
  * _________________________________________________________________
