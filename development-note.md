@@ -27,6 +27,8 @@ MVC と DDD の設計思想を取り入れたい
 更新は豆に！
 
 
+- [Google翻訳を実行したあとに拡張機能OFFからのONにすると英語字幕は最早取得できない件](#Google翻訳を実行したあとに拡張機能OFFからのONにすると英語字幕は最早取得できない件)
+
 - 例外/Error ダイアグラムの作成
 
 やっぱり視覚的にわかりやすいのを作った方がいいね
@@ -5614,3 +5616,246 @@ callbackはT型の値を返す関数である、
 isLoopDoneはT型の値を引数にとって、booleanを返す関数
 
 
+
+## Google翻訳を実行したあとに拡張機能OFFからのONにすると英語字幕は最早取得できない件
+
+修正
+
+結構深刻やねこれ...
+
+つまりこういう経緯です
+
+- 拡張機能をONにして字幕を再生成したExTranscriptを出力した
+- Google翻訳を実行していい感じの翻訳字幕を取得できた
+- 拡張機能をOFFにした(トランスクリプトが閉じられた、windowサイズが小さくなりすぎたなど...)
+- 再度拡張機能をONにした(トランスクリプトが再度開かれた、windowサイズがリサイズされたなど...)
+- すでに字幕が翻訳済のデータからcaptureSubtitleするので、英語字幕が取得できずおかしな字幕が出力されてしまう
+
+ということで、
+
+一度取得できた英語字幕またはそこから生成できた整形字幕は
+「現在のレクチャーページ以外に移動」するまでは保存したままにしたほうがいいね...
+
+つまり、
+
+保存タイミング：
+
+- handlerOfRun時
+- chrome.tabs.onUpdated.addListener()で「次のレクチャーページに移動した」判定後の最初の字幕取得時
+
+消去タイミング：
+
+chrome.tabs.onUpdated.addListener()で「次のレクチャーページに移動した」判定後の最初の字幕取得前
+
+その間：
+
+必ず保存された字幕からデータを取得すること
+
+
+
+詳細:
+
+#### 保存タイミング
+
+```TypeScript
+
+
+chrome.tabs.onUpdated.addListener(
+  async (
+    tabIdUpdatedOccured: number,
+    changeInfo: chrome.tabs.TabChangeInfo,
+    Tab: chrome.tabs.Tab
+  ): Promise<void> => {
+      //...
+    //   ...
+    if (isExTranscriptStructured && tabIdUpdatedOccured === tabId) {
+      //...
+      //...
+      //...
+        res.isPageIncludingMovie
+        // NOTE: 保存タイミングはこのときのhandlerOfReset()内での字幕取得
+          ? // 次の動画に移った
+            await handlerOfReset(tabIdUpdatedOccured)
+          : // 動画を含まないページへ移った
+            await handlerOfHide(tabIdUpdatedOccured);
+      }
+    }
+  }
+);
+
+// NOTE: 保存タイミング２
+// ただしすでに保存しているので修正の必要なし
+    const subtitles: subtitle_piece[] = await circulateRepeatCaptureSubtitles();
+    await state.set({ subtitles: subtitles });
+
+```
+
+重要なのは保存タイミング以外の時は保存字幕をロードするようにしてDOMから取得しないようにすること
+
+修正すべきは`handlerOfReset`だけ
+
+```TypeScript
+const handlerOfReset = async (tabId: number): Promise<void> => {
+  try {
+    console.log("[background] RESET Begin...");
+    await state.set({
+      isTranscriptDisplaying: false,
+      isSubtitleCaptured: false,
+      isSubtitleCapturing: true,
+    //   NOTE: 修正
+    // subtitlesを消すかどうかはケースによる
+      subtitles: [],
+    });
+
+    await resetEachContentScript(tabId);
+
+    // NOTE: 修正
+    // 任意にstateから取得するのかDOMから取得するのか選べるようにする
+    // もしくは
+    // handlerOfResetのオーバーロード関数を作る
+    const newSubtitles: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
+
+    await state.set({
+      isSubtitleCaptured: true,
+      isSubtitleCapturing: false,
+      subtitles: newSubtitles,
+    });
+
+    const resetOrder: iResponse = await sendMessageToTabsPromise(tabId, {
+      from: extensionNames.background,
+      to: extensionNames.controller,
+      order: [orderNames.reset],
+    });
+
+    const resetSubtitle: iResponse = await sendMessageToTabsPromise(tabId, {
+      from: extensionNames.background,
+      to: extensionNames.controller,
+      subtitles: newSubtitles,
+    });
+
+    await state.set({
+      isTranscriptDisplaying: true,
+    });
+
+    console.log("[background] RESET Complete!");
+  } catch (e) {
+    throw e;
+  }
+};
+
+// 
+// ひとまずの修正
+// 
+
+const handlerOfReset = async (
+    tabId: number
+    // NOTE: 修正： 字幕は予め取得して渡されることとする
+    subtitles: subtitle_piece[]
+): Promise<void> => {
+  try {
+    console.log("[background] RESET Begin...");
+    await state.set({
+      isTranscriptDisplaying: false,
+      isSubtitleCaptured: false,
+      isSubtitleCapturing: true,
+    //   NOTE: 修正: ここではsubtitlesを消去しない
+    //   subtitles: [],
+    });
+
+    await resetEachContentScript(tabId);
+
+    // NOTE: 修正: 字幕データはこの関数の外で取得することにする
+    // const newSubtitles: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
+
+    await state.set({
+      isSubtitleCaptured: true,
+      isSubtitleCapturing: false,
+      subtitles: subtitles,
+    });
+
+    const resetOrder: iResponse = await sendMessageToTabsPromise(tabId, {
+      from: extensionNames.background,
+      to: extensionNames.controller,
+      order: [orderNames.reset],
+    });
+
+    const resetSubtitle: iResponse = await sendMessageToTabsPromise(tabId, {
+      from: extensionNames.background,
+      to: extensionNames.controller,
+      subtitles: subtitles,
+    });
+
+    await state.set({
+      isTranscriptDisplaying: true,
+    });
+
+    console.log("[background] RESET Complete!");
+  } catch (e) {
+    throw e;
+  }
+};
+
+
+// USAGE
+// NOTE: 呼出しルール：予め字幕データを取得してhandlerOfResetへ渡す
+// 
+// reset時はstateから取得する
+const { tabId, subtitles } = await state.get();
+// or
+// ページ移動後はDOMから取得する
+const subtitles: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
+
+await handlerOfReset(tabId, subtitles);
+```
+
+関数の引数の中でawait呼出しした関数の戻り値を受け取るのはアリらしい...
+
+ということで次のような呼び出しができる
+
+```TypeScript
+const handlerOfReset = async (
+    tabId: number
+    // NOTE: 修正： 字幕は予め取得して渡されることとする
+    subtitles: subtitle_piece[]
+): Promise<void> => {};
+
+// これなら呼び出し側でコントロールできる
+await handlerOfReset(tabId, (await state.get()).subtitles);
+await handlerOfReset(tabId, await repeatCaptureSubtitles(tabId));
+```
+
+
+Tips:
+
+`(await state.get()).subtitles`のような呼び出しは実現可能な模様
+
+codesandboxで確認済
+
+
+```JavaScript
+
+(async function() {
+  // await foo()
+  const foo = async function() {
+    return new Promise((resolve, reject) => {
+  
+      setTimeout(function() {
+        resolve({
+          subtitles: "this is awesome subtitle"
+        });
+      }, 2000);
+    })
+  };
+
+  // const r = (await foo()).subtitles;
+  // console.log(r);
+
+  const bar = async function(subtitles) {
+    console.log(subtitles);
+  }
+
+  bar((await foo()).subtitles);
+    // this is awesome subtitles
+})();
+
+```
