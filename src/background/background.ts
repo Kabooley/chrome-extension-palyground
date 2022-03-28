@@ -141,7 +141,7 @@ chrome.tabs.onUpdated.addListener(
 
         res.isPageIncludingMovie
           ? // 次の動画に移った
-            await handlerOfReset(tabIdUpdatedOccured)
+            await handlerOfReset(tabIdUpdatedOccured, await circulateRepeatCaptureSubtitles())
           : // 動画を含まないページへ移った
             await handlerOfHide(tabIdUpdatedOccured);
       }
@@ -379,7 +379,7 @@ const handlerOfContentScriptMessage = async (
     // ExTranscriptが非表示だったならば再表示させる
     if (isExTranscriptStructured && !isTranscriptDisplaying) {
       try {
-        await handlerOfReset(tabId);
+        await handlerOfReset(tabId, (await state.get()).subtitles);
         await state.set({ isTranscriptDisplaying: true });
 
         response.complete = true;
@@ -396,7 +396,7 @@ const handlerOfContentScriptMessage = async (
     // ExTranscriptが非表示だったならば再表示させる
     if (isExTranscriptStructured && !isEnglish) {
       try {
-        await handlerOfReset(tabId);
+        await handlerOfReset(tabId, (await state.get()).subtitles);
         await state.set({
           isTranscriptDisplaying: true,
           isEnglish: true,
@@ -571,51 +571,101 @@ const handlerOfRun = async (tabInfo: chrome.tabs.Tab): Promise<boolean> => {
  * - controller.jsへ字幕データを渡す
  *
  * */
-const handlerOfReset = async (tabId: number): Promise<void> => {
-  try {
-    console.log("[background] RESET Begin...");
-    // stateの更新：
-    await state.set({
-      isTranscriptDisplaying: false,
-      isSubtitleCaptured: false,
-      isSubtitleCapturing: true,
-      subtitles: [],
-    });
+// const handlerOfReset = async (tabId: number): Promise<void> => {
+//   try {
+//     console.log("[background] RESET Begin...");
+//     // stateの更新：
+//     await state.set({
+//       isTranscriptDisplaying: false,
+//       isSubtitleCaptured: false,
+//       isSubtitleCapturing: true,
+//       subtitles: [],
+//     });
 
-    // reset 処理: 各content scritpのリセットを実施する
-    await resetEachContentScript(tabId);
+//     // reset 処理: 各content scritpのリセットを実施する
+//     await resetEachContentScript(tabId);
 
-    const newSubtitles: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
+//     const newSubtitles: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
 
-    // If okay, then save subtitles data.
-    await state.set({
-      isSubtitleCaptured: true,
-      isSubtitleCapturing: false,
-      subtitles: newSubtitles,
-    });
+//     // If okay, then save subtitles data.
+//     await state.set({
+//       isSubtitleCaptured: true,
+//       isSubtitleCapturing: false,
+//       subtitles: newSubtitles,
+//     });
 
-    // NOTE: 必ずresetオーダーを出してから字幕を送ること
-    const resetOrder: iResponse = await sendMessageToTabsPromise(tabId, {
-      from: extensionNames.background,
-      to: extensionNames.controller,
-      order: [orderNames.reset],
-    });
+//     // NOTE: 必ずresetオーダーを出してから字幕を送ること
+//     const resetOrder: iResponse = await sendMessageToTabsPromise(tabId, {
+//       from: extensionNames.background,
+//       to: extensionNames.controller,
+//       order: [orderNames.reset],
+//     });
 
-    const resetSubtitle: iResponse = await sendMessageToTabsPromise(tabId, {
-      from: extensionNames.background,
-      to: extensionNames.controller,
-      subtitles: newSubtitles,
-    });
+//     const resetSubtitle: iResponse = await sendMessageToTabsPromise(tabId, {
+//       from: extensionNames.background,
+//       to: extensionNames.controller,
+//       subtitles: newSubtitles,
+//     });
 
-    await state.set({
-      isTranscriptDisplaying: true,
-    });
+//     await state.set({
+//       isTranscriptDisplaying: true,
+//     });
 
-    console.log("[background] RESET Complete!");
-  } catch (e) {
-    throw e;
-  }
+//     console.log("[background] RESET Complete!");
+//   } catch (e) {
+//     throw e;
+//   }
+// };
+
+const handlerOfReset = async (
+  tabId: number,
+  // NOTE: 修正： 字幕は予め取得して渡されることとする
+  subtitles: subtitle_piece[]
+): Promise<void> => {
+try {
+  console.log("[background] RESET Begin...");
+  await state.set({
+    isTranscriptDisplaying: false,
+    isSubtitleCaptured: false,
+    isSubtitleCapturing: true,
+  //   NOTE: 修正: ここではsubtitlesを消去しない
+  //   subtitles: [],
+  });
+
+  await resetEachContentScript(tabId);
+
+  // NOTE: 修正: 字幕データはこの関数の外で取得することにする
+  // const newSubtitles: subtitle_piece[] = await repeatCaptureSubtitles(tabId);
+
+  await state.set({
+    isSubtitleCaptured: true,
+    isSubtitleCapturing: false,
+    subtitles: subtitles,
+  });
+
+  const resetOrder: iResponse = await sendMessageToTabsPromise(tabId, {
+    from: extensionNames.background,
+    to: extensionNames.controller,
+    order: [orderNames.reset],
+  });
+
+  const resetSubtitle: iResponse = await sendMessageToTabsPromise(tabId, {
+    from: extensionNames.background,
+    to: extensionNames.controller,
+    subtitles: subtitles,
+  });
+
+  await state.set({
+    isTranscriptDisplaying: true,
+  });
+
+  console.log("[background] RESET Complete!");
+} catch (e) {
+  throw e;
+}
 };
+
+
 
 /*****************************************************
  * Handler of hide ExTranscript
@@ -636,7 +686,7 @@ const handlerOfHide = async (tabId: number): Promise<void> => {
     await state.set({
       isTranscriptDisplaying: false,
       isSubtitleCaptured: false,
-      subtitles: [],
+      // subtitles: [],
     });
     // reset 処理: 各content scritpのリセットを実施する
     await sendMessageToTabsPromise(tabId, {
