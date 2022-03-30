@@ -28,9 +28,6 @@ MVC と DDD の設計思想を取り入れたい
 やっぱり視覚的にわかりやすいのを作った方がいいね
 まず紙とペンですわ
 
--   [`setTimeout`, `setInterval`を background script で使うな](#`setTimeout`, `setInterval`を background script で使うな)
-    専用の API が用意されているのでそちらに切り替えること
-    https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/#alarms
 
 -   どのタブ ID でどの window なのかは区別しないといかんかも
     たとえば複数タブで展開するときに、おそらく今のままだと
@@ -77,6 +74,10 @@ MVC と DDD の設計思想を取り入れたい
     [ブラウザが閉じたらどうなるのか](#ブラウザが閉じたらどうなるのか)
 
 済：
+
+- [済][`setTimeout`, `setInterval`を background script で使うな](#`setTimeout`, `setInterval`を background script で使うな)
+    専用の API が用意されているのでそちらに切り替えること
+    https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/#alarms
 
 -   [済][google翻訳を実行したあとに拡張機能offからのonにすると英語字幕は最早取得できない件](#Google 翻訳を実行したあとに拡張機能 OFF からの ON にすると英語字幕は最早取得できない件)
 -   [済] [実装：拡張機能 OFF](#実装：拡張機能OFF)
@@ -5948,3 +5949,26 @@ Codesandbox で確認済。
 })();
 
 ```
+
+
+## `setTimeout`, `setInterval`を background script で使うな
+
+解決
+
+https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/#alarms
+
+https://developer.chrome.com/docs/extensions/reference/alarms/
+
+かわりにchrome.alarms APIを使いなさいとのこと
+
+> In order to reduce the load on the user's machine, Chrome limits alarms to at most once every 1 minute but may delay them an arbitrary amount more. That is, setting delayInMinutes or periodInMinutes to less than 1 will not be honored and will cause a warning. when can be set to less than 1 minute after "now" without warning but won't actually cause the alarm to fire for at least 1 minute.
+
+> ユーザーのマシンの負荷を軽減するために、**Chromeはアラームを最大で1分に1回に制限します**が、アラームをさらに任意の量だけ遅延させる場合があります。つまり、delayInMinutesまたはperiodInMinutesを1未満に設定すると、適用されず、警告が発生します。**警告なしに「今」から1分未満に設定できますが、実際には少なくとも1分間はアラームが発生しません。**
+
+は？
+
+つかえね～
+
+とにかく自分の拡張機能では活躍する場面がないし
+イマんところ`setTimeout`, `setInterval`は問題はないので
+このままでよし
