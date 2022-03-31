@@ -19,8 +19,8 @@ import AlertMessage from "./AlertMessage";
 
 // NOTE: alertTimer MUST BE OVER slideTimer + Slide timeout time
 const TIMERS = {
-  alertLifeTimer: 3200,
-  slideTimer: 2000,
+  alertLifeTimer: 2800,
+  slideTimer: 1600,
 } as const;
 
 /*********************************************************************

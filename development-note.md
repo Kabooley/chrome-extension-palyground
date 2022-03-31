@@ -29,6 +29,8 @@ MVC と DDD の設計思想を取り入れたい
 まず紙とペンですわ
 
 
+- [時間をおいてからUdemy講義ぺーいに戻るとリロードするけど、popupのボタンがturnoffのままな件](#時間をおいてからUdemy講義ぺーいに戻るとリロードするけど、popupのボタンがturnoffのままな件)
+
 -   どのタブ ID でどの window なのかは区別しないといかんかも
     たとえば複数タブで展開するときに、おそらく今のままだと
     一つのタブの情報しか扱えない
@@ -5972,3 +5974,7 @@ https://developer.chrome.com/docs/extensions/reference/alarms/
 とにかく自分の拡張機能では活躍する場面がないし
 イマんところ`setTimeout`, `setInterval`は問題はないので
 このままでよし
+
+## 時間をおいてからUdemy講義ぺーいに戻るとリロードするけど、popupのボタンがturnoffのままな件
+
+とにかく時間をおかないと再現性がない
